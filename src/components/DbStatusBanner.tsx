@@ -39,23 +39,23 @@ export default function DbStatusBanner() {
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2">
           <Database className="w-4 h-4 text-slate-500" />
-          <span className="font-semibold text-slate-700">ডাটাবেজ কানেকশন স্টেটাস:</span>
+          <span className="font-semibold text-slate-700">Database Status:</span>
           {status?.isMySQL ? (
             status.connected ? (
               <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-medium">
                 <Wifi className="w-3.5 h-3.5 text-emerald-500" />
-                রিমোট MySQL সংযুক্ত আছে
+                Remote MySQL Connected
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full font-medium">
                 <WifiOff className="w-3.5 h-3.5 text-amber-500" />
-                MySQL সংযোগ ব্যর্থ (লোকাল ডাটাবেজে চলছে)
+                MySQL Connection Failed (Falling back to Local JSON DB)
               </span>
             )
           ) : (
             <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full font-medium">
               <Database className="w-3.5 h-3.5 text-indigo-500" />
-              লোকাল অফলাইন ডাটাবেজ (JSON DB) সক্রিয়
+              Local Offline Storage Enabled (JSON DB)
             </span>
           )}
         </div>
@@ -64,17 +64,17 @@ export default function DbStatusBanner() {
           {status?.isMySQL ? (
             status.connected ? (
               <span>
-                সংযুক্ত হোস্ট: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">{status.host}</code> | ডাটাবেজ: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">{status.database}</code>
+                Host: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">{status.host}</code> | Database: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">{status.database}</code>
               </span>
             ) : (
               <span className="text-rose-600 flex items-center gap-1">
                 <AlertTriangle className="w-3.5 h-3.5" />
-                ত্রুটি: {status.error || 'Connection Failed'}. হোস্ট ও ক্রেডেনশিয়াল চেক করুন।
+                Error: {status.error || 'Connection Failed'}. Please verify database credentials in your env settings.
               </span>
             )
           ) : (
             <span>
-              হোস্টিংগার বা গিটহাবে ডেপ্লয় করার সময় <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">DB_HOST</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">DB_USER</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">DB_PASSWORD</code>, এবং <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">DB_NAME</code> যুক্ত করলে তা অটো MySQL টেবিল তৈরি করে নেবে।
+              Define <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">DB_HOST</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">DB_USER</code>, <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">DB_PASSWORD</code>, and <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800 font-mono">DB_NAME</code> environment variables to connect MySQL server.
             </span>
           )}
         </div>

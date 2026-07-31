@@ -37,12 +37,12 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'এডমিন ডাটা লোড করতে ব্যর্থ হয়েছে।');
+        throw new Error(data.error || 'Failed to load admin dashboard data.');
       }
       setUsers(data.users || []);
       setStats(data.stats || null);
     } catch (err: any) {
-      setError(err.message || 'সার্ভার সংযোগে ত্রুটি ঘটেছে।');
+      setError(err.message || 'Server connection error.');
     } finally {
       setLoading(false);
     }
@@ -68,7 +68,7 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'এপ্রুভাল সম্পূর্ণ করা সম্ভব হয়নি।');
+        throw new Error(data.error || 'Unable to complete activation approval.');
       }
       setSuccessMsg(data.message);
       
@@ -104,7 +104,7 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'ডিএক্টিভেশন সম্পূর্ণ করা সম্ভব হয়নি।');
+        throw new Error(data.error || 'Unable to complete deactivation suspension.');
       }
       setSuccessMsg(data.message);
       
@@ -170,11 +170,11 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
           <div className="space-y-1.5">
             <div className="inline-flex items-center gap-1.5 bg-amber-500/20 text-amber-200 border border-amber-400/20 px-3 py-1 rounded-full text-xs font-semibold">
               <Shield className="w-4 h-4 text-amber-400 animate-pulse" />
-              সিস্টেম এডমিনিস্ট্রেটর মোড
+              System Administrator Mode
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold">এডমিন কন্ট্রোল প্যানেল</h2>
+            <h2 className="text-xl sm:text-2xl font-bold">Admin Control Panel</h2>
             <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
-              সদস্যদের নিবন্ধন অনুমোদন (Approval) করুন, ডাটা চেক করুন, এবং রিকোর্সিভ চেইনের মাধ্যমে সম্পূর্ণ নেটওয়ার্ক মনিটর করুন।
+              Approve member registrations, inspect active user counts, and monitor the entire multi-level network recursively.
             </p>
           </div>
           
@@ -183,7 +183,7 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
             className="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-700 hover:border-slate-600 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold transition-all shadow-md self-start md:self-auto cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            ডাটা রিফ্রেশ করুন
+            Refresh Data
           </button>
         </div>
       </div>
@@ -195,32 +195,32 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
             <div className="w-8 h-8 rounded-lg bg-slate-50 text-slate-600 flex items-center justify-center mb-3">
               <Users className="w-4 h-4" />
             </div>
-            <span className="text-[11px] text-slate-500 font-semibold block uppercase">মোট নিবন্ধিত</span>
-            <span className="text-2xl font-black text-slate-950 mt-1 block">{stats.totalUsers} জন</span>
+            <span className="text-[11px] text-slate-500 font-semibold block uppercase">Total Registered</span>
+            <span className="text-2xl font-black text-slate-950 mt-1 block">{stats.totalUsers} members</span>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm">
             <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
               <ShieldCheck className="w-4 h-4" />
             </div>
-            <span className="text-[11px] text-slate-500 font-semibold block uppercase">সক্রিয় সদস্য (Active)</span>
-            <span className="text-2xl font-black text-emerald-600 mt-1 block">{stats.activeUsers} জন</span>
+            <span className="text-[11px] text-slate-500 font-semibold block uppercase">Active Members</span>
+            <span className="text-2xl font-black text-emerald-600 mt-1 block">{stats.activeUsers} members</span>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm">
             <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
               <UserCheck className="w-4 h-4" />
             </div>
-            <span className="text-[11px] text-slate-500 font-semibold block uppercase">অপেক্ষমাণ (Pending)</span>
-            <span className="text-2xl font-black text-amber-600 mt-1 block">{stats.inactiveUsers} জন</span>
+            <span className="text-[11px] text-slate-500 font-semibold block uppercase">Pending Approval</span>
+            <span className="text-2xl font-black text-amber-600 mt-1 block">{stats.inactiveUsers} members</span>
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm">
             <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
               <Network className="w-4 h-4" />
             </div>
-            <span className="text-[11px] text-slate-500 font-semibold block uppercase">সিস্টেম গভীরতা</span>
-            <span className="text-2xl font-black text-indigo-600 mt-1 block">{stats.maxLevelsDeep} লেভেল</span>
+            <span className="text-[11px] text-slate-500 font-semibold block uppercase">System Depth</span>
+            <span className="text-2xl font-black text-indigo-600 mt-1 block">{stats.maxLevelsDeep} Levels</span>
           </div>
         </div>
       )}
@@ -230,7 +230,7 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
         <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex gap-3 text-emerald-800 text-xs shadow-sm leading-relaxed">
           <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-500" />
           <div>
-            <span className="font-bold">সফল অ্যাকশন:</span> {successMsg}
+            <span className="font-bold">Action Success:</span> {successMsg}
           </div>
         </div>
       )}
@@ -239,7 +239,7 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
         <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 flex gap-3 text-rose-800 text-xs shadow-sm leading-relaxed">
           <AlertCircle className="w-5 h-5 shrink-0 text-rose-500" />
           <div>
-            <span className="font-bold">ব্যর্থতা:</span> {error}
+            <span className="font-bold">Error Occurred:</span> {error}
           </div>
         </div>
       )}
@@ -249,8 +249,8 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
         <div className="p-5 border-b border-slate-200 space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-bold text-slate-900">সদস্য ডিরেক্টরি ({filteredUsers.length})</h3>
-              <p className="text-xs text-slate-500 mt-0.5">নিবন্ধিত সকল সদস্যের তালিকা ও এপ্রুভাল পরিচালনা করুন</p>
+              <h3 className="text-sm font-bold text-slate-900">Member Directory ({filteredUsers.length})</h3>
+              <p className="text-xs text-slate-500 mt-0.5">Manage registered accounts, pending activations, or membership status</p>
             </div>
 
             {/* Status filters */}
@@ -261,7 +261,7 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
                   statusFilter === 'all' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-600'
                 }`}
               >
-                সব সদস্য
+                All Members
               </button>
               <button
                 onClick={() => setStatusFilter('active')}
@@ -269,7 +269,7 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
                   statusFilter === 'active' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600'
                 }`}
               >
-                সক্রিয় (Active)
+                Active
               </button>
               <button
                 onClick={() => setStatusFilter('inactive')}
@@ -277,7 +277,7 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
                   statusFilter === 'inactive' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-600'
                 }`}
               >
-                অপেক্ষমাণ (Pending)
+                Pending
               </button>
             </div>
           </div>
@@ -291,26 +291,26 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="নাম, আইডি, ইমেইল বা মোবাইল দিয়ে মেম্বার খুঁজুন..."
-              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+              placeholder="Search members by name, ID, email, or phone..."
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium"
             />
           </div>
         </div>
 
         {loading ? (
-          <div className="p-12 text-center text-slate-500 text-xs">ডাটা লোড হচ্ছে...</div>
+          <div className="p-12 text-center text-slate-500 text-xs">Loading directory...</div>
         ) : filteredUsers.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50 text-slate-700 border-b border-slate-200 font-bold">
-                  <th className="p-4 w-16">আইডি</th>
-                  <th className="p-4">নাম</th>
-                  <th className="p-4">যোগাযোগ তথ্য</th>
-                  <th className="p-4">স্পন্সর করেছেন</th>
-                  <th className="p-4">তারিখ</th>
-                  <th className="p-4 w-28 text-center">স্টেটাস</th>
-                  <th className="p-4 w-52 text-right">পদক্ষেপ</th>
+                  <th className="p-4 w-16">ID</th>
+                  <th className="p-4">Name</th>
+                  <th className="p-4">Contact Info</th>
+                  <th className="p-4">Sponsor</th>
+                  <th className="p-4">Date Joined</th>
+                  <th className="p-4 w-28 text-center">Status</th>
+                  <th className="p-4 w-52 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
@@ -328,11 +328,11 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
                       </div>
                     </td>
                     <td className="p-4 space-y-1">
-                      <div className="flex items-center gap-1 text-slate-700">
+                      <div className="flex items-center gap-1 text-slate-700 font-semibold">
                         <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span className="font-semibold">{userItem.phone}</span>
+                        <span>{userItem.phone}</span>
                       </div>
-                      <div className="flex items-center gap-1 text-[11px] text-slate-500">
+                      <div className="flex items-center gap-1 text-[11px] text-slate-500 font-medium">
                         <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                         <span>{userItem.email}</span>
                       </div>
@@ -340,26 +340,26 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
                     <td className="p-4">
                       {userItem.referrer_id ? (
                         <span className="bg-indigo-50 border border-indigo-100/50 text-indigo-700 font-bold px-2 py-0.5 rounded-md text-[10px]">
-                          সদস্য #{userItem.referrer_id}
+                          Member #{userItem.referrer_id}
                         </span>
                       ) : (
-                        <span className="text-slate-400 italic">কেউ না (সিস্টেম রুট)</span>
+                        <span className="text-slate-400 italic">None (System Root)</span>
                       )}
                     </td>
-                    <td className="p-4 text-slate-500">
+                    <td className="p-4 text-slate-500 font-semibold">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>{new Date(userItem.created_at).toLocaleDateString('bn-BD')}</span>
+                        <span>{new Date(userItem.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                       </div>
                     </td>
                     <td className="p-4 text-center">
                       {userItem.status === 'active' ? (
                         <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 rounded-lg font-bold">
-                          সক্রিয় (Active)
+                          Active
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-100 px-2.5 py-1 rounded-lg font-bold">
-                          অপেক্ষমাণ (Pending)
+                          Pending
                         </span>
                       )}
                     </td>
@@ -367,7 +367,7 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
                       {/* View downline network map */}
                       <button
                         onClick={() => handleInspectTree(userItem)}
-                        title="নেটওয়ার্ক ভিজ্যুয়ালাইজার ওপেন করুন"
+                        title="View Downline Tree Map"
                         className="inline-flex items-center justify-center p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
                       >
                         <Network className="w-4 h-4" />
@@ -381,7 +381,7 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
                             disabled={actionLoading === userItem.id}
                             className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold px-3 py-2 rounded-xl transition-all shadow-sm hover:shadow cursor-pointer"
                           >
-                            {actionLoading === userItem.id ? 'প্রসেসিং...' : 'এপ্রুভ করুন'}
+                            {actionLoading === userItem.id ? 'Processing...' : 'Approve'}
                           </button>
                         ) : (
                           <button
@@ -389,7 +389,7 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
                             disabled={actionLoading === userItem.id}
                             className="bg-rose-50 hover:bg-rose-100 border border-rose-200 disabled:opacity-50 text-rose-700 font-bold px-3 py-2 rounded-xl transition-all cursor-pointer"
                           >
-                            {actionLoading === userItem.id ? 'প্রসেসিং...' : 'নিষ্ক্রিয় করুন'}
+                            {actionLoading === userItem.id ? 'Processing...' : 'Suspend'}
                           </button>
                         )
                       )}
@@ -400,8 +400,8 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
             </table>
           </div>
         ) : (
-          <div className="bg-slate-50 border-t border-slate-200 py-12 text-center text-slate-500">
-            খুঁজে পাওয়া যায়নি।
+          <div className="bg-slate-50 border-t border-slate-200 py-12 text-center text-slate-500 font-medium">
+            No matching members found.
           </div>
         )}
       </div>
@@ -412,9 +412,9 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
           <div className="flex justify-between items-center pb-3 border-b border-slate-200">
             <div>
               <h4 className="font-bold text-slate-900">
-                নেটওয়ার্ক ম্যাপ অডিট: <span className="text-indigo-600 font-black">{inspectingUser.name}</span> (ID #{inspectingUser.id})
+                Network Audit: <span className="text-indigo-600 font-black">{inspectingUser.name}</span> (ID #{inspectingUser.id})
               </h4>
-              <p className="text-xs text-slate-500">এই মেম্বারের সম্পূর্ণ অর্গানাইজেশন চার্ট চেক করুন</p>
+              <p className="text-xs text-slate-500">Inspect recursively the entire downline organization chart of this member.</p>
             </div>
             <button
               onClick={() => {
@@ -423,12 +423,12 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
               }}
               className="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-bold text-slate-800 transition-colors cursor-pointer"
             >
-              বন্ধ করুন
+              Close Audit
             </button>
           </div>
 
           {treeLoading ? (
-            <div className="py-12 text-center text-slate-500 text-xs">রিকোর্সিভ মেম্বার ট্রি লোড হচ্ছে...</div>
+            <div className="py-12 text-center text-slate-500 text-xs font-medium">Loading recursive organization chart...</div>
           ) : (
             <VisualTree treeData={inspectedTree} />
           )}

@@ -20,7 +20,7 @@ export default function Navbar({ user, onLogout, currentView, setView }: NavbarP
             </div>
             <div>
               <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight leading-tight">
-                লেভেল রেফারেল প্ল্যান
+                Referral Network Plan
               </h1>
               <span className="text-[10px] text-slate-500 font-medium tracking-wide uppercase">
                 Unlimited Level Downline Network
@@ -36,25 +36,25 @@ export default function Navbar({ user, onLogout, currentView, setView }: NavbarP
                 <div className="flex bg-slate-100 p-1 rounded-lg gap-1 text-xs">
                   <button
                     onClick={() => setView('dashboard')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-semibold transition-all cursor-pointer ${
                       currentView === 'dashboard'
                         ? 'bg-white text-slate-950 shadow-sm'
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     <LayoutDashboard className="w-3.5 h-3.5" />
-                    ড্যাশবোর্ড
+                    Dashboard
                   </button>
                   <button
                     onClick={() => setView('admin')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md font-semibold transition-all cursor-pointer ${
                       currentView === 'admin'
                         ? 'bg-indigo-600 text-white shadow-sm'
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
                     <Shield className="w-3.5 h-3.5" />
-                    এডমিন প্যানেল
+                    Admin Panel
                   </button>
                 </div>
               )}
@@ -84,15 +84,15 @@ export default function Navbar({ user, onLogout, currentView, setView }: NavbarP
               {/* Log Out Button */}
               <button
                 onClick={onLogout}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 hover:border-slate-300 rounded-lg text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-sm"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 hover:border-slate-300 rounded-lg text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
               >
                 <LogOut className="w-3.5 h-3.5 text-slate-500" />
-                <span className="hidden sm:inline">লগআউট</span>
+                <span className="hidden sm:inline">Logout</span>
               </button>
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 font-medium">নিরাপদ ড্যাশবোর্ড অ্যাক্সেস</span>
+              <span className="text-xs text-slate-500 font-medium">Secure Portal Access</span>
             </div>
           )}
         </div>

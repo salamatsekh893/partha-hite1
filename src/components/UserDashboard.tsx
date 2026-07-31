@@ -92,17 +92,17 @@ export default function UserDashboard({ user }: UserDashboardProps) {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-1.5 bg-indigo-500/20 text-indigo-200 border border-indigo-400/20 px-3 py-1 rounded-full text-xs font-semibold">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              আপনার আইডি সক্রিয় (Active) রয়েছে
+              Your Account is Active
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold">স্বাগতম, {user.name}!</h2>
+            <h2 className="text-xl sm:text-2xl font-bold">Welcome, {user.name}!</h2>
             <p className="text-xs sm:text-sm text-indigo-200 max-w-xl leading-relaxed">
-              এটি আপনার লেভেল রেফারেল ড্যাশবোর্ড। এখান থেকে আপনি আপনার স্পন্সরশিপের অধীনে থাকা সকল মেম্বারদের স্তরভিত্তিক তালিকা এবং ভিজ্যুয়াল নেটওয়ার্ক দেখতে পাবেন।
+              This is your level-based referral dashboard. Monitor downline tiers, check membership statuses, and interact with your visual network mapping.
             </p>
           </div>
 
           {/* User ID block */}
           <div className="bg-white/10 border border-white/10 rounded-2xl p-4 shrink-0 backdrop-blur-sm">
-            <span className="text-[10px] text-indigo-300 font-bold uppercase tracking-wider block">আপনার স্পন্সর কোড / ইউজার আইডি</span>
+            <span className="text-[10px] text-indigo-300 font-bold uppercase tracking-wider block">Your Sponsor / User ID</span>
             <span className="text-2xl font-extrabold tracking-wider font-mono mt-0.5 block">{user.id}</span>
           </div>
         </div>
@@ -113,10 +113,10 @@ export default function UserDashboard({ user }: UserDashboardProps) {
         <div className="space-y-1 text-center lg:text-left">
           <h3 className="text-sm font-bold text-slate-900 flex items-center justify-center lg:justify-start gap-1.5">
             <Share2 className="w-4 h-4 text-indigo-600" />
-            আপনার রেফারেল লিংকটি শেয়ার করুন:
+            Share your referral link:
           </h3>
-          <p className="text-xs text-slate-500">
-            নতুন কাওকে একাউন্ট রেজিস্ট্রেশন করার সময় আপনার কোড দিন, অথবা নিচের লিংকটি ব্যবহার করে সরাসরি জয়েন করান।
+          <p className="text-xs text-slate-500 font-medium">
+            Distribute your unique sponsor link or give your User ID to new sign-ups to automatically attach them to your network.
           </p>
         </div>
 
@@ -133,12 +133,12 @@ export default function UserDashboard({ user }: UserDashboardProps) {
             {copied ? (
               <>
                 <Check className="w-3.5 h-3.5" />
-                কপি হয়েছে
+                Copied
               </>
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5" />
-                লিংক কপি করুন
+                Copy Link
               </>
             )}
           </button>
@@ -151,32 +151,32 @@ export default function UserDashboard({ user }: UserDashboardProps) {
           <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
             <Users className="w-4 h-4" />
           </div>
-          <span className="text-[11px] text-slate-500 font-semibold block uppercase">মোট ডাউনলাইন</span>
-          <span className="text-2xl font-black text-slate-900 mt-1 block">{totalRefs} জন</span>
+          <span className="text-[11px] text-slate-500 font-semibold block uppercase">Total Downline</span>
+          <span className="text-2xl font-black text-slate-900 mt-1 block">{totalRefs} members</span>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm">
           <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
             <Check className="w-4 h-4" />
           </div>
-          <span className="text-[11px] text-slate-500 font-semibold block uppercase">সক্রিয় মেম্বার (Active)</span>
-          <span className="text-2xl font-black text-emerald-600 mt-1 block">{activeRefs} জন</span>
+          <span className="text-[11px] text-slate-500 font-semibold block uppercase">Active Members</span>
+          <span className="text-2xl font-black text-emerald-600 mt-1 block">{activeRefs} members</span>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm">
           <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
             <UserIcon className="w-4 h-4" />
           </div>
-          <span className="text-[11px] text-slate-500 font-semibold block uppercase">নিষ্ক্রিয় মেম্বার (Pending)</span>
-          <span className="text-2xl font-black text-amber-600 mt-1 block">{inactiveRefs} জন</span>
+          <span className="text-[11px] text-slate-500 font-semibold block uppercase">Pending Members</span>
+          <span className="text-2xl font-black text-amber-600 mt-1 block">{inactiveRefs} members</span>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm">
           <div className="w-8 h-8 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center mb-3">
             <Network className="w-4 h-4" />
           </div>
-          <span className="text-[11px] text-slate-500 font-semibold block uppercase">নেটওয়ার্কের গভীরতা</span>
-          <span className="text-2xl font-black text-violet-600 mt-1 block">{maxLevel} লেভেল</span>
+          <span className="text-[11px] text-slate-500 font-semibold block uppercase">Network Depth</span>
+          <span className="text-2xl font-black text-violet-600 mt-1 block">{maxLevel} Levels</span>
         </div>
       </div>
 
@@ -194,7 +194,7 @@ export default function UserDashboard({ user }: UserDashboardProps) {
               }`}
             >
               <Users className="w-3.5 h-3.5" />
-              স্তরভিত্তিক তালিকা ভিউ
+              Tiered Downline List
             </button>
             <button
               onClick={() => setActiveTab('tree')}
@@ -205,7 +205,7 @@ export default function UserDashboard({ user }: UserDashboardProps) {
               }`}
             >
               <Network className="w-3.5 h-3.5" />
-              ভিজুয়াল ট্রি ম্যাপ
+              Interactive Network Tree
             </button>
           </div>
 
@@ -213,13 +213,13 @@ export default function UserDashboard({ user }: UserDashboardProps) {
             onClick={fetchDownline}
             className="text-xs text-indigo-600 hover:text-indigo-700 font-bold px-3 py-1.5 hover:bg-indigo-50 rounded-lg transition-all cursor-pointer"
           >
-            ডাটা রিফ্রেশ করুন
+            Refresh Data
           </button>
         </div>
 
         {loading ? (
           <div className="p-12 text-center text-slate-500 text-xs">
-            রেফারেল ডাটা লোড হচ্ছে, দয়া করে অপেক্ষা করুন...
+            Loading referral network data, please wait...
           </div>
         ) : error ? (
           <div className="p-8 text-center text-rose-500 text-xs bg-rose-50/50 border-t border-rose-100">
@@ -238,8 +238,8 @@ export default function UserDashboard({ user }: UserDashboardProps) {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="নাম, আইডি, ইমেইল বা মোবাইল দিয়ে খুঁজুন..."
-                  className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all"
+                  placeholder="Search by name, ID, email, or phone..."
+                  className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium"
                 />
               </div>
 
@@ -247,7 +247,7 @@ export default function UserDashboard({ user }: UserDashboardProps) {
               <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
                 <span className="text-[11px] text-slate-500 font-bold flex items-center gap-1 shrink-0">
                   <Filter className="w-3 h-3" />
-                  লেভেল ফিল্টার:
+                  Level Filter:
                 </span>
                 <button
                   onClick={() => setSelectedLevelFilter('all')}
@@ -257,7 +257,7 @@ export default function UserDashboard({ user }: UserDashboardProps) {
                       : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                   }`}
                 >
-                  সব লেভেল
+                  All Levels
                 </button>
                 {availableLevels.map((lvl) => (
                   <button
@@ -269,7 +269,7 @@ export default function UserDashboard({ user }: UserDashboardProps) {
                         : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                     }`}
                   >
-                    লেভেল {lvl}
+                    Level {lvl}
                   </button>
                 ))}
               </div>
@@ -282,26 +282,26 @@ export default function UserDashboard({ user }: UserDashboardProps) {
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="bg-slate-50 text-slate-700 border-b border-slate-200 font-bold">
-                        <th className="p-4 w-16">আইডি</th>
-                        <th className="p-4">মেম্বার নাম</th>
-                        <th className="p-4">লেভেল</th>
-                        <th className="p-4">স্পন্সর করেছেন</th>
-                        <th className="p-4">যোগাযোগ</th>
-                        <th className="p-4">যোগদানের তারিখ</th>
-                        <th className="p-4 w-28 text-center">স্টেটাস</th>
+                        <th className="p-4 w-16">ID</th>
+                        <th className="p-4">Member Name</th>
+                        <th className="p-4">Level</th>
+                        <th className="p-4">Sponsor</th>
+                        <th className="p-4">Contact Info</th>
+                        <th className="p-4">Date Joined</th>
+                        <th className="p-4 w-28 text-center">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
+                    <tbody className="divide-y divide-slate-100 bg-white font-medium">
                       {filteredDownlines.map((member) => (
                         <tr key={member.id} className="hover:bg-slate-50/50 transition-colors">
                           <td className="p-4 font-mono font-bold text-slate-600">#{member.id}</td>
                           <td className="p-4 font-bold text-slate-900">{member.name}</td>
                           <td className="p-4">
                             <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full font-bold">
-                              লেভেল {member.level}
+                              Level {member.level}
                             </span>
                           </td>
-                          <td className="p-4 text-slate-500">
+                          <td className="p-4 text-slate-500 font-semibold">
                             {member.referrer_name || `ID: ${member.referrer_id}`}
                           </td>
                           <td className="p-4 space-y-1">
@@ -314,20 +314,20 @@ export default function UserDashboard({ user }: UserDashboardProps) {
                               <span>{member.email}</span>
                             </div>
                           </td>
-                          <td className="p-4 text-slate-500">
+                          <td className="p-4 text-slate-500 font-semibold">
                             <div className="flex items-center gap-1">
                               <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                              <span>{new Date(member.created_at).toLocaleDateString('bn-BD')}</span>
+                              <span>{new Date(member.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                             </div>
                           </td>
                           <td className="p-4 text-center">
                             {member.status === 'active' ? (
                               <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-100 px-2.5 py-1 rounded-lg font-bold">
-                                সক্রিয় (Active)
+                                Active
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-100 px-2.5 py-1 rounded-lg font-bold">
-                                নিষ্ক্রিয় (Pending)
+                                Pending
                               </span>
                             )}
                           </td>
@@ -338,8 +338,8 @@ export default function UserDashboard({ user }: UserDashboardProps) {
                 </div>
               </div>
             ) : (
-              <div className="bg-slate-50 border border-slate-100 rounded-2xl py-12 text-center text-slate-500">
-                কোন রেফারেল মেম্বার খুঁজে পাওয়া যায়নি।
+              <div className="bg-slate-50 border border-slate-100 rounded-2xl py-12 text-center text-slate-500 font-medium">
+                No downline members found matching your filters.
               </div>
             )}
           </div>

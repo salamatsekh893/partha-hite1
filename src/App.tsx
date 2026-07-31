@@ -55,8 +55,8 @@ export default function App() {
 
   if (initializing) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-xs text-slate-500">
-        লোডিং হচ্ছে, দয়া করে অপেক্ষা করুন...
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-xs text-slate-500 font-medium tracking-wide">
+        Initializing application, please wait...
       </div>
     );
   }
@@ -75,7 +75,7 @@ export default function App() {
       />
 
       {/* 3. Main Body */}
-      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {user ? (
           /* LOGGED IN VIEWS */
           currentView === 'admin' && user.role === 'admin' ? (
@@ -85,60 +85,60 @@ export default function App() {
           )
         ) : (
           /* ANONYMOUS/AUTH VIEWS */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:items-center py-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:items-center py-4">
             {/* Left Column: Visual Information & Promotion */}
-            <div className="lg:col-span-7 space-y-6 text-left">
-              <div className="space-y-3">
-                <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                  🚀 আনলিমিটেড ডেপথ্ রেফারেল প্রোগ্রাম
+            <div className="lg:col-span-7 space-y-8 text-left">
+              <div className="space-y-4">
+                <span className="inline-flex items-center gap-1.5 bg-indigo-50 border border-indigo-100/50 text-indigo-700 px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                  🚀 Unlimited Depth Referral Program
                 </span>
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                  রিয়েল-টাইম <span className="text-indigo-600">লেভেল প্ল্যান</span> নেটওয়ার্ক
+                <h2 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                  Real-Time <span className="text-indigo-600">Level Plan</span> Network
                 </h2>
                 <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl">
-                  আমাদের প্লাটফর্মে যুক্ত হন এবং রেফারেল চেইনের মাধ্যমে আনলিমিটেড লেভেল পর্যন্ত আয়ের টিম তৈরি করুন। প্রত্যেকে যে কাউকে সরাসরি যুক্ত করলে তা আপনার চেইনের পরবর্তী স্তরে জমা হবে।
+                  Join our high-performance platform to build and scale your downline structure. Access unlimited depth tracking, automated referral paths, and instant graphical hierarchy rendering.
                 </p>
               </div>
 
               {/* Informational Cards (No Nesting, Clean Grid) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-2.5 transition-all hover:shadow-md hover:border-slate-300">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
                     <Network className="w-4 h-4" />
                   </div>
-                  <h3 className="font-bold text-slate-800 text-sm">unlimited লেভেল চেইন</h3>
+                  <h3 className="font-bold text-slate-800 text-sm">Infinite Level Chain</h3>
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    ১ম স্তর যাকে যুক্ত করবেন সে হবে লেভেল ২ তে, এবং সে আবার অন্য কাউকে যুক্ত করলে সে চলে যাবে লেভেল ৩ তে। এভাবে ক্রমান্বয়ে স্তরটি নিচের দিকে আনলিমিটেড গভীরতায় বিস্তৃত হবে।
+                    Direct referrals join your Level 1 downline. When they recruit, their signups cascade into Level 2, Level 3, and so on, building an organic branch to infinite depths.
                   </p>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-                  <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-sm">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-2.5 transition-all hover:shadow-md hover:border-slate-300">
+                  <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
                     <Shield className="w-4 h-4" />
                   </div>
-                  <h3 className="font-bold text-slate-800 text-sm">এডমিন এপ্রুভাল গেট</h3>
+                  <h3 className="font-bold text-slate-800 text-sm">Admin Verification Gate</h3>
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    নতুন অ্যাকাউন্ট খোলার পর তা নিষ্ক্রিয় (Inactive) থাকে। এডমিন প্যানেল থেকে তথ্য যাচাই করে সক্রিয় (Active) করলেই সদস্য রেফারেল কোড বা ড্যাশবোর্ড ব্যবহারের অনুমতি পায়।
+                    Security-focused account workflow. Newly registered users start in pending status and require admin approval before they can activate and share their sponsor link.
                   </p>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-2.5 transition-all hover:shadow-md hover:border-slate-300">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
                     <TrendingUp className="w-4 h-4" />
                   </div>
-                  <h3 className="font-bold text-slate-800 text-sm">রিয়েল-টাইম ডাটাবেজ</h3>
+                  <h3 className="font-bold text-slate-800 text-sm">Remote Database Sync</h3>
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    সম্পূর্ণ ডিরেক্টরি এবং রেফারেল ডাটা সরাসরি রিমোট MySQL এ সেভ হচ্ছে। হোস্ট করার সময় গিটহাব ইন্টিগ্রেশন এবং আপনার রিমোট MySQL একদম রিয়েল ডাটা ব্যবহার করে রান করবে।
+                    Powered by a robust remote MySQL integration. Every sign-up, downline connection, and hierarchy update is logged securely and rendered in real time.
                   </p>
                 </div>
 
-                <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-sm">
+                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-2.5 transition-all hover:shadow-md hover:border-slate-300">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
                     <Users className="w-4 h-4" />
                   </div>
-                  <h3 className="font-bold text-slate-800 text-sm">রিকোর্সিভ ভিজ্যুয়ালাইজার</h3>
+                  <h3 className="font-bold text-slate-800 text-sm">Interactive Visualizer</h3>
                   <p className="text-xs text-slate-500 leading-relaxed">
-                    যেকোনো সদস্যের সম্পূর্ণ ডাউনলাইন কাঠামোটি দেখতে একটি আধুনিক গ্রাফিক্যাল ট্রি চার্ট ব্যবহার করা হয়েছে, যা দিয়ে আপনি যেকোনো গভীরতায় শাখা গুটিয়ে বা মেলে দেখতে পারবেন।
+                    Explore deep organizational pathways using our modern recursive tree widget. Expand and collapse node elements smoothly with live status checks.
                   </p>
                 </div>
               </div>
@@ -163,11 +163,11 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 mt-12">
-        <div className="max-w-7xl mx-auto px-4 space-y-1">
-          <p>© {new Date().getFullYear()} লেভেল প্ল্যান নেটওয়ার্ক। সর্বস্বত্ব সংরক্ষিত।</p>
-          <p>
-            Developed with React 19 + Vite + Express + pure MySQL driver for automated table bootstrap and high portability.
+      <footer className="bg-white border-t border-slate-200 py-8 text-center text-xs text-slate-500 mt-16">
+        <div className="max-w-7xl mx-auto px-4 space-y-2">
+          <p>© {new Date().getFullYear()} Unlimited Level Referral Plan. All rights reserved.</p>
+          <p className="text-[11px] text-slate-400">
+            Engineered with React 19 + Vite + Express + pure MySQL driver for high portability and auto-provisioning.
           </p>
         </div>
       </footer>

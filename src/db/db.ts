@@ -13,7 +13,9 @@ const isMySQLConfigured = (): boolean => {
 let mysqlPool: mysql.Pool | null = null;
 let isDbConnected = false;
 let dbConnectionError: string | null = null;
-let connectionTested = false;
+let lastConnectAttemptTime = 0;
+const RECONNECT_THROTTLE_MS = 5000; // Throttle reconnection attempts to at most once per 5 seconds
+let isInitialized = false;
 
 // Initialize MySQL Connection Pool
 const getMySQLPool = (): mysql.Pool | null => {
@@ -51,64 +53,38 @@ const DEFAULT_ADMIN = {
   created_at: new Date().toISOString(),
 };
 
-// Main Database Service
-export const DB = {
-  async getStatus(): Promise<DBConfigStatus> {
-    const isMySQL = isMySQLConfigured();
-    if (!isMySQL) {
-      return {
-        isMySQL: false,
-        connected: false,
-        error: 'MySQL environment variables are not configured in your Hosting/Environment settings.',
-      };
+// Unified helper to connect and initialize database tables if needed
+async function ensureConnectedAndInitialized(): Promise<boolean> {
+  const isMySQL = isMySQLConfigured();
+  if (!isMySQL) {
+    dbConnectionError = 'MySQL environment variables are not configured in your settings.';
+    isDbConnected = false;
+    return false;
+  }
+
+  if (isDbConnected && isInitialized) {
+    return true;
+  }
+
+  const now = Date.now();
+  // Throttle reconnect attempts to avoid spamming connection requests during server down
+  if (!isDbConnected && (now - lastConnectAttemptTime < RECONNECT_THROTTLE_MS)) {
+    return isDbConnected;
+  }
+
+  lastConnectAttemptTime = now;
+
+  try {
+    const pool = getMySQLPool();
+    if (!pool) {
+      throw new Error('MySQL connection pool could not be initialized. Please check credentials.');
     }
 
-    if (!connectionTested) {
-      try {
-        const pool = getMySQLPool();
-        if (!pool) {
-          throw new Error('MySQL connection pool could not be initialized. Please check credentials.');
-        }
-        const conn = await pool.getConnection();
-        conn.release();
-        isDbConnected = true;
-        dbConnectionError = null;
-      } catch (err: any) {
-        isDbConnected = false;
-        dbConnectionError = err.message || 'Database connection failed';
-      }
-      connectionTested = true;
-    }
+    const conn = await pool.getConnection();
+    console.log('MySQL connected successfully.');
 
-    return {
-      isMySQL: true,
-      connected: isDbConnected,
-      host: process.env.DB_HOST,
-      database: process.env.DB_NAME,
-      error: dbConnectionError || undefined,
-    };
-  },
-
-  async init(): Promise<void> {
-    connectionTested = true;
-    const isMySQL = isMySQLConfigured();
-    
-    if (!isMySQL) {
-      const errMsg = 'CRITICAL: MySQL config is missing! Please configure DB_HOST, DB_USER, DB_PASSWORD, DB_NAME in environment settings.';
-      console.error(errMsg);
-      dbConnectionError = errMsg;
-      isDbConnected = false;
-      return;
-    }
-
-    console.log('Database Mode: Remote MySQL configured. Testing connection and creating tables...');
-    try {
-      const pool = getMySQLPool();
-      if (!pool) throw new Error('Could not create MySQL pool. Verify DB credentials.');
-      
-      const conn = await pool.getConnection();
-      console.log('MySQL connected successfully. Verifying tables...');
-      
+    if (!isInitialized) {
+      console.log('Verifying or creating database tables...');
       // Create table
       await conn.query(`
         CREATE TABLE IF NOT EXISTS users (
@@ -143,23 +119,60 @@ export const DB = {
           ]
         );
       }
-      conn.release();
-      console.log('MySQL database initialization complete.');
-      isDbConnected = true;
-      dbConnectionError = null;
-    } catch (err: any) {
-      console.error('MySQL initialization failed:', err);
-      isDbConnected = false;
-      dbConnectionError = err.message || 'MySQL Init Error';
+      isInitialized = true;
     }
+
+    conn.release();
+    isDbConnected = true;
+    dbConnectionError = null;
+    return true;
+  } catch (err: any) {
+    console.error('Database connection/init failed:', err);
+    isDbConnected = false;
+    dbConnectionError = err.message || 'Database connection failed';
+    return false;
+  }
+}
+
+// Main Database Service
+export const DB = {
+  async getStatus(): Promise<DBConfigStatus> {
+    const isMySQL = isMySQLConfigured();
+    if (!isMySQL) {
+      return {
+        isMySQL: false,
+        connected: false,
+        error: 'MySQL environment variables are not configured in your Hosting/Environment settings.',
+      };
+    }
+
+    await ensureConnectedAndInitialized();
+
+    return {
+      isMySQL: true,
+      connected: isDbConnected,
+      host: process.env.DB_HOST,
+      database: process.env.DB_NAME,
+      error: dbConnectionError || undefined,
+    };
+  },
+
+  async init(): Promise<void> {
+    await ensureConnectedAndInitialized();
   },
 
   async getUsers(): Promise<User[]> {
     const status = await this.getStatus();
     if (status.connected) {
-      const pool = getMySQLPool()!;
-      const [rows] = await pool.query('SELECT * FROM users ORDER BY id DESC');
-      return rows as User[];
+      try {
+        const pool = getMySQLPool()!;
+        const [rows] = await pool.query('SELECT * FROM users ORDER BY id DESC');
+        return rows as User[];
+      } catch (err: any) {
+        isDbConnected = false;
+        dbConnectionError = err.message || 'Query failed';
+        throw err;
+      }
     } else {
       throw new Error('MySQL Database is not connected: ' + (status.error || 'Connection offline'));
     }
@@ -168,10 +181,16 @@ export const DB = {
   async getUserById(id: number): Promise<User | null> {
     const status = await this.getStatus();
     if (status.connected) {
-      const pool = getMySQLPool()!;
-      const [rows]: any = await pool.query('SELECT * FROM users WHERE id = ? LIMIT 1', [id]);
-      if (rows.length === 0) return null;
-      return rows[0] as User;
+      try {
+        const pool = getMySQLPool()!;
+        const [rows]: any = await pool.query('SELECT * FROM users WHERE id = ? LIMIT 1', [id]);
+        if (rows.length === 0) return null;
+        return rows[0] as User;
+      } catch (err: any) {
+        isDbConnected = false;
+        dbConnectionError = err.message || 'Query failed';
+        throw err;
+      }
     } else {
       throw new Error('MySQL Database is not connected: ' + (status.error || 'Connection offline'));
     }
@@ -180,10 +199,16 @@ export const DB = {
   async getUserByEmail(email: string): Promise<User | null> {
     const status = await this.getStatus();
     if (status.connected) {
-      const pool = getMySQLPool()!;
-      const [rows]: any = await pool.query('SELECT * FROM users WHERE email = ? LIMIT 1', [email]);
-      if (rows.length === 0) return null;
-      return rows[0] as User;
+      try {
+        const pool = getMySQLPool()!;
+        const [rows]: any = await pool.query('SELECT * FROM users WHERE email = ? LIMIT 1', [email]);
+        if (rows.length === 0) return null;
+        return rows[0] as User;
+      } catch (err: any) {
+        isDbConnected = false;
+        dbConnectionError = err.message || 'Query failed';
+        throw err;
+      }
     } else {
       throw new Error('MySQL Database is not connected: ' + (status.error || 'Connection offline'));
     }
@@ -192,22 +217,28 @@ export const DB = {
   async createUser(userData: Omit<User, 'id'>): Promise<User> {
     const status = await this.getStatus();
     if (status.connected) {
-      const pool = getMySQLPool()!;
-      const [result]: any = await pool.query(
-        'INSERT INTO users (name, phone, email, password, referrer_id, status, role, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [
-          userData.name,
-          userData.phone,
-          userData.email,
-          userData.password,
-          userData.referrer_id,
-          userData.status,
-          userData.role,
-          userData.created_at || new Date().toISOString(),
-        ]
-      );
-      const insertedId = result.insertId;
-      return { id: insertedId, ...userData };
+      try {
+        const pool = getMySQLPool()!;
+        const [result]: any = await pool.query(
+          'INSERT INTO users (name, phone, email, password, referrer_id, status, role, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          [
+            userData.name,
+            userData.phone,
+            userData.email,
+            userData.password,
+            userData.referrer_id,
+            userData.status,
+            userData.role,
+            userData.created_at || new Date().toISOString(),
+          ]
+        );
+        const insertedId = result.insertId;
+        return { id: insertedId, ...userData };
+      } catch (err: any) {
+        isDbConnected = false;
+        dbConnectionError = err.message || 'Query failed';
+        throw err;
+      }
     } else {
       throw new Error('MySQL Database is not connected: ' + (status.error || 'Connection offline'));
     }
@@ -216,9 +247,15 @@ export const DB = {
   async updateUserStatus(id: number, activeStatus: 'active' | 'inactive'): Promise<User | null> {
     const status = await this.getStatus();
     if (status.connected) {
-      const pool = getMySQLPool()!;
-      await pool.query('UPDATE users SET status = ? WHERE id = ?', [activeStatus, id]);
-      return this.getUserById(id);
+      try {
+        const pool = getMySQLPool()!;
+        await pool.query('UPDATE users SET status = ? WHERE id = ?', [activeStatus, id]);
+        return this.getUserById(id);
+      } catch (err: any) {
+        isDbConnected = false;
+        dbConnectionError = err.message || 'Query failed';
+        throw err;
+      }
     } else {
       throw new Error('MySQL Database is not connected: ' + (status.error || 'Connection offline'));
     }

@@ -306,7 +306,11 @@ app.post('/api/admin/suspend', authenticateUser, requireAdmin, async (req, res) 
 
 async function bootstrap() {
   // 1. Initialize DB (Auto create tables / Seed Admin)
-  await DB.init();
+  try {
+    await DB.init();
+  } catch (dbInitErr: any) {
+    console.error('Initial database connection/initialization failed. Will auto-retry on API calls:', dbInitErr);
+  }
 
   // 2. Vite Integration or Production static serving
   if (!isProduction) {
