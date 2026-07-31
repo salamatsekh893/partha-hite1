@@ -246,9 +246,23 @@ export const DB = {
     if (status.connected) {
       try {
         const pool = getMySQLPool()!;
+        // 1. Direct exact match
         const [rows]: any = await pool.query('SELECT * FROM users WHERE email = ? OR phone = ? LIMIT 1', [identifier, identifier]);
-        if (rows.length === 0) return null;
-        return rows[0] as User;
+        if (rows.length > 0) return rows[0] as User;
+
+        // 2. Flexible phone match if identifier contains digits
+        const digits = identifier.replace(/\D/g, '');
+        if (digits.length >= 6) {
+          // Compare trailing 10 digits or exact digits
+          const lastDigits = digits.slice(-10);
+          const [phoneRows]: any = await pool.query(
+            "SELECT * FROM users WHERE REPLACE(REPLACE(REPLACE(phone, '+', ''), ' ', ''), '-', '') LIKE ? LIMIT 1",
+            [`%${lastDigits}`]
+          );
+          if (phoneRows.length > 0) return phoneRows[0] as User;
+        }
+
+        return null;
       } catch (err: any) {
         isDbConnected = false;
         dbConnectionError = err.message || 'Query failed';
