@@ -9,7 +9,7 @@ import { User } from './src/types.js';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const PORT = process.env.PORT || '3000';
 
 // Body parser middlewares
 app.use(express.json());
@@ -321,9 +321,16 @@ async function bootstrap() {
   }
 
   // 3. Listen on port
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server listening on http://localhost:${PORT}`);
-  });
+  if (typeof PORT === 'string' && !/^\d+$/.test(PORT)) {
+    app.listen(PORT, () => {
+      console.log(`Server listening on socket path: ${PORT}`);
+    });
+  } else {
+    const portNum = typeof PORT === 'number' ? PORT : parseInt(PORT, 10);
+    app.listen(portNum, '0.0.0.0', () => {
+      console.log(`Server listening on http://localhost:${portNum}`);
+    });
+  }
 }
 
 bootstrap().catch((err) => {
