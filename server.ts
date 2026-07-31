@@ -7,8 +7,12 @@ import { User } from './src/types.js';
 // Load environment variables
 dotenv.config();
 
+const isProduction = process.env.NODE_ENV === 'production' || 
+  (typeof __filename !== 'undefined' && __filename.endsWith('.cjs')) || 
+  (typeof __dirname !== 'undefined' && __dirname.includes('dist'));
+
 const app = express();
-const PORT = process.env.PORT || '3000';
+const PORT = isProduction ? (process.env.PORT || '3000') : '3000';
 
 // Body parser middlewares
 app.use(express.json());
@@ -305,10 +309,6 @@ async function bootstrap() {
   await DB.init();
 
   // 2. Vite Integration or Production static serving
-  const isProduction = process.env.NODE_ENV === 'production' || 
-    (typeof __filename !== 'undefined' && __filename.endsWith('.cjs')) || 
-    (typeof __dirname !== 'undefined' && __dirname.includes('dist'));
-  
   if (!isProduction) {
     console.log("Starting in development mode with Vite...");
     const { createServer: createViteServer } = await import('vite');
