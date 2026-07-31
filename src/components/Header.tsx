@@ -10,6 +10,19 @@ interface HeaderProps {
 }
 
 export default function Header({ user, onLogout, currentView, setView, onMenuClick }: HeaderProps) {
+  // Parse user additional_details for profile photo
+  let headerPhoto: string | null = null;
+  try {
+    if (user?.additional_details) {
+      const details = typeof user.additional_details === 'string'
+        ? JSON.parse(user.additional_details)
+        : user.additional_details;
+      headerPhoto = details.photo || null;
+    }
+  } catch (e) {
+    console.error("Error parsing user photo in header", e);
+  }
+
   return (
     <header id="app-header" className="bg-gradient-to-r from-slate-900 via-slate-950 to-slate-900 text-slate-100 border-b border-slate-800 sticky top-0 z-40 backdrop-blur-md shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -75,10 +88,19 @@ export default function Header({ user, onLogout, currentView, setView, onMenuCli
               )}
 
               {/* Quick Profile Badge */}
-              <div className="hidden sm:flex items-center gap-2 bg-slate-800/50 border border-slate-700/60 px-3 py-1.5 rounded-xl">
-                <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center">
-                  <UserIcon className="w-3 text-slate-300" />
-                </div>
+              <div className="hidden sm:flex items-center gap-2 bg-slate-800/80 border border-slate-700/60 px-3 py-1.5 rounded-xl shadow-sm">
+                {headerPhoto ? (
+                  <img 
+                    src={headerPhoto} 
+                    alt={user.name} 
+                    className="w-6 h-6 rounded-full object-cover ring-2 ring-indigo-500/60 shrink-0"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center text-white text-[10px] font-black shrink-0">
+                    {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon className="w-3 text-slate-300" />}
+                  </div>
+                )}
                 <span className="text-xs font-bold text-slate-200">{user.name}</span>
               </div>
 

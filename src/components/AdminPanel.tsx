@@ -59,6 +59,13 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
     fetchAdminData();
   }, [adminUser.id]);
 
+  // Keep local users list synchronized if adminUser prop updates
+  useEffect(() => {
+    if (adminUser) {
+      setUsers(prev => prev.map(u => u.id === adminUser.id ? { ...u, ...adminUser } : u));
+    }
+  }, [adminUser]);
+
   // Handle Approve (Activate)
   const handleApprove = async (userId: number) => {
     setActionLoading(userId);
@@ -222,26 +229,31 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
 
   return (
     <div id="admin-panel-root" className="space-y-6">
-      {/* 1. Admin Banner */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
-        <div className="absolute right-0 bottom-0 translate-x-12 translate-y-12 w-64 h-64 rounded-full bg-white/5 pointer-events-none"></div>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 bg-amber-500/20 text-amber-200 border border-amber-400/20 px-3 py-1 rounded-full text-xs font-semibold">
-              <Shield className="w-4 h-4 text-amber-400 animate-pulse" />
-              System Administrator Mode
+      {/* 1. Compact & Premium Admin Banner */}
+      <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-2xl p-4 sm:px-6 sm:py-4 shadow-lg shadow-indigo-950/20 border border-indigo-700/30 relative overflow-hidden">
+        {/* Subtle decorative glow elements */}
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-purple-500/15 blur-2xl pointer-events-none"></div>
+        <div className="absolute left-1/3 bottom-0 w-32 h-32 rounded-full bg-indigo-400/10 blur-xl pointer-events-none"></div>
+
+        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 bg-amber-400/15 text-amber-300 border border-amber-400/30 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold tracking-wide backdrop-blur-sm shadow-sm">
+                <Shield className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                SYSTEM ADMIN
+              </span>
+              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">Admin Control Panel</h2>
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold">Admin Control Panel</h2>
-            <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
-              Approve member registrations, inspect active user counts, and monitor the entire multi-level network recursively.
+            <p className="text-xs text-indigo-100/80 max-w-2xl leading-normal font-medium">
+              Approve registrations, inspect active member counts, and monitor the multi-level referral network depth.
             </p>
           </div>
           
           <button
             onClick={fetchAdminData}
-            className="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-700 hover:border-slate-600 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold transition-all shadow-md self-start md:self-auto cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 border border-white/20 hover:border-white/40 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all shadow-sm active:scale-95 shrink-0 self-start sm:self-auto cursor-pointer backdrop-blur-sm"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <RefreshCw className="w-3.5 h-3.5 text-indigo-200" />
             Refresh Data
           </button>
         </div>
@@ -249,37 +261,37 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
 
       {/* 2. Global Stats Grid */}
       {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm">
-            <div className="w-8 h-8 rounded-lg bg-slate-50 text-slate-600 flex items-center justify-center mb-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div className="bg-white border border-slate-200/80 hover:border-indigo-300/80 rounded-2xl p-4 text-left shadow-sm hover:shadow-md transition-all">
+            <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center mb-2.5">
               <Users className="w-4 h-4" />
             </div>
-            <span className="text-[11px] text-slate-500 font-semibold block uppercase">Total Registered</span>
-            <span className="text-2xl font-black text-slate-950 mt-1 block">{stats.totalUsers} members</span>
+            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Total Registered</span>
+            <span className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 block">{stats.totalUsers} <span className="text-xs font-semibold text-slate-500">members</span></span>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3">
+          <div className="bg-white border border-slate-200/80 hover:border-emerald-300/80 rounded-2xl p-4 text-left shadow-sm hover:shadow-md transition-all">
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2.5">
               <ShieldCheck className="w-4 h-4" />
             </div>
-            <span className="text-[11px] text-slate-500 font-semibold block uppercase">Active Members</span>
-            <span className="text-2xl font-black text-emerald-600 mt-1 block">{stats.activeUsers} members</span>
+            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Active Members</span>
+            <span className="text-xl sm:text-2xl font-black text-emerald-600 mt-0.5 block">{stats.activeUsers} <span className="text-xs font-semibold text-emerald-600/70">members</span></span>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm">
-            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center mb-3">
+          <div className="bg-white border border-slate-200/80 hover:border-amber-300/80 rounded-2xl p-4 text-left shadow-sm hover:shadow-md transition-all">
+            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-2.5">
               <UserCheck className="w-4 h-4" />
             </div>
-            <span className="text-[11px] text-slate-500 font-semibold block uppercase">Pending Approval</span>
-            <span className="text-2xl font-black text-amber-600 mt-1 block">{stats.inactiveUsers} members</span>
+            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Pending Approval</span>
+            <span className="text-xl sm:text-2xl font-black text-amber-600 mt-0.5 block">{stats.inactiveUsers} <span className="text-xs font-semibold text-amber-600/70">members</span></span>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm">
-            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3">
+          <div className="bg-white border border-slate-200/80 hover:border-indigo-300/80 rounded-2xl p-4 text-left shadow-sm hover:shadow-md transition-all">
+            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2.5">
               <Network className="w-4 h-4" />
             </div>
-            <span className="text-[11px] text-slate-500 font-semibold block uppercase">System Depth</span>
-            <span className="text-2xl font-black text-indigo-600 mt-1 block">{stats.maxLevelsDeep} Levels</span>
+            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">System Depth</span>
+            <span className="text-xl sm:text-2xl font-black text-indigo-600 mt-0.5 block">{stats.maxLevelsDeep} <span className="text-xs font-semibold text-indigo-600/70">Levels</span></span>
           </div>
         </div>
       )}
@@ -373,19 +385,48 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 bg-white">
-                {filteredUsers.map((userItem) => (
-                  <tr key={userItem.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="p-4 font-mono font-bold text-slate-600">#{userItem.id}</td>
-                    <td className="p-4">
-                      <div className="font-bold text-slate-900">{userItem.name}</div>
-                      <div className="mt-0.5">
-                        <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${
-                          userItem.role === 'admin' ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-700'
-                        }`}>
-                          {userItem.role === 'admin' ? 'Admin' : 'Member'}
-                        </span>
-                      </div>
-                    </td>
+                {filteredUsers.map((userItem) => {
+                  let itemPhoto: string | null = null;
+                  try {
+                    if (userItem.additional_details) {
+                      const d = typeof userItem.additional_details === 'string'
+                        ? JSON.parse(userItem.additional_details)
+                        : userItem.additional_details;
+                      itemPhoto = d.photo || null;
+                    }
+                  } catch (e) {
+                    // ignore
+                  }
+
+                  return (
+                    <tr key={userItem.id} className="hover:bg-slate-50/50 transition-colors">
+                      <td className="p-4 font-mono font-bold text-slate-600">#{userItem.id}</td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2.5">
+                          {itemPhoto ? (
+                            <img 
+                              src={itemPhoto} 
+                              alt={userItem.name} 
+                              className="w-8 h-8 rounded-full object-cover border border-slate-200 shadow-sm shrink-0"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0">
+                              {userItem.name ? userItem.name.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-bold text-slate-900">{userItem.name}</div>
+                            <div className="mt-0.5">
+                              <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${
+                                userItem.role === 'admin' ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-700'
+                              }`}>
+                                {userItem.role === 'admin' ? 'Admin' : 'Member'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
                     <td className="p-4 space-y-1">
                       <div className="flex items-center gap-1 text-slate-700 font-semibold">
                         <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -495,7 +536,8 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
                       )}
                     </td>
                   </tr>
-                ))}
+                );
+              })}
               </tbody>
             </table>
           </div>
@@ -874,6 +916,7 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
           onProfileUpdated={(updatedUser) => {
             setUsers(prev => prev.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u));
             setEditingUser(null);
+            fetchAdminData();
           }}
           isAdminMode={true}
           loggedInUserId={adminUser.id}

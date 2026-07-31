@@ -94,35 +94,49 @@ export default function UserDashboard({ user }: UserDashboardProps) {
 
   return (
     <div id="user-dashboard-root" className="space-y-6">
-      {/* 1. Welcoming Hero Panel */}
-      <div className="bg-gradient-to-r from-indigo-800 to-indigo-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute right-0 bottom-0 translate-x-12 translate-y-12 w-64 h-64 rounded-full bg-white/5 pointer-events-none"></div>
-        <div className="absolute left-1/3 top-0 -translate-y-10 w-32 h-32 rounded-full bg-indigo-500/10 pointer-events-none"></div>
+      {/* 1. Compact & Beautiful Welcoming Hero Panel */}
+      <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-2xl p-4 sm:px-6 sm:py-4 shadow-lg shadow-indigo-950/20 border border-indigo-700/30 relative overflow-hidden">
+        {/* Subtle decorative glow elements */}
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-purple-500/15 blur-2xl pointer-events-none"></div>
+        <div className="absolute left-1/3 bottom-0 w-32 h-32 rounded-full bg-indigo-400/10 blur-xl pointer-events-none"></div>
 
-        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
-            {details?.photo && (
-              <div className="shrink-0 w-20 h-24 bg-white/10 border border-white/20 rounded-xl p-1 shadow-md">
+        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 text-left">
+            {details?.photo ? (
+              <div className="shrink-0 w-14 h-16 bg-white/10 border border-white/20 rounded-xl p-0.5 shadow-md overflow-hidden">
                 <img src={details.photo} alt="Your Passport Photo" className="w-full h-full object-cover rounded-lg" referrerPolicy="no-referrer" />
               </div>
-            )}
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 bg-indigo-500/20 text-indigo-200 border border-indigo-400/20 px-3 py-1 rounded-full text-xs font-semibold">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                Your Account is Active
+            ) : (
+              <div className="shrink-0 w-14 h-16 bg-indigo-700/60 border border-indigo-400/30 rounded-xl p-1 flex flex-col items-center justify-center text-indigo-200 shadow-inner">
+                <UserIcon className="w-6 h-6 opacity-80 mb-0.5" />
+                <span className="text-[8px] font-extrabold uppercase tracking-wider text-indigo-300 text-center leading-none">Photo</span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold">Welcome, {user.name}!</h2>
-              <p className="text-xs sm:text-sm text-indigo-200 max-w-xl leading-relaxed">
-                This is your level-based referral dashboard. Monitor downline tiers, check membership statuses, and interact with your visual network mapping.
+            )}
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold tracking-wide border shadow-sm ${
+                  user.status === 'active' 
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
+                    : 'bg-amber-500/20 text-amber-300 border-amber-400/30'
+                }`}>
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  {user.status === 'active' ? 'Account Active' : 'Pending Activation'}
+                </span>
+                <span className="text-[11px] font-semibold text-indigo-200/80 bg-white/10 px-2 py-0.5 rounded-md">
+                  {user.role === 'admin' ? 'System Administrator' : 'Referral Member'}
+                </span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">Welcome, {user.name}!</h2>
+              <p className="text-xs text-indigo-100/80 max-w-xl leading-normal font-medium hidden sm:block">
+                Level-based referral dashboard. Monitor downline tiers and track network growth.
               </p>
             </div>
           </div>
 
           {/* User ID block */}
-          <div className="bg-white/10 border border-white/10 rounded-2xl p-4 shrink-0 backdrop-blur-sm">
-            <span className="text-[10px] text-indigo-300 font-bold uppercase tracking-wider block">Your Sponsor / User ID</span>
-            <span className="text-2xl font-extrabold tracking-wider font-mono mt-0.5 block">{user.id}</span>
+          <div className="bg-white/10 border border-white/20 rounded-xl px-4 py-2 shrink-0 backdrop-blur-sm self-start sm:self-auto flex sm:flex-col items-center justify-between sm:justify-center gap-2 sm:gap-0 min-w-[130px]">
+            <span className="text-[10px] text-indigo-200/90 font-bold uppercase tracking-wider block">Sponsor ID</span>
+            <span className="text-xl font-black tracking-wider font-mono text-white block">#{user.id}</span>
           </div>
         </div>
       </div>
