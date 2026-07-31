@@ -10,8 +10,13 @@ export default function DbStatusBanner() {
     try {
       const res = await fetch('/api/db-status');
       if (res.ok) {
-        const data = await res.json();
-        setStatus(data);
+        const contentType = res.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await res.json();
+          setStatus(data);
+        } else {
+          console.warn('DB status endpoint did not return JSON. Connection might be recovering.');
+        }
       }
     } catch (err) {
       console.error('Failed to fetch DB status', err);
