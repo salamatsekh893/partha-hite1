@@ -66,17 +66,23 @@ app.get('/api/db-status', async (req, res) => {
 
 // 2. Register User
 app.post('/api/auth/register', async (req, res) => {
-  const { name, phone, email, password, sponsorId } = req.body;
+  const { name, phone, email, password, sponsorId, additionalDetails } = req.body;
 
   if (!name || !phone || !email || !password) {
-    return res.status(400).json({ error: 'দয়া করে সবকটি প্রয়োজনীয় তথ্য পূরণ করুন।' });
+    return res.status(400).json({ error: 'Please fill in all required fields (Name, Phone, Email, and Password).' });
   }
 
   try {
     // Check if email already exists
-    const existingUser = await DB.getUserByEmail(email);
-    if (existingUser) {
-      return res.status(400).json({ error: 'এই ইমেইল দিয়ে ইতিমধ্যেই একটি অ্যাকাউন্ট খোলা হয়েছে।' });
+    const existingUserByEmail = await DB.getUserByEmail(email);
+    if (existingUserByEmail) {
+      return res.status(400).json({ error: 'This email is already registered.' });
+    }
+
+    // Check if phone already exists
+    const existingUserByPhone = await DB.getUserByPhone(phone);
+    if (existingUserByPhone) {
+      return res.status(400).json({ error: 'This phone number is already registered.' });
     }
 
     let referrerIdVal: number | null = null;
@@ -85,16 +91,16 @@ app.post('/api/auth/register', async (req, res) => {
     if (sponsorId) {
       const parsedSponsorId = parseInt(sponsorId, 10);
       if (isNaN(parsedSponsorId)) {
-        return res.status(400).json({ error: 'স্পন্সর আইডি অবশ্যই সংখ্যা হতে হবে।' });
+        return res.status(400).json({ error: 'Sponsor ID must be a numeric ID.' });
       }
       
       const sponsor = await DB.getUserById(parsedSponsorId);
       if (!sponsor) {
-        return res.status(400).json({ error: 'প্রদত্ত স্পন্সর আইডি বা রেফারেল আইডিটি পাওয়া যায়নি।' });
+        return res.status(400).json({ error: 'The provided Sponsor ID was not found.' });
       }
 
       if (sponsor.status !== 'active') {
-        return res.status(400).json({ error: 'প্রদত্ত স্পন্সর আইডিটি নিষ্ক্রিয় (Inactive)। শুধুমাত্র সক্রিয় স্পন্সরের মাধ্যমে জয়েন করা সম্ভব।' });
+        return res.status(400).json({ error: 'The provided Sponsor ID is Inactive. You can only register under active sponsors.' });
       }
       
       referrerIdVal = parsedSponsorId;
@@ -103,13 +109,16 @@ app.post('/api/auth/register', async (req, res) => {
       const allUsers = await DB.getUsers();
       // If only admin exists (length 1), they can join directly under admin (ID 1)
       if (allUsers.length > 1) {
-        return res.status(400).json({ error: 'জয়েন করার জন্য একটি রেফারেল বা স্পন্সর আইডি প্রয়োজন।' });
+        return res.status(400).json({ error: 'A valid Referrer/Sponsor ID is required to register.' });
       } else {
         // Default to joining under Admin (ID 1) if no sponsor provided and database is empty
         const admin = allUsers.find(u => u.role === 'admin');
         referrerIdVal = admin ? admin.id : 1;
       }
     }
+
+    // Stringify additionalDetails if they exist
+    const additionalDetailsStr = additionalDetails ? JSON.stringify(additionalDetails) : null;
 
     const newUser = await DB.createUser({
       name,
@@ -120,10 +129,11 @@ app.post('/api/auth/register', async (req, res) => {
       status: 'inactive', // New registers are inactive by default until approved
       role: 'user',
       created_at: new Date().toISOString(),
+      additional_details: additionalDetailsStr || undefined,
     });
 
     res.status(201).json({
-      message: 'নিবন্ধন সফল হয়েছে! আপনার আইডিটি এডমিন এপ্রুভালের অপেক্ষায় রয়েছে।',
+      message: 'Registration successful! Your account is pending administrator review and activation.',
       user: {
         id: newUser.id,
         name: newUser.name,
@@ -136,32 +146,32 @@ app.post('/api/auth/register', async (req, res) => {
 
   } catch (err: any) {
     console.error('Registration error:', err);
-    res.status(500).json({ error: 'রেজিস্ট্রেশন করার সময় সার্ভার ত্রুটি ঘটেছে।' });
+    res.status(500).json({ error: 'A server error occurred during registration.' });
   }
 });
 
 // 3. Login User
 app.post('/api/auth/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body; // email is used as general identifier
 
   if (!email || !password) {
-    return res.status(400).json({ error: 'ইমেইল এবং পাসওয়ার্ড প্রদান করুন।' });
+    return res.status(400).json({ error: 'Please provide both your email/phone and password.' });
   }
 
   try {
-    const user = await DB.getUserByEmail(email);
+    const user = await DB.getUserByEmailOrPhone(email);
     if (!user) {
-      return res.status(401).json({ error: 'ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।' });
+      return res.status(401).json({ error: 'Invalid credentials. Please verify your details.' });
     }
 
     if (user.password !== password) {
-      return res.status(401).json({ error: 'ইমেইল অথবা পাসওয়ার্ড সঠিক নয়।' });
+      return res.status(401).json({ error: 'Invalid credentials. Please verify your details.' });
     }
 
     // Verify account status (Only Active users or Admins can log in)
     if (user.status !== 'active' && user.role !== 'admin') {
       return res.status(403).json({
-        error: 'আপনার অ্যাকাউন্টটি নিষ্ক্রিয় (Inactive) রয়েছে। এডমিন অনুমোদন করলেই আপনি ড্যাশবোর্ড ব্যবহার করতে পারবেন।'
+        error: 'Your account is currently Inactive (Pending Approval). Please wait for an administrator to activate it.'
       });
     }
 
@@ -299,6 +309,34 @@ app.post('/api/admin/suspend', authenticateUser, requireAdmin, async (req, res) 
   } catch (err) {
     console.error('Suspend error:', err);
     res.status(500).json({ error: 'ইউজারকে নিষ্ক্রিয় করার সময় ত্রুটি ঘটেছে।' });
+  }
+});
+
+// 9. Admin: Delete / Reject User
+app.post('/api/admin/delete', authenticateUser, requireAdmin, async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required.' });
+  }
+
+  try {
+    const targetUser = await DB.getUserById(parseInt(userId, 10));
+    if (!targetUser) {
+      return res.status(404).json({ error: 'User not found.' });
+    }
+
+    if (targetUser.role === 'admin') {
+      return res.status(400).json({ error: 'System administrator cannot be deleted.' });
+    }
+
+    await DB.deleteUser(targetUser.id);
+    res.json({
+      message: `Account of ${targetUser.name} has been deleted successfully.`,
+      success: true,
+    });
+  } catch (err) {
+    console.error('Delete error:', err);
+    res.status(500).json({ error: 'An error occurred while trying to delete the user.' });
   }
 });
 

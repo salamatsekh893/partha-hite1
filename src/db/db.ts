@@ -97,9 +97,18 @@ async function ensureConnectedAndInitialized(): Promise<boolean> {
           status VARCHAR(50) DEFAULT 'inactive',
           role VARCHAR(50) DEFAULT 'user',
           created_at VARCHAR(100) NOT NULL,
+          additional_details LONGTEXT NULL,
           FOREIGN KEY (referrer_id) REFERENCES users(id) ON DELETE SET NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
       `);
+
+      // Attempt to safely add the additional_details column to existing tables if it doesn't exist
+      try {
+        await conn.query('ALTER TABLE users ADD COLUMN additional_details LONGTEXT NULL');
+        console.log('Successfully upgraded table with additional_details column.');
+      } catch (colErr) {
+        // Column may already exist, ignore error safely
+      }
 
       // Check if admin exists
       const [rows]: any = await conn.query('SELECT * FROM users WHERE role = "admin" OR email = ? LIMIT 1', [DEFAULT_ADMIN.email]);
@@ -214,13 +223,49 @@ export const DB = {
     }
   },
 
+  async getUserByPhone(phone: string): Promise<User | null> {
+    const status = await this.getStatus();
+    if (status.connected) {
+      try {
+        const pool = getMySQLPool()!;
+        const [rows]: any = await pool.query('SELECT * FROM users WHERE phone = ? LIMIT 1', [phone]);
+        if (rows.length === 0) return null;
+        return rows[0] as User;
+      } catch (err: any) {
+        isDbConnected = false;
+        dbConnectionError = err.message || 'Query failed';
+        throw err;
+      }
+    } else {
+      throw new Error('MySQL Database is not connected: ' + (status.error || 'Connection offline'));
+    }
+  },
+
+  async getUserByEmailOrPhone(identifier: string): Promise<User | null> {
+    const status = await this.getStatus();
+    if (status.connected) {
+      try {
+        const pool = getMySQLPool()!;
+        const [rows]: any = await pool.query('SELECT * FROM users WHERE email = ? OR phone = ? LIMIT 1', [identifier, identifier]);
+        if (rows.length === 0) return null;
+        return rows[0] as User;
+      } catch (err: any) {
+        isDbConnected = false;
+        dbConnectionError = err.message || 'Query failed';
+        throw err;
+      }
+    } else {
+      throw new Error('MySQL Database is not connected: ' + (status.error || 'Connection offline'));
+    }
+  },
+
   async createUser(userData: Omit<User, 'id'>): Promise<User> {
     const status = await this.getStatus();
     if (status.connected) {
       try {
         const pool = getMySQLPool()!;
         const [result]: any = await pool.query(
-          'INSERT INTO users (name, phone, email, password, referrer_id, status, role, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          'INSERT INTO users (name, phone, email, password, referrer_id, status, role, created_at, additional_details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
           [
             userData.name,
             userData.phone,
@@ -230,6 +275,7 @@ export const DB = {
             userData.status,
             userData.role,
             userData.created_at || new Date().toISOString(),
+            userData.additional_details || null,
           ]
         );
         const insertedId = result.insertId;
@@ -251,6 +297,25 @@ export const DB = {
         const pool = getMySQLPool()!;
         await pool.query('UPDATE users SET status = ? WHERE id = ?', [activeStatus, id]);
         return this.getUserById(id);
+      } catch (err: any) {
+        isDbConnected = false;
+        dbConnectionError = err.message || 'Query failed';
+        throw err;
+      }
+    } else {
+      throw new Error('MySQL Database is not connected: ' + (status.error || 'Connection offline'));
+    }
+  },
+
+  async deleteUser(id: number): Promise<boolean> {
+    const status = await this.getStatus();
+    if (status.connected) {
+      try {
+        const pool = getMySQLPool()!;
+        // Explicitly set referrer_id of referrals to NULL first to prevent foreign key errors
+        await pool.query('UPDATE users SET referrer_id = NULL WHERE referrer_id = ?', [id]);
+        await pool.query('DELETE FROM users WHERE id = ?', [id]);
+        return true;
       } catch (err: any) {
         isDbConnected = false;
         dbConnectionError = err.message || 'Query failed';

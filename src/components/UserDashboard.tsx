@@ -20,6 +20,18 @@ export default function UserDashboard({ user }: UserDashboardProps) {
   const [activeTab, setActiveTab] = useState<'list' | 'tree'>('list');
   const [copied, setCopied] = useState(false);
 
+  // Parse additional_details for profile image display
+  let details: any = null;
+  try {
+    if (user.additional_details) {
+      details = typeof user.additional_details === 'string'
+        ? JSON.parse(user.additional_details)
+        : user.additional_details;
+    }
+  } catch (e) {
+    console.error("Error parsing user details", e);
+  }
+
   // Fetch downline data
   const fetchDownline = async () => {
     setLoading(true);
@@ -89,15 +101,22 @@ export default function UserDashboard({ user }: UserDashboardProps) {
         <div className="absolute left-1/3 top-0 -translate-y-10 w-32 h-32 rounded-full bg-indigo-500/10 pointer-events-none"></div>
 
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 bg-indigo-500/20 text-indigo-200 border border-indigo-400/20 px-3 py-1 rounded-full text-xs font-semibold">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              Your Account is Active
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
+            {details?.photo && (
+              <div className="shrink-0 w-20 h-24 bg-white/10 border border-white/20 rounded-xl p-1 shadow-md">
+                <img src={details.photo} alt="Your Passport Photo" className="w-full h-full object-cover rounded-lg" referrerPolicy="no-referrer" />
+              </div>
+            )}
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 bg-indigo-500/20 text-indigo-200 border border-indigo-400/20 px-3 py-1 rounded-full text-xs font-semibold">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                Your Account is Active
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold">Welcome, {user.name}!</h2>
+              <p className="text-xs sm:text-sm text-indigo-200 max-w-xl leading-relaxed">
+                This is your level-based referral dashboard. Monitor downline tiers, check membership statuses, and interact with your visual network mapping.
+              </p>
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold">Welcome, {user.name}!</h2>
-            <p className="text-xs sm:text-sm text-indigo-200 max-w-xl leading-relaxed">
-              This is your level-based referral dashboard. Monitor downline tiers, check membership statuses, and interact with your visual network mapping.
-            </p>
           </div>
 
           {/* User ID block */}

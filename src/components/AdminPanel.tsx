@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   Users, CheckCircle2, XCircle, Search, RefreshCw, 
-  Calendar, Shield, ShieldCheck, UserCheck, AlertCircle, Phone, Mail, Network 
+  Calendar, Shield, ShieldCheck, UserCheck, AlertCircle, Phone, Mail, Network, FileText, Trash2 
 } from 'lucide-react';
 import { User, SystemStats, ReferralTreeNode } from '../types.js';
 import VisualTree from './VisualTree.js';
@@ -24,6 +24,9 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
   const [inspectingUser, setInspectingUser] = useState<Omit<User, 'password'> | null>(null);
   const [inspectedTree, setInspectedTree] = useState<ReferralTreeNode | null>(null);
   const [treeLoading, setTreeLoading] = useState(false);
+
+  // Audit specific user's Success India application details
+  const [auditingUser, setAuditingUser] = useState<Omit<User, 'password'> | null>(null);
 
   // Fetch admin list and stats
   const fetchAdminData = async () => {
@@ -124,9 +127,61 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
     }
   };
 
+  // Custom sweet confirmation state
+  const [deleteConfirmUser, setDeleteConfirmUser] = useState<{ id: number, name: string } | null>(null);
+
+  // Trigger modal confirmation popup
+  const handleDelete = (userId: number, userName: string) => {
+    setDeleteConfirmUser({ id: userId, name: userName });
+  };
+
+  // Actual execution of Delete / Reject
+  const executeDelete = async () => {
+    if (!deleteConfirmUser) return;
+    const { id: userId, name: userName } = deleteConfirmUser;
+
+    setActionLoading(userId);
+    setError(null);
+    setSuccessMsg(null);
+    setDeleteConfirmUser(null); // Close modal
+    try {
+      const res = await fetch('/api/admin/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-Id': adminUser.id.toString(),
+        },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to delete the user.');
+      }
+      setSuccessMsg(data.message || `${userName} has been deleted successfully.`);
+      
+      // If currently auditing or inspecting this user, clear it
+      if (auditingUser?.id === userId) {
+        setAuditingUser(null);
+      }
+      if (inspectingUser?.id === userId) {
+        setInspectingUser(null);
+        setInspectedTree(null);
+      }
+
+      // Update local state by removing user completely
+      setUsers(prev => prev.filter(u => u.id !== userId));
+      fetchAdminData(); // Refetch to accurately update stats and recursive tree paths
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // Inspect any user's downline tree
   const handleInspectTree = async (userObj: Omit<User, 'password'>) => {
     setInspectingUser(userObj);
+    setAuditingUser(null);
     setInspectedTree(null);
     setTreeLoading(true);
     try {
@@ -364,6 +419,18 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
                       )}
                     </td>
                     <td className="p-4 text-right space-x-1.5 whitespace-nowrap">
+                      {/* View completed Success India Applicant Form */}
+                      <button
+                        onClick={() => {
+                          setAuditingUser(userItem);
+                          setInspectingUser(null);
+                        }}
+                        title="View Completed Applicant Form"
+                        className="inline-flex items-center justify-center p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 transition-all cursor-pointer"
+                      >
+                        <FileText className="w-4 h-4" />
+                      </button>
+
                       {/* View downline network map */}
                       <button
                         onClick={() => handleInspectTree(userItem)}
@@ -373,24 +440,44 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
                         <Network className="w-4 h-4" />
                       </button>
 
-                      {/* Approve / Suspend toggler */}
+                      {/* Approve / Suspend toggler and Reject / Delete buttons */}
                       {userItem.role !== 'admin' && (
                         userItem.status === 'inactive' ? (
-                          <button
-                            onClick={() => handleApprove(userItem.id)}
-                            disabled={actionLoading === userItem.id}
-                            className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold px-3 py-2 rounded-xl transition-all shadow-sm hover:shadow cursor-pointer"
-                          >
-                            {actionLoading === userItem.id ? 'Processing...' : 'Approve'}
-                          </button>
+                          <div className="inline-flex items-center gap-1.5">
+                            <button
+                              onClick={() => handleApprove(userItem.id)}
+                              disabled={actionLoading !== null}
+                              className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold px-3 py-2 rounded-xl transition-all shadow-sm hover:shadow cursor-pointer text-xs"
+                            >
+                              {actionLoading === userItem.id ? 'Processing...' : 'Approve'}
+                            </button>
+                            <button
+                              onClick={() => handleDelete(userItem.id, userItem.name)}
+                              disabled={actionLoading !== null}
+                              title="Reject & Delete Registration"
+                              className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 disabled:opacity-50 p-2 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+                            >
+                              <Trash2 className="w-4 h-4 text-rose-600" />
+                            </button>
+                          </div>
                         ) : (
-                          <button
-                            onClick={() => handleSuspend(userItem.id)}
-                            disabled={actionLoading === userItem.id}
-                            className="bg-rose-50 hover:bg-rose-100 border border-rose-200 disabled:opacity-50 text-rose-700 font-bold px-3 py-2 rounded-xl transition-all cursor-pointer"
-                          >
-                            {actionLoading === userItem.id ? 'Processing...' : 'Suspend'}
-                          </button>
+                          <div className="inline-flex items-center gap-1.5">
+                            <button
+                              onClick={() => handleSuspend(userItem.id)}
+                              disabled={actionLoading !== null}
+                              className="bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 font-bold px-3 py-2 rounded-xl transition-all cursor-pointer text-xs"
+                            >
+                              {actionLoading === userItem.id ? 'Processing...' : 'Suspend'}
+                            </button>
+                            <button
+                              onClick={() => handleDelete(userItem.id, userItem.name)}
+                              disabled={actionLoading !== null}
+                              title="Delete Member"
+                              className="bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 disabled:opacity-50 p-2 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+                            >
+                              <Trash2 className="w-4 h-4 text-rose-600" />
+                            </button>
+                          </div>
                         )
                       )}
                     </td>
@@ -406,7 +493,276 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
         )}
       </div>
 
-      {/* 4. Sub-tree inspection modal/container */}
+      {/* 4. SUCCESS INDIA Applicant Form Audit Inspector */}
+      {auditingUser && (() => {
+        let details: any = null;
+        try {
+          if (auditingUser.additional_details) {
+            details = typeof auditingUser.additional_details === 'string' 
+              ? JSON.parse(auditingUser.additional_details) 
+              : auditingUser.additional_details;
+          }
+        } catch (e) {
+          console.error("Error parsing additional details", e);
+        }
+
+        return (
+          <div className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-md space-y-6 animate-fade-in">
+            <div className="flex justify-between items-center pb-3 border-b border-slate-200">
+              <div>
+                <h4 className="font-bold text-slate-900">
+                  SUCCESS INDIA Form Audit: <span className="text-indigo-600 font-black">{auditingUser.name}</span> (ID #{auditingUser.id})
+                </h4>
+                <p className="text-xs text-slate-500">Review full applicant details, physical characteristics, addresses, and audit references.</p>
+              </div>
+              <button
+                onClick={() => setAuditingUser(null)}
+                className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold text-slate-800 transition-colors cursor-pointer"
+              >
+                Close Audit
+              </button>
+            </div>
+
+            {details ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs text-slate-700">
+                {/* Personal Section */}
+                <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/60">
+                  <h5 className="font-bold text-indigo-700 text-xs border-b border-indigo-100 pb-1.5 uppercase tracking-wider">1. Personal & Family Info</h5>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    {details.photo && (
+                      <div className="shrink-0 w-24 h-32 bg-white border border-slate-300 rounded-lg overflow-hidden self-center sm:self-start p-1 shadow-sm">
+                        <img src={details.photo} alt="Applicant Passport Photo" className="w-full h-full object-cover rounded" referrerPolicy="no-referrer" />
+                      </div>
+                    )}
+                    <div className="flex-1 grid grid-cols-2 gap-y-2 gap-x-4">
+                      <div>
+                        <span className="text-slate-400 font-semibold block uppercase text-[9px]">Father/Husband Name:</span>
+                        <span className="font-bold text-slate-800 text-[11px]">{details.fatherHusbandName || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block uppercase text-[9px]">Mother's Name:</span>
+                        <span className="font-bold text-slate-800 text-[11px]">{details.motherName || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block uppercase text-[9px]">Date of Birth:</span>
+                        <span className="font-bold text-slate-800 text-[11px]">{details.dob || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block uppercase text-[9px]">Place of Birth:</span>
+                        <span className="font-bold text-slate-800 text-[11px]">{details.placeOfBirth || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block uppercase text-[9px]">Gender:</span>
+                        <span className="font-bold text-slate-800 text-[11px]">{details.gender || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block uppercase text-[9px]">Religion:</span>
+                        <span className="font-bold text-slate-800 text-[11px]">{details.religion || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block uppercase text-[9px]">Blood Group:</span>
+                        <span className="font-bold text-slate-800 text-[11px]">{details.bloodGroup || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block uppercase text-[9px]">Alt Phone:</span>
+                        <span className="font-bold text-slate-800 text-[11px]">{details.phone2 || 'N/A'}</span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-slate-400 font-semibold block uppercase text-[9px]">Height / Weight:</span>
+                        <span className="font-bold text-slate-800 text-[11px]">{(details.height || 'N/A') + ' / ' + (details.weight || 'N/A')}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Government Documents */}
+                <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/60">
+                  <h5 className="font-bold text-indigo-700 text-xs border-b border-indigo-100 pb-1.5 uppercase tracking-wider">2. Government Documents & Co-Applicant</h5>
+                  <div className="grid grid-cols-2 gap-y-2 gap-x-4">
+                    <div>
+                      <span className="text-slate-400 font-semibold block uppercase text-[9px]">Aadhar Card No:</span>
+                      <span className="font-bold text-slate-800 text-[11px]">{details.aadharNo || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-semibold block uppercase text-[9px]">PAN Card No:</span>
+                      <span className="font-bold text-slate-800 text-[11px]">{details.panNo || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-semibold block uppercase text-[9px]">Voter Card No:</span>
+                      <span className="font-bold text-slate-800 text-[11px]">{details.voterNo || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-semibold block uppercase text-[9px]">Ration Card No:</span>
+                      <span className="font-bold text-slate-800 text-[11px]">{details.rationNo || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-semibold block uppercase text-[9px]">Consumer Number:</span>
+                      <span className="font-bold text-slate-800 text-[11px]">{details.consumerNo || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-semibold block uppercase text-[9px]">Co-Applicant:</span>
+                      <span className="font-bold text-slate-800 text-[11px]">{details.coApplicantName || 'N/A'} {details.coApplicantRelation ? `(${details.coApplicantRelation})` : ''}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-semibold block uppercase text-[9px]">Family Count:</span>
+                      <span className="font-bold text-slate-800 text-[11px]">{details.familyMembersNo || 'N/A'}</span>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-slate-400 font-semibold block uppercase text-[9px]">Co-Applicant Address:</span>
+                      <span className="font-bold text-slate-800 text-[11px]">{details.coApplicantAddress || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Present Address */}
+                <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/60">
+                  <h5 className="font-bold text-indigo-700 text-xs border-b border-indigo-100 pb-1.5 uppercase tracking-wider">3. Present Address</h5>
+                  <div className="space-y-1.5">
+                    <div>
+                      <span className="text-slate-400 font-semibold uppercase text-[9px] mr-1">Address:</span>
+                      <span className="font-bold text-slate-800 text-[11px]">{details.presentAddressText || 'N/A'}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <span className="text-slate-400 font-semibold block uppercase text-[9px]">P.O.</span>
+                        <span className="font-bold text-slate-800 text-[11px]">{details.presentPO || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block uppercase text-[9px]">P.S.</span>
+                        <span className="font-bold text-slate-800 text-[11px]">{details.presentPS || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block uppercase text-[9px]">District</span>
+                        <span className="font-bold text-slate-800 text-[11px]">{details.presentDist || 'N/A'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Permanent Address */}
+                <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/60">
+                  <h5 className="font-bold text-indigo-700 text-xs border-b border-indigo-100 pb-1.5 uppercase tracking-wider">4. Permanent Address</h5>
+                  <div className="space-y-1.5">
+                    <div>
+                      <span className="text-slate-400 font-semibold uppercase text-[9px] mr-1">Address:</span>
+                      <span className="font-bold text-slate-800 text-[11px]">{details.permanentAddressText || 'N/A'}</span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      <div>
+                        <span className="text-slate-400 font-semibold block uppercase text-[9px]">P.O.</span>
+                        <span className="font-bold text-slate-800 text-[11px]">{details.permanentPO || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block uppercase text-[9px]">P.S.</span>
+                        <span className="font-bold text-slate-800 text-[11px]">{details.permanentPS || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block uppercase text-[9px]">District</span>
+                        <span className="font-bold text-slate-800 text-[11px]">{details.permanentDist || 'N/A'}</span>
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-semibold block uppercase text-[9px]">PIN / Landmark</span>
+                        <span className="font-bold text-slate-800 text-[11px]">{(details.permanentPin || 'N/A') + ' / ' + (details.permanentLandmark || 'N/A')}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* References */}
+                <div className="col-span-1 md:col-span-2 space-y-3 bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100/50">
+                  <h5 className="font-bold text-indigo-700 text-xs border-b border-indigo-100 pb-1.5 uppercase tracking-wider">5. Audit References (Relative & Friend)</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white p-3 rounded-xl border border-indigo-100/30">
+                      <span className="font-bold text-slate-800 block text-[10px] mb-1.5 uppercase">Relative Reference:</span>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <span className="text-slate-400 font-semibold block text-[8px]">NAME</span>
+                          <span className="font-bold text-slate-700 text-[11px]">{details.relativeName || 'N/A'}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 font-semibold block text-[8px]">PHONE</span>
+                          <span className="font-bold text-slate-700 text-[11px]">{details.relativePhone || 'N/A'}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 font-semibold block text-[8px]">ADDRESS</span>
+                          <span className="font-bold text-slate-700 text-[11px]">{details.relativeAddress || 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl border border-indigo-100/30">
+                      <span className="font-bold text-slate-800 block text-[10px] mb-1.5 uppercase">Friend Reference:</span>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <span className="text-slate-400 font-semibold block text-[8px]">NAME</span>
+                          <span className="font-bold text-slate-700 text-[11px]">{details.friendName || 'N/A'}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 font-semibold block text-[8px]">PHONE</span>
+                          <span className="font-bold text-slate-700 text-[11px]">{details.friendPhone || 'N/A'}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-400 font-semibold block text-[8px]">ADDRESS</span>
+                          <span className="font-bold text-slate-700 text-[11px]">{details.friendAddress || 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Audit Action Controls inside details panel */}
+                {auditingUser.role !== 'admin' && (
+                  <div className="col-span-1 md:col-span-2 flex flex-wrap gap-3 items-center justify-end pt-5 border-t border-slate-200">
+                    <span className="text-xs text-slate-500 font-bold mr-auto">Member Action Controls:</span>
+                    {auditingUser.status === 'inactive' ? (
+                      <>
+                        <button
+                          onClick={() => handleApprove(auditingUser.id)}
+                          disabled={actionLoading !== null}
+                          className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm hover:shadow text-xs cursor-pointer flex items-center gap-1.5"
+                        >
+                          <CheckCircle2 className="w-4 h-4" /> Approve Applicant
+                        </button>
+                        <button
+                          onClick={() => handleDelete(auditingUser.id, auditingUser.name)}
+                          disabled={actionLoading !== null}
+                          className="bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm hover:shadow text-xs cursor-pointer flex items-center gap-1.5"
+                        >
+                          <Trash2 className="w-4 h-4" /> Reject & Delete Applicant
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => handleSuspend(auditingUser.id)}
+                          disabled={actionLoading !== null}
+                          className="bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-700 font-bold px-4 py-2.5 rounded-xl transition-all text-xs cursor-pointer flex items-center gap-1.5"
+                        >
+                          <XCircle className="w-4 h-4" /> Suspend Member
+                        </button>
+                        <button
+                          onClick={() => handleDelete(auditingUser.id, auditingUser.name)}
+                          disabled={actionLoading !== null}
+                          className="bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-bold px-4 py-2.5 rounded-xl transition-all shadow-sm hover:shadow text-xs cursor-pointer flex items-center gap-1.5"
+                        >
+                          <Trash2 className="w-4 h-4" /> Delete Member
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+
+              </div>
+            ) : (
+              <div className="py-8 text-center text-slate-500 text-xs font-semibold">
+                No additional registration details are logged for this user. This might be a legacy account or root admin.
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* 5. Sub-tree inspection modal/container */}
       {inspectingUser && (
         <div className="bg-slate-50 border border-slate-200 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
           <div className="flex justify-between items-center pb-3 border-b border-slate-200">
@@ -432,6 +788,55 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
           ) : (
             <VisualTree treeData={inspectedTree} />
           )}
+        </div>
+      )}
+
+      {/* Sweet Alert / Custom Delete Confirmation Popup */}
+      {deleteConfirmUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden transform scale-100 transition-all duration-300 p-6 space-y-6">
+            
+            {/* Warning Icon Container */}
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="w-16 h-16 rounded-full bg-rose-50 border-4 border-rose-100 flex items-center justify-center text-rose-500 animate-pulse">
+                <AlertCircle className="w-8 h-8" />
+              </div>
+              
+              <div className="space-y-1.5">
+                <h3 className="text-lg font-black text-slate-800">Are you sure?</h3>
+                <p className="text-sm font-semibold text-rose-600">This action cannot be undone</p>
+              </div>
+            </div>
+
+            {/* Warning Description */}
+            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-center space-y-2">
+              <p className="text-xs text-slate-600 leading-relaxed">
+                You are about to permanently delete <span className="font-extrabold text-slate-900">"{deleteConfirmUser.name}"</span> from the system. If you delete this account, their downline connection and data cannot be recovered.
+              </p>
+              <p className="text-[11px] text-slate-400 italic">
+                All registration details, history, and referral associations for this member will be permanently erased.
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmUser(null)}
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-xs transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={executeDelete}
+                className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-2xl text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-rose-600/20 hover:shadow-rose-600/30"
+              >
+                <Trash2 className="w-4 h-4" /> Yes, Delete
+              </button>
+            </div>
+
+          </div>
         </div>
       )}
     </div>

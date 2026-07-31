@@ -18,7 +18,7 @@ export default function LoginForm({ onLoginSuccess, onToggleRegister }: LoginFor
     setError(null);
 
     if (!email || !password) {
-      setError('Please provide both your email and password.');
+      setError('Please provide both your email/phone and password.');
       return;
     }
 
@@ -80,7 +80,7 @@ export default function LoginForm({ onLoginSuccess, onToggleRegister }: LoginFor
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="login-email" className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Email Address <span className="text-rose-500">*</span>
+                Email Address or Phone Number <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -88,11 +88,11 @@ export default function LoginForm({ onLoginSuccess, onToggleRegister }: LoginFor
                 </div>
                 <input
                   id="login-email"
-                  type="email"
+                  type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium"
-                  placeholder="name@example.com"
+                  placeholder="name@example.com or phone number"
                   required
                 />
               </div>

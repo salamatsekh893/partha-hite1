@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { User as UserIcon, Shield, Users, Network, TrendingUp } from 'lucide-react';
 import { User } from './types.js';
-import DbStatusBanner from './components/DbStatusBanner.js';
-import Navbar from './components/Navbar.js';
+import Header from './components/Header.js';
+import Sidebar from './components/Sidebar.js';
 import LoginForm from './components/LoginForm.js';
 import RegisterForm from './components/RegisterForm.js';
 import UserDashboard from './components/UserDashboard.js';
@@ -13,6 +13,7 @@ export default function App() {
   const [currentView, setView] = useState<'dashboard' | 'admin'>('dashboard');
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
   const [initializing, setInitializing] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Restore session from localStorage on startup
   useEffect(() => {
@@ -63,15 +64,25 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans antialiased">
-      {/* 1. Header Database Status */}
-      <DbStatusBanner />
-
-      {/* 2. Global Navigation */}
-      <Navbar 
+      {/* 1. Global Navigation & Overlay Sidebar */}
+      <Header 
         user={user} 
         onLogout={handleLogout} 
         currentView={user ? currentView : 'auth'} 
         setView={setView} 
+        onMenuClick={() => setIsSidebarOpen(true)}
+      />
+
+      <Sidebar 
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        user={user}
+        onLogout={handleLogout}
+        currentView={user ? currentView : 'auth'}
+        setView={(view) => {
+          setView(view);
+          setIsSidebarOpen(false);
+        }}
       />
 
       {/* 3. Main Body */}

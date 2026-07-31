@@ -8,6 +8,7 @@ export interface User {
   status: 'active' | 'inactive';
   role: 'user' | 'admin';
   created_at: string;
+  additional_details?: string;
 }
 
 export interface DownlineMember {
