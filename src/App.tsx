@@ -7,6 +7,7 @@ import LoginForm from './components/LoginForm.js';
 import RegisterForm from './components/RegisterForm.js';
 import UserDashboard from './components/UserDashboard.js';
 import AdminPanel from './components/AdminPanel.js';
+import ProfileEditModal from './components/ProfileEditModal.js';
 
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -14,6 +15,7 @@ export default function App() {
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
   const [initializing, setInitializing] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   // Restore session from localStorage on startup
   useEffect(() => {
@@ -82,6 +84,17 @@ export default function App() {
         setView={(view) => {
           setView(view);
           setIsSidebarOpen(false);
+        }}
+        onEditProfileClick={() => setIsProfileModalOpen(true)}
+      />
+
+      <ProfileEditModal 
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        user={user}
+        onProfileUpdated={(updatedUser) => {
+          setUser(updatedUser);
+          localStorage.setItem('mlm_user_session', JSON.stringify(updatedUser));
         }}
       />
 

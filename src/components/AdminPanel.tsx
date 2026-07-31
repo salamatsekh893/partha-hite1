@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { 
   Users, CheckCircle2, XCircle, Search, RefreshCw, 
-  Calendar, Shield, ShieldCheck, UserCheck, AlertCircle, Phone, Mail, Network, FileText, Trash2 
+  Calendar, Shield, ShieldCheck, UserCheck, AlertCircle, Phone, Mail, Network, FileText, Trash2, Edit
 } from 'lucide-react';
 import { User, SystemStats, ReferralTreeNode } from '../types.js';
 import VisualTree from './VisualTree.js';
+import ProfileEditModal from './ProfileEditModal.js';
 
 interface AdminPanelProps {
   adminUser: User;
@@ -20,6 +21,9 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   
+  // Edit specific user's full profile info
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+
   // Inspect specific user's tree
   const [inspectingUser, setInspectingUser] = useState<Omit<User, 'password'> | null>(null);
   const [inspectedTree, setInspectedTree] = useState<ReferralTreeNode | null>(null);
@@ -417,30 +421,39 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
                           Pending
                         </span>
                       )}
-                    </td>
-                    <td className="p-4 text-right space-x-1.5 whitespace-nowrap">
-                      {/* View completed Success India Applicant Form */}
-                      <button
-                        onClick={() => {
-                          setAuditingUser(userItem);
-                          setInspectingUser(null);
-                        }}
-                        title="View Completed Applicant Form"
-                        className="inline-flex items-center justify-center p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 transition-all cursor-pointer"
-                      >
-                        <FileText className="w-4 h-4" />
-                      </button>
+                     </td>
+                     <td className="p-4 text-right space-x-1.5 whitespace-nowrap">
+                       {/* View completed Success India Applicant Form */}
+                       <button
+                         onClick={() => {
+                           setAuditingUser(userItem);
+                           setInspectingUser(null);
+                         }}
+                         title="View Completed Applicant Form"
+                         className="inline-flex items-center justify-center p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 transition-all cursor-pointer"
+                       >
+                         <FileText className="w-4 h-4" />
+                       </button>
+ 
+                       {/* View downline network map */}
+                       <button
+                         onClick={() => handleInspectTree(userItem)}
+                         title="View Downline Tree Map"
+                         className="inline-flex items-center justify-center p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
+                       >
+                         <Network className="w-4 h-4" />
+                       </button>
 
-                      {/* View downline network map */}
-                      <button
-                        onClick={() => handleInspectTree(userItem)}
-                        title="View Downline Tree Map"
-                        className="inline-flex items-center justify-center p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-all cursor-pointer"
-                      >
-                        <Network className="w-4 h-4" />
-                      </button>
-
-                      {/* Approve / Suspend toggler and Reject / Delete buttons */}
+                       {/* Edit Member Profile Details */}
+                       <button
+                         onClick={() => setEditingUser(userItem as User)}
+                         title="Edit Member Profile Details"
+                         className="inline-flex items-center justify-center p-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 transition-all cursor-pointer"
+                       >
+                         <Edit className="w-4 h-4" />
+                       </button>
+ 
+                       {/* Approve / Suspend toggler and Reject / Delete buttons */}
                       {userItem.role !== 'admin' && (
                         userItem.status === 'inactive' ? (
                           <div className="inline-flex items-center gap-1.5">
@@ -611,6 +624,19 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
                       <span className="text-slate-400 font-semibold block uppercase text-[9px]">Co-Applicant Address:</span>
                       <span className="font-bold text-slate-800 text-[11px]">{details.coApplicantAddress || 'N/A'}</span>
                     </div>
+                    {details.identityDocument && (
+                      <div className="col-span-2 pt-2">
+                        <span className="text-slate-400 font-semibold block uppercase text-[9px] mb-1">Uploaded ID Proof Scan:</span>
+                        <div className="w-full max-w-sm h-48 bg-white border border-slate-200 rounded-xl overflow-hidden p-1.5 shadow-sm">
+                          <img 
+                            src={details.identityDocument} 
+                            alt="Government ID Proof Scan" 
+                            className="w-full h-full object-contain rounded-lg" 
+                            referrerPolicy="no-referrer" 
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -838,6 +864,19 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
 
           </div>
         </div>
+      )}
+
+      {editingUser && (
+        <ProfileEditModal
+          isOpen={!!editingUser}
+          onClose={() => setEditingUser(null)}
+          user={editingUser}
+          onProfileUpdated={(updatedUser) => {
+            setUsers(prev => prev.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u));
+            setEditingUser(null);
+          }}
+          isAdminMode={true}
+        />
       )}
     </div>
   );

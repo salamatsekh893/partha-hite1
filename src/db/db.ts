@@ -43,7 +43,7 @@ const getMySQLPool = (): mysql.Pool | null => {
 
 // Seed admin user values
 const DEFAULT_ADMIN = {
-  name: 'System Admin (সিস্টেম এডমিন)',
+  name: 'System Admin',
   phone: '01700000000',
   email: 'admin@gmail.com',
   password: 'admin123',
@@ -296,6 +296,33 @@ export const DB = {
       try {
         const pool = getMySQLPool()!;
         await pool.query('UPDATE users SET status = ? WHERE id = ?', [activeStatus, id]);
+        return this.getUserById(id);
+      } catch (err: any) {
+        isDbConnected = false;
+        dbConnectionError = err.message || 'Query failed';
+        throw err;
+      }
+    } else {
+      throw new Error('MySQL Database is not connected: ' + (status.error || 'Connection offline'));
+    }
+  },
+
+  async updateUserProfile(id: number, name: string, email: string, phone: string, password?: string, additionalDetails?: string): Promise<User | null> {
+    const status = await this.getStatus();
+    if (status.connected) {
+      try {
+        const pool = getMySQLPool()!;
+        if (password && password.trim() !== "") {
+          await pool.query(
+            'UPDATE users SET name = ?, email = ?, phone = ?, password = ?, additional_details = ? WHERE id = ?', 
+            [name, email, phone, password, additionalDetails || null, id]
+          );
+        } else {
+          await pool.query(
+            'UPDATE users SET name = ?, email = ?, phone = ?, additional_details = ? WHERE id = ?', 
+            [name, email, phone, additionalDetails || null, id]
+          );
+        }
         return this.getUserById(id);
       } catch (err: any) {
         isDbConnected = false;

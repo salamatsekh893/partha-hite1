@@ -106,7 +106,7 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
 
     } catch (err) {
       console.error(err);
-      setError('ফটো কমপ্রেস ও আপলোড করতে ব্যর্থ হয়েছে। অনুগ্রহ করে অন্য ছবি চেষ্টা করুন।');
+      setError('Failed to compress and upload photo. Please try a different image.');
     } finally {
       setCompressing(false);
     }

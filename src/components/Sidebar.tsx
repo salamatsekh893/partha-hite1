@@ -8,9 +8,10 @@ interface SidebarProps {
   onLogout: () => void;
   currentView: 'dashboard' | 'admin' | 'auth';
   setView: (view: 'dashboard' | 'admin') => void;
+  onEditProfileClick: () => void;
 }
 
-export default function Sidebar({ isOpen, onClose, user, onLogout, currentView, setView }: SidebarProps) {
+export default function Sidebar({ isOpen, onClose, user, onLogout, currentView, setView, onEditProfileClick }: SidebarProps) {
   if (!user) return null;
 
   return (
@@ -98,6 +99,20 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, currentView, 
                   <span>Sponsor ID: {user.referrer_id}</span>
                 </div>
               )}
+            </div>
+
+            {/* Edit Profile Button */}
+            <div className="pt-2 border-t border-slate-200/50">
+              <button
+                onClick={() => {
+                  onClose();
+                  onEditProfileClick();
+                }}
+                className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-[11px] rounded-lg transition-colors cursor-pointer"
+              >
+                <UserIcon className="w-3.5 h-3.5" />
+                Edit Profile Info
+              </button>
             </div>
           </div>
 
