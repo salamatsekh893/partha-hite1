@@ -54,14 +54,14 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, currentView, 
           
           <div className="relative flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-base shadow-md shadow-indigo-500/30 ring-2 ring-indigo-400/30">
-                R
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-black text-base shadow-md shadow-indigo-500/30 ring-2 ring-indigo-400/30">
+                S
               </div>
               <div>
                 <h3 className="font-black text-sm text-white uppercase tracking-wider leading-none">
-                  Referral Plan
+                  SuccessIndia
                 </h3>
-                <span className="text-[10px] text-indigo-200/80 font-medium">Navigation Menu</span>
+                <span className="text-[10px] text-indigo-200/80 font-medium">Referral Portal Menu</span>
               </div>
             </div>
             
@@ -218,8 +218,8 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, currentView, 
             Logout Account
           </button>
           
-          <div className="text-center text-[10px] text-slate-400 font-medium">
-            Multi-Level Referral System © 2026
+          <div className="text-center text-[10px] text-slate-400 font-bold">
+            SuccessIndia Referral Network © 2026
           </div>
         </div>
       </aside>

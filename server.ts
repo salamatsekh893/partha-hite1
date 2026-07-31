@@ -20,6 +20,206 @@ app.use(express.urlencoded({ extended: true }));
 
 // --- API ROUTES ---
 
+// In-memory OTP storage for phone verification: mobile -> { otp, expiresAt }
+const otpStore = new Map<string, { otp: string; expiresAt: number }>();
+
+// Helper to clean phone numbers to digits only (e.g. +91 98145 22052 -> 919814522052)
+const cleanPhoneNumber = (phone: string): string => {
+  if (!phone) return '';
+  return phone.replace(/\D/g, '');
+};
+
+// OTP 1: Send OTP endpoint via apitxt.com
+app.post('/api/otp/send', async (req, res) => {
+  const { mobile, channel = 'sms', template_id, template_name, project_ref_id, country } = req.body;
+
+  if (!mobile) {
+    return res.status(400).json({ error: 'Mobile phone number is required to send OTP.' });
+  }
+
+  const cleanMobile = cleanPhoneNumber(mobile);
+  const last10Digits = cleanMobile.slice(-10);
+
+  if (cleanMobile.length < 6) {
+    return res.status(400).json({ error: 'Please enter a valid mobile number with country code.' });
+  }
+
+  // Generate a random 6-digit numeric OTP code
+  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes validity
+
+  // Store OTP against clean mobile, original input, and trailing 10 digits
+  const otpData = { otp: otpCode, expiresAt };
+  otpStore.set(cleanMobile, otpData);
+  if (mobile) otpStore.set(mobile, otpData);
+  if (last10Digits) otpStore.set(last10Digits, otpData);
+
+  const authKey = process.env.APITXT_AUTHKEY;
+  const templateIdConfig = template_id || process.env.APITXT_TEMPLATE_ID;
+
+  if (authKey && authKey.trim() !== '' && authKey !== 'YOUR_KEY') {
+    try {
+      // Build apitxt.com URL
+      const apiUrl = new URL('https://apitxt.com/api/sendOTP');
+      apiUrl.searchParams.append('authkey', authKey.trim());
+      apiUrl.searchParams.append('mobile', cleanMobile);
+      apiUrl.searchParams.append('otp', otpCode);
+
+      if (channel) apiUrl.searchParams.append('channel', channel);
+      if (templateIdConfig) apiUrl.searchParams.append('template_id', templateIdConfig);
+      if (template_name) apiUrl.searchParams.append('template_name', template_name);
+      if (project_ref_id) apiUrl.searchParams.append('project_ref_id', project_ref_id);
+      if (country) apiUrl.searchParams.append('country', country);
+
+      console.log(`Sending OTP via apitxt.com API to mobile: ${cleanMobile} [Channel: ${channel}] [OTP: ${otpCode}]`);
+
+      const apiRes = await fetch(apiUrl.toString());
+      const apiData = await apiRes.text();
+
+      console.log('apitxt.com API response:', apiData);
+
+      return res.json({
+        success: true,
+        message: `OTP sent successfully via ${channel.toUpperCase()}!`,
+        mobile: cleanMobile,
+        apiResponse: apiData,
+      });
+    } catch (err: any) {
+      console.error('Failed to dispatch OTP via apitxt.com:', err);
+      // Fallback response with demo OTP if live API call failed
+      return res.json({
+        success: true,
+        message: 'OTP dispatch attempted. (Fallback code generated)',
+        otp: otpCode,
+        isDemo: true,
+        error: err.message,
+      });
+    }
+  } else {
+    // Demo Mode (When APITXT_AUTHKEY is not yet added in environment settings)
+    console.log(`[DEMO MODE] OTP for ${cleanMobile}: ${otpCode}`);
+    return res.json({
+      success: true,
+      message: 'OTP sent! (Demo mode: Use code below or add APITXT_AUTHKEY in .env)',
+      otp: otpCode,
+      isDemo: true,
+      mobile: cleanMobile,
+    });
+  }
+});
+
+// OTP 2: Verify OTP endpoint
+app.post('/api/otp/verify', (req, res) => {
+  const { mobile, otp } = req.body;
+
+  if (!mobile || !otp) {
+    return res.status(400).json({ error: 'Both mobile number and OTP code are required.' });
+  }
+
+  const cleanMobile = cleanPhoneNumber(mobile);
+  const last10Digits = cleanMobile.slice(-10);
+  const stored = otpStore.get(cleanMobile) || otpStore.get(mobile) || otpStore.get(last10Digits);
+
+  if (!stored) {
+    return res.status(400).json({ error: 'No OTP requested for this mobile number. Please request a new OTP.' });
+  }
+
+  if (Date.now() > stored.expiresAt) {
+    otpStore.delete(cleanMobile);
+    otpStore.delete(mobile);
+    otpStore.delete(last10Digits);
+    return res.status(400).json({ error: 'OTP has expired. Please request a new OTP.' });
+  }
+
+  if (stored.otp !== otp.toString().trim()) {
+    return res.status(400).json({ error: 'Invalid OTP code. Please check and try again.' });
+  }
+
+  // OTP verified successfully! Clear stored OTP
+  otpStore.delete(cleanMobile);
+  otpStore.delete(mobile);
+  otpStore.delete(last10Digits);
+
+  return res.json({
+    success: true,
+    message: 'Mobile number verified successfully!',
+    mobile: cleanMobile,
+  });
+});
+
+// OTP 3: Mobile Login using OTP endpoint
+app.post('/api/auth/login-otp', async (req, res) => {
+  const { mobile, otp } = req.body;
+
+  if (!mobile || !otp) {
+    return res.status(400).json({ error: 'Please enter your mobile number and OTP code.' });
+  }
+
+  const cleanMobile = cleanPhoneNumber(mobile);
+  const last10Digits = cleanMobile.slice(-10);
+  const stored = otpStore.get(cleanMobile) || otpStore.get(mobile) || otpStore.get(last10Digits);
+
+  if (!stored) {
+    return res.status(400).json({ error: 'No active OTP found for this number. Please click "Send OTP" first.' });
+  }
+
+  if (Date.now() > stored.expiresAt) {
+    otpStore.delete(cleanMobile);
+    otpStore.delete(mobile);
+    otpStore.delete(last10Digits);
+    return res.status(400).json({ error: 'OTP has expired. Please request a new OTP.' });
+  }
+
+  if (stored.otp !== otp.toString().trim()) {
+    return res.status(400).json({ error: 'Invalid OTP code entered. Please check the code received.' });
+  }
+
+  // Clear OTP on successful match
+  otpStore.delete(cleanMobile);
+  otpStore.delete(mobile);
+  otpStore.delete(last10Digits);
+
+  try {
+    // Find user by phone number (try full mobile, clean mobile, or last 10 digits)
+    let user = await DB.getUserByEmailOrPhone(mobile);
+    if (!user && cleanMobile) {
+      user = await DB.getUserByEmailOrPhone(cleanMobile);
+    }
+    if (!user && last10Digits) {
+      user = await DB.getUserByEmailOrPhone(last10Digits);
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'No registered member account found with this phone number. Please click "Create an account" to register.'
+      });
+    }
+
+    if (user.status !== 'active' && user.role !== 'admin') {
+      return res.status(403).json({
+        error: 'Your account is registered but currently Pending Admin Approval. Please wait for an administrator to activate your account.'
+      });
+    }
+
+    return res.json({
+      message: 'OTP Login successful!',
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        referrer_id: user.referrer_id,
+        status: user.status,
+        role: user.role,
+        additional_details: user.additional_details,
+      }
+    });
+  } catch (err: any) {
+    console.error('OTP Login error:', err);
+    return res.status(500).json({ error: 'Server error during OTP login.' });
+  }
+});
+
 // Middleware to verify if a request is authenticated
 const authenticateUser = async (req: express.Request, res: express.Response, next: express.NextFunction) => {
   const userIdHeader = req.headers['x-user-id'];

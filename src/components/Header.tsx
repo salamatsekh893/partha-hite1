@@ -42,15 +42,15 @@ export default function Header({ user, onLogout, currentView, setView, onMenuCli
             )}
             
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-lg shadow-sm">
-                R
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-black text-lg shadow-md shadow-indigo-600/30 ring-1 ring-white/20">
+                S
               </div>
               <div className="text-left">
-                <h1 className="text-sm sm:text-base font-extrabold text-white tracking-tight leading-tight">
-                  Referral Plan
+                <h1 className="text-sm sm:text-base font-black text-white tracking-tight leading-tight">
+                  SuccessIndia
                 </h1>
-                <span className="text-[9px] text-slate-400 font-bold tracking-wider uppercase block -mt-0.5">
-                  Unlimited Downline Network
+                <span className="text-[9px] text-indigo-300 font-bold tracking-wider uppercase block -mt-0.5">
+                  Unlimited Referral Network
                 </span>
               </div>
             </div>

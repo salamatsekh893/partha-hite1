@@ -190,9 +190,9 @@ export default function App() {
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-8 text-center text-xs text-slate-500 mt-16">
         <div className="max-w-7xl mx-auto px-4 space-y-2">
-          <p>© {new Date().getFullYear()} Unlimited Level Referral Plan. All rights reserved.</p>
+          <p className="font-bold text-slate-700">© {new Date().getFullYear()} SuccessIndia. All rights reserved.</p>
           <p className="text-[11px] text-slate-400">
-            Engineered with React 19 + Vite + Express + pure MySQL driver for high portability and auto-provisioning.
+            Powered by SuccessIndia Multi-Level Referral Network Platform.
           </p>
         </div>
       </footer>
