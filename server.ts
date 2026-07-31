@@ -1,7 +1,6 @@
 import express from 'express';
 import path from 'path';
 import dotenv from 'dotenv';
-import { createServer as createViteServer } from 'vite';
 import { DB } from './src/db/db.js';
 import { User } from './src/types.js';
 
@@ -306,13 +305,20 @@ async function bootstrap() {
   await DB.init();
 
   // 2. Vite Integration or Production static serving
-  if (process.env.NODE_ENV !== 'production') {
+  const isProduction = process.env.NODE_ENV === 'production' || 
+    (typeof __filename !== 'undefined' && __filename.endsWith('.cjs')) || 
+    (typeof __dirname !== 'undefined' && __dirname.includes('dist'));
+  
+  if (!isProduction) {
+    console.log("Starting in development mode with Vite...");
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
   } else {
+    console.log("Starting in production mode (serving static files)...");
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
