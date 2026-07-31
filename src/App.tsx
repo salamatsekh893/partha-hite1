@@ -110,60 +110,60 @@ export default function App() {
           )
         ) : (
           /* ANONYMOUS/AUTH VIEWS */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:items-center py-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 lg:items-center py-4">
             {/* Left Column: Visual Information & Promotion */}
-            <div className="lg:col-span-7 space-y-8 text-left">
-              <div className="space-y-4">
-                <span className="inline-flex items-center gap-1.5 bg-indigo-50 border border-indigo-100/50 text-indigo-700 px-3.5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                  🚀 Unlimited Depth Referral Program
+            <div className="lg:col-span-7 space-y-6 text-left">
+              <div className="space-y-3">
+                <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-indigo-50 to-indigo-100/80 border border-indigo-200/60 text-indigo-700 px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide shadow-sm">
+                  🚀 Unlimited Depth Referral Platform
                 </span>
-                <h2 className="text-4xl sm:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                  Real-Time <span className="text-indigo-600">Level Plan</span> Network
+                <h2 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+                  Real-Time <span className="bg-gradient-to-r from-indigo-600 to-indigo-800 bg-clip-text text-transparent">Level Plan</span> Network
                 </h2>
-                <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl">
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl font-medium">
                   Join our high-performance platform to build and scale your downline structure. Access unlimited depth tracking, automated referral paths, and instant graphical hierarchy rendering.
                 </p>
               </div>
 
-              {/* Informational Cards (No Nesting, Clean Grid) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
-                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-2.5 transition-all hover:shadow-md hover:border-slate-300">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-                    <Network className="w-4 h-4" />
+              {/* Informational Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-2 transition-all hover:shadow-md hover:border-indigo-200 group">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold group-hover:scale-105 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+                    <Network className="w-5 h-5" />
                   </div>
-                  <h3 className="font-bold text-slate-800 text-sm">Infinite Level Chain</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Direct referrals join your Level 1 downline. When they recruit, their signups cascade into Level 2, Level 3, and so on, building an organic branch to infinite depths.
+                  <h3 className="font-extrabold text-slate-900 text-sm">Infinite Level Chain</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                    Direct referrals join Level 1. When they recruit, their signups cascade into Level 2, 3, and beyond to infinite depths.
                   </p>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-2.5 transition-all hover:shadow-md hover:border-slate-300">
-                  <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-                    <Shield className="w-4 h-4" />
+                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-2 transition-all hover:shadow-md hover:border-amber-200 group">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold group-hover:scale-105 group-hover:bg-amber-500 group-hover:text-white transition-all shadow-sm">
+                    <Shield className="w-5 h-5" />
                   </div>
-                  <h3 className="font-bold text-slate-800 text-sm">Admin Verification Gate</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Security-focused account workflow. Newly registered users start in pending status and require admin approval before they can activate and share their sponsor link.
+                  <h3 className="font-extrabold text-slate-900 text-sm">Admin Verification Gate</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                    Security-focused account workflow. Newly registered users start in pending status and require admin approval for activation.
                   </p>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-2.5 transition-all hover:shadow-md hover:border-slate-300">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
-                    <TrendingUp className="w-4 h-4" />
+                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-2 transition-all hover:shadow-md hover:border-emerald-200 group">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold group-hover:scale-105 group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm">
+                    <TrendingUp className="w-5 h-5" />
                   </div>
-                  <h3 className="font-bold text-slate-800 text-sm">Remote Database Sync</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Powered by a robust remote MySQL integration. Every sign-up, downline connection, and hierarchy update is logged securely and rendered in real time.
+                  <h3 className="font-extrabold text-slate-900 text-sm">Remote Database Sync</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                    Powered by robust database integration. Every sign-up, downline connection, and hierarchy update is logged securely in real time.
                   </p>
                 </div>
 
-                <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-2.5 transition-all hover:shadow-md hover:border-slate-300">
-                  <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-                    <Users className="w-4 h-4" />
+                <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm space-y-2 transition-all hover:shadow-md hover:border-indigo-200 group">
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold group-hover:scale-105 group-hover:bg-indigo-600 group-hover:text-white transition-all shadow-sm">
+                    <Users className="w-5 h-5" />
                   </div>
-                  <h3 className="font-bold text-slate-800 text-sm">Interactive Visualizer</h3>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    Explore deep organizational pathways using our modern recursive tree widget. Expand and collapse node elements smoothly with live status checks.
+                  <h3 className="font-extrabold text-slate-900 text-sm">Interactive Visualizer</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                    Explore deep organizational pathways using our modern recursive tree widget. Expand and collapse node elements with live status.
                   </p>
                 </div>
               </div>
