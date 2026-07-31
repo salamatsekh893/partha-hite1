@@ -96,6 +96,7 @@ export default function App() {
           setUser(updatedUser);
           localStorage.setItem('mlm_user_session', JSON.stringify(updatedUser));
         }}
+        loggedInUserId={user?.id}
       />
 
       {/* 3. Main Body */}

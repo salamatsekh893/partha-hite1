@@ -876,6 +876,7 @@ export default function AdminPanel({ adminUser }: AdminPanelProps) {
             setEditingUser(null);
           }}
           isAdminMode={true}
+          loggedInUserId={adminUser.id}
         />
       )}
     </div>

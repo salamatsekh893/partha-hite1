@@ -11,16 +11,18 @@ interface ProfileEditModalProps {
   user: User | null;
   onProfileUpdated: (updatedUser: User) => void;
   isAdminMode?: boolean; // If true, uses admin-specific endpoint
+  loggedInUserId?: number; // The user ID performing the action (for authentication headers)
 }
 
 type TabType = 'account' | 'personal' | 'address' | 'documents';
 
-export default function ProfileEditModal({ isOpen, onClose, user, onProfileUpdated, isAdminMode = false }: ProfileEditModalProps) {
+export default function ProfileEditModal({ isOpen, onClose, user, onProfileUpdated, isAdminMode = false, loggedInUserId }: ProfileEditModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>('account');
   
   // Credentials / Core info
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [countryCode, setCountryCode] = useState('+880');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -76,7 +78,37 @@ export default function ProfileEditModal({ isOpen, onClose, user, onProfileUpdat
     if (user && isOpen) {
       setName(user.name || '');
       setEmail(user.email || '');
-      setPhone(user.phone || '');
+      
+      // Smartly parse country code and phone number
+      let phoneVal = user.phone || '';
+      let matchedCode = '+880'; // Default BD
+      const codes = ['+880', '+91', '+966', '+971', '+965', '+968', '+974', '+973', '+1', '+44'];
+      let found = false;
+      for (const code of codes) {
+        if (phoneVal.startsWith(code)) {
+          matchedCode = code;
+          phoneVal = phoneVal.substring(code.length);
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        if (phoneVal.length === 10) {
+          matchedCode = '+91';
+        } else if (phoneVal.length === 11 && phoneVal.startsWith('01')) {
+          matchedCode = '+880';
+          phoneVal = phoneVal.substring(1);
+        } else if (phoneVal.startsWith('880')) {
+          matchedCode = '+880';
+          phoneVal = phoneVal.substring(3);
+        } else if (phoneVal.startsWith('91')) {
+          matchedCode = '+91';
+          phoneVal = phoneVal.substring(2);
+        }
+      }
+      setCountryCode(matchedCode);
+      setPhone(phoneVal);
+
       setPassword('');
       setConfirmPassword('');
       setError(null);
@@ -286,7 +318,7 @@ export default function ProfileEditModal({ isOpen, onClose, user, onProfileUpdat
         userId: isAdminMode ? user.id : undefined,
         name: name.trim(),
         email: email.trim(),
-        phone: phone.trim(),
+        phone: (countryCode + phone.trim()),
         password: password ? password : undefined,
         additionalDetails: mergedDetails
       };
@@ -295,6 +327,7 @@ export default function ProfileEditModal({ isOpen, onClose, user, onProfileUpdat
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-User-Id': (loggedInUserId || user?.id || '').toString(),
         },
         body: JSON.stringify(bodyPayload),
       });
@@ -447,18 +480,39 @@ export default function ProfileEditModal({ isOpen, onClose, user, onProfileUpdat
                   <label className="block text-xs font-bold text-slate-700 mb-1">
                     Mobile / Phone <span className="text-rose-500">*</span>
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Phone className="w-4 h-4 text-slate-400" />
+                  <div className="flex gap-2">
+                    <div className="relative w-1/3 min-w-[120px] shrink-0">
+                      <select
+                        value={countryCode}
+                        onChange={(e) => setCountryCode(e.target.value)}
+                        className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-semibold appearance-none text-slate-700 cursor-pointer pr-7"
+                        style={{ backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`, backgroundPosition: 'right 0.5rem center', backgroundSize: '1em', backgroundRepeat: 'no-repeat' }}
+                      >
+                        <option value="+880">🇧🇩 BD (+880)</option>
+                        <option value="+91">🇮🇳 IN (+91)</option>
+                        <option value="+966">🇸🇦 SA (+966)</option>
+                        <option value="+971">🇦🇪 AE (+971)</option>
+                        <option value="+965">🇰🇼 KW (+965)</option>
+                        <option value="+968">🇴🇲 OM (+968)</option>
+                        <option value="+974">🇶🇦 QA (+974)</option>
+                        <option value="+973">🇧🇭 BH (+973)</option>
+                        <option value="+1">🇺🇸 US (+1)</option>
+                        <option value="+44">🇬🇧 UK (+44)</option>
+                      </select>
                     </div>
-                    <input
-                      type="text"
-                      required
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="Phone number"
-                      className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium"
-                    />
+                    <div className="relative flex-1">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Phone className="w-4 h-4 text-slate-400" />
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                        placeholder="Phone number"
+                        className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
