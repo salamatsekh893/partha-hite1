@@ -1,0 +1,6 @@
+{
+  "name": "Unlimited Level Referral Plan",
+  "description": "A robust, multi-level marketing (MLM) referral plan with unlimited downline tracking, custom registration, secure login, and a powerful admin approval panel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
