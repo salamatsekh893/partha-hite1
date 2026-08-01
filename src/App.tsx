@@ -54,6 +54,16 @@ export default function App() {
       }
     }
     setInitializing(false);
+
+    const handleProfileUpdate = (e: any) => {
+      if (e.detail) {
+        setUser(e.detail);
+      }
+    };
+    window.addEventListener('user-profile-updated', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('user-profile-updated', handleProfileUpdate);
+    };
   }, []);
 
   const handleLoginSuccess = (loggedInUser: User) => {
@@ -100,6 +110,7 @@ export default function App() {
         setView={(v) => setView(v)} 
         onMenuClick={() => setIsSidebarOpen(true)}
         onOpenAuthModal={handleOpenAuthModal}
+        onEditProfileClick={() => setIsProfileModalOpen(true)}
       />
 
       <Sidebar 

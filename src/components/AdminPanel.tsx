@@ -474,32 +474,81 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
   return (
     <div id="admin-panel-root" className="space-y-6">
       {/* 1. Compact & Premium Admin Banner */}
-      <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white rounded-2xl p-4 sm:px-6 sm:py-4 shadow-lg shadow-indigo-950/20 border border-indigo-700/30 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-indigo-950 via-indigo-900 to-slate-900 text-white rounded-2xl p-4 sm:px-6 sm:py-5 shadow-lg shadow-indigo-950/30 border border-indigo-700/40 relative overflow-hidden">
         {/* Subtle decorative glow elements */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-purple-500/15 blur-2xl pointer-events-none"></div>
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-amber-500/10 blur-2xl pointer-events-none"></div>
         <div className="absolute left-1/3 bottom-0 w-32 h-32 rounded-full bg-indigo-400/10 blur-xl pointer-events-none"></div>
 
-        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 bg-amber-400/15 text-amber-300 border border-amber-400/30 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold tracking-wide backdrop-blur-sm shadow-sm">
-                <Shield className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-                SYSTEM ADMIN
-              </span>
-              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">Admin Control Panel</h2>
+        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 text-left">
+            {/* Admin Avatar Display */}
+            {(() => {
+              let photo: string | null = null;
+              try {
+                if (adminUser.additional_details) {
+                  const details = typeof adminUser.additional_details === 'string'
+                    ? JSON.parse(adminUser.additional_details)
+                    : adminUser.additional_details;
+                  photo = details?.photo || null;
+                }
+              } catch (e) {}
+
+              if (photo) {
+                return (
+                  <img
+                    src={photo}
+                    alt={adminUser.name}
+                    className="w-12 h-14 rounded-xl object-cover ring-2 ring-amber-400 shrink-0 shadow-md"
+                    referrerPolicy="no-referrer"
+                  />
+                );
+              }
+              return (
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 flex items-center justify-center font-black text-xl shrink-0 shadow-md ring-2 ring-amber-300">
+                  {adminUser.name ? adminUser.name.charAt(0).toUpperCase() : 'A'}
+                </div>
+              );
+            })()}
+
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 bg-amber-400/15 text-amber-300 border border-amber-400/30 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold tracking-wide backdrop-blur-sm shadow-sm">
+                  <Shield className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+                  SYSTEM ADMIN
+                </span>
+                <span className="text-xs font-mono font-bold text-indigo-200 bg-white/10 px-2 py-0.5 rounded">
+                  ID: #{adminUser.id}
+                </span>
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                <span>{adminUser.name}</span>
+                <span className="text-xs font-normal text-slate-300">({adminUser.email})</span>
+              </h2>
+              <p className="text-xs text-indigo-100/80 max-w-xl leading-normal font-medium">
+                Approve registrations, inspect active member downlines, manage live website media, and edit admin profile.
+              </p>
             </div>
-            <p className="text-xs text-indigo-100/80 max-w-2xl leading-normal font-medium">
-              Approve registrations, inspect active member counts, and monitor the multi-level referral network depth.
-            </p>
           </div>
           
-          <button
-            onClick={fetchAdminData}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 border border-white/20 hover:border-white/40 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all shadow-sm active:scale-95 shrink-0 self-start sm:self-auto cursor-pointer backdrop-blur-sm"
-          >
-            <RefreshCw className="w-3.5 h-3.5 text-indigo-200" />
-            Refresh Data
-          </button>
+          <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto flex-wrap">
+            <button
+              type="button"
+              onClick={() => setEditingUser(adminUser)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-amber-400/60 hover:border-amber-400 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black transition-all shadow-md active:scale-95 cursor-pointer"
+              title="Edit System Admin Profile"
+            >
+              <Edit className="w-3.5 h-3.5 text-slate-950" />
+              <span>Edit Admin Profile</span>
+            </button>
+            <button
+              type="button"
+              onClick={fetchAdminData}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-white/20 hover:border-white/40 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all shadow-sm active:scale-95 cursor-pointer backdrop-blur-sm"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-indigo-200" />
+              <span>Refresh Data</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1660,6 +1709,10 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
             setUsers(prev => prev.map(u => u.id === updatedUser.id ? { ...u, ...updatedUser } : u));
             setEditingUser(null);
             fetchAdminData();
+            if (updatedUser.id === adminUser.id) {
+              localStorage.setItem('mlm_user_session', JSON.stringify(updatedUser));
+              window.dispatchEvent(new CustomEvent('user-profile-updated', { detail: updatedUser }));
+            }
           }}
           isAdminMode={true}
           loggedInUserId={adminUser.id}

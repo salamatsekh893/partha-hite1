@@ -8,9 +8,10 @@ interface HeaderProps {
   setView: (view: 'dashboard' | 'admin') => void;
   onMenuClick: () => void;
   onOpenAuthModal?: (mode?: 'login' | 'register') => void;
+  onEditProfileClick?: () => void;
 }
 
-export default function Header({ user, onLogout, currentView, setView, onMenuClick, onOpenAuthModal }: HeaderProps) {
+export default function Header({ user, onLogout, currentView, setView, onMenuClick, onOpenAuthModal, onEditProfileClick }: HeaderProps) {
   // Parse user additional_details for profile photo
   let headerPhoto: string | null = null;
   try {
@@ -89,7 +90,12 @@ export default function Header({ user, onLogout, currentView, setView, onMenuCli
               )}
 
               {/* Quick Profile Badge */}
-              <div className="hidden sm:flex items-center gap-2 bg-amber-50 border border-amber-200/80 px-3 py-1.5 rounded-xl shadow-sm">
+              <button
+                type="button"
+                onClick={onEditProfileClick}
+                className="hidden sm:flex items-center gap-2 bg-amber-50 hover:bg-amber-100/90 border border-amber-200/90 px-3 py-1.5 rounded-xl shadow-xs transition-all cursor-pointer group"
+                title="Edit Profile Info"
+              >
                 {headerPhoto ? (
                   <img 
                     src={headerPhoto} 
@@ -102,8 +108,11 @@ export default function Header({ user, onLogout, currentView, setView, onMenuCli
                     {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon className="w-3 text-slate-950" />}
                   </div>
                 )}
-                <span className="text-xs font-black text-slate-900">{user.name}</span>
-              </div>
+                <span className="text-xs font-black text-slate-900 group-hover:text-amber-900 transition-colors">{user.name}</span>
+                <span className="text-[10px] text-amber-700 bg-amber-200/60 font-extrabold px-1.5 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                  Edit
+                </span>
+              </button>
 
               {/* Quick Logout */}
               <button
