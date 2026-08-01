@@ -6,6 +6,7 @@ import {
   Check, Star, Video, Globe, Play, Pause, Maximize2, Grid, Layers
 } from 'lucide-react';
 import { WebsiteContent } from '../types.js';
+import { getEmbedVideoUrl, getDirectImageUrl } from '../utils/mediaUtils.js';
 
 interface SolarLandingProps {
   onOpenAuthModal: (mode: 'login' | 'register') => void;
@@ -508,7 +509,7 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
                           {current.type === 'photo' && current.media_url && (
                             <div className="relative w-full h-full min-h-[180px] lg:min-h-[240px]">
                               <img
-                                src={current.media_url}
+                                src={getDirectImageUrl(current.media_url)}
                                 alt={current.title}
                                 className="w-full h-full object-cover max-h-[260px]"
                                 onError={(e) => {
@@ -526,29 +527,16 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
 
                           {current.type === 'video' && (
                             <div className="w-full h-full min-h-[180px] lg:min-h-[240px] bg-slate-950 flex items-center justify-center">
-                              {current.media_url?.includes('youtube.com') || current.media_url?.includes('youtu.be') ? (
+                              {current.media_url?.startsWith('data:video') ? (
+                                <video src={current.media_url} controls className="w-full h-full object-contain" />
+                              ) : (
                                 <iframe
-                                  src={current.media_url.replace('watch?v=', 'embed/')}
+                                  src={getEmbedVideoUrl(current.media_url)}
                                   title={current.title}
                                   className="w-full h-full min-h-[180px] lg:min-h-[240px] border-0"
                                   allowFullScreen
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 />
-                              ) : current.media_url?.startsWith('data:video') ? (
-                                <video src={current.media_url} controls className="w-full h-full object-contain" />
-                              ) : (
-                                <div className="text-center p-3 space-y-1.5">
-                                  <div className="w-10 h-10 rounded-full bg-rose-600 text-white flex items-center justify-center mx-auto shadow-md">
-                                    <Play className="w-5 h-5 fill-white ml-0.5" />
-                                  </div>
-                                  <a
-                                    href={current.media_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="px-3 py-1 bg-rose-600 hover:bg-rose-500 rounded-full text-[10px] font-black text-white inline-block shadow-xs"
-                                  >
-                                    Open Stream
-                                  </a>
-                                </div>
                               )}
                             </div>
                           )}
@@ -719,7 +707,7 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
                     {item.type === 'photo' && item.media_url && (
                       <div className="relative h-32 sm:h-36 rounded-lg bg-slate-900 overflow-hidden group">
                         <img
-                          src={item.media_url}
+                          src={getDirectImageUrl(item.media_url)}
                           alt={item.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           onError={(e) => {
@@ -728,11 +716,11 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
                         />
                         <button
                           onClick={() => setLightboxMedia(item)}
-                          className="absolute top-1.5 right-1.5 p-1 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white text-[10px] font-black shadow-xs cursor-pointer flex items-center gap-0.5"
+                          className="absolute top-1.5 right-1.5 p-1 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white text-[10px] font-black shadow-xs cursor-pointer flex items-center gap-0.5 z-10"
                         >
                           <Maximize2 className="w-3 h-3" />
                         </button>
-                        <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-blue-600 text-white text-[9px] font-bold uppercase tracking-wider shadow-xs flex items-center gap-1">
+                        <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-blue-600 text-white text-[9px] font-bold uppercase tracking-wider shadow-xs flex items-center gap-1 z-10">
                           <ImageIcon className="w-3 h-3" /> Photo
                         </span>
                       </div>
@@ -741,29 +729,18 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
                     {/* Video Preview */}
                     {item.type === 'video' && (
                       <div className="relative h-32 sm:h-36 rounded-lg bg-slate-950 flex items-center justify-center overflow-hidden">
-                        {item.media_url?.includes('youtube.com') || item.media_url?.includes('youtu.be') ? (
+                        {item.media_url?.startsWith('data:video') ? (
+                          <video src={item.media_url} controls className="w-full h-full object-cover" />
+                        ) : (
                           <iframe
-                            src={item.media_url.replace('watch?v=', 'embed/')}
+                            src={getEmbedVideoUrl(item.media_url)}
                             title={item.title}
                             className="w-full h-full border-0"
                             allowFullScreen
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                           />
-                        ) : item.media_url?.startsWith('data:video') ? (
-                          <video src={item.media_url} controls className="w-full h-full object-cover" />
-                        ) : (
-                          <a
-                            href={item.media_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-center p-2 space-y-1 group"
-                          >
-                            <div className="w-10 h-10 rounded-full bg-rose-600 group-hover:bg-rose-500 text-white flex items-center justify-center mx-auto shadow-md transition-transform group-hover:scale-105">
-                              <Play className="w-5 h-5 fill-white ml-0.5" />
-                            </div>
-                            <span className="text-[10px] font-bold text-slate-200 block underline">Stream Video</span>
-                          </a>
                         )}
-                        <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-rose-600 text-white text-[9px] font-bold uppercase tracking-wider shadow-xs flex items-center gap-1">
+                        <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-rose-600 text-white text-[9px] font-bold uppercase tracking-wider shadow-xs flex items-center gap-1 z-10">
                           <Video className="w-3 h-3" /> Video
                         </span>
                       </div>

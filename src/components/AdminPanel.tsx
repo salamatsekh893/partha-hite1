@@ -5,6 +5,7 @@ import {
   Globe, Video, Image as ImageIcon, Plus, Eye, EyeOff, Sparkles, Upload, Play, Check, ExternalLink, Layers, X
 } from 'lucide-react';
 import { User, SystemStats, ReferralTreeNode, WebsiteContent } from '../types.js';
+import { getEmbedVideoUrl, getDirectImageUrl } from '../utils/mediaUtils.js';
 import VisualTree from './VisualTree.js';
 import ProfileEditModal from './ProfileEditModal.js';
 
@@ -1311,12 +1312,32 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
 
                     {/* Media Preview */}
                     {newMediaUrl && (
-                      <div className="mt-2 p-2 bg-white border border-slate-200 rounded-xl">
-                        <span className="text-[10px] font-extrabold text-slate-500 uppercase block mb-1">Media Preview:</span>
+                      <div className="mt-2 p-2 bg-slate-900 border border-slate-700 rounded-xl">
+                        <span className="text-[10px] font-extrabold text-amber-400 uppercase block mb-1">
+                          Media Live Preview:
+                        </span>
                         {newType === 'photo' ? (
-                          <img src={newMediaUrl} alt="Preview" className="max-h-36 rounded-lg object-cover mx-auto shadow-xs" />
+                          <img
+                            src={getDirectImageUrl(newMediaUrl)}
+                            alt="Preview"
+                            className="max-h-40 rounded-lg object-contain mx-auto shadow-md"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none';
+                            }}
+                          />
                         ) : (
-                          <div className="text-[11px] font-mono text-rose-600 bg-rose-50 p-2 rounded-lg truncate">{newMediaUrl}</div>
+                          <div className="w-full h-44 rounded-lg overflow-hidden bg-black flex items-center justify-center">
+                            {newMediaUrl.startsWith('data:video') ? (
+                              <video src={newMediaUrl} controls className="w-full h-full object-contain" />
+                            ) : (
+                              <iframe
+                                src={getEmbedVideoUrl(newMediaUrl)}
+                                title="Video Preview"
+                                className="w-full h-full border-0"
+                                allowFullScreen
+                              />
+                            )}
+                          </div>
                         )}
                       </div>
                     )}
@@ -1445,14 +1466,14 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
                       {item.type === 'photo' && item.media_url && (
                         <div className="relative h-40 bg-slate-900 overflow-hidden group">
                           <img
-                            src={item.media_url}
+                            src={getDirectImageUrl(item.media_url)}
                             alt={item.title}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onError={(e) => {
                               (e.target as HTMLElement).style.display = 'none';
                             }}
                           />
-                          <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-blue-600 text-white text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-xs">
+                          <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-blue-600 text-white text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-xs z-10">
                             <ImageIcon className="w-3 h-3" /> Photo
                           </span>
                         </div>
@@ -1460,23 +1481,17 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
 
                       {item.type === 'video' && (
                         <div className="relative h-40 bg-slate-950 flex items-center justify-center overflow-hidden">
-                          {item.media_url?.includes('youtube.com') || item.media_url?.includes('youtu.be') ? (
-                            <iframe
-                              src={item.media_url.replace('watch?v=', 'embed/')}
-                              title={item.title}
-                              className="w-full h-full border-0 pointer-events-none"
-                            />
-                          ) : item.media_url?.startsWith('data:video') ? (
-                            <video src={item.media_url} className="w-full h-full object-cover" />
+                          {item.media_url?.startsWith('data:video') ? (
+                            <video src={item.media_url} className="w-full h-full object-cover" controls />
                           ) : (
-                            <div className="text-center p-3 space-y-1">
-                              <div className="w-10 h-10 rounded-full bg-rose-600 text-white flex items-center justify-center mx-auto shadow-xs">
-                                <Play className="w-5 h-5 fill-white ml-0.5" />
-                              </div>
-                              <span className="text-[10px] text-slate-300 font-mono block truncate max-w-xs">{item.media_url}</span>
-                            </div>
+                            <iframe
+                              src={getEmbedVideoUrl(item.media_url)}
+                              title={item.title}
+                              className="w-full h-full border-0"
+                              allowFullScreen
+                            />
                           )}
-                          <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-xs">
+                          <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-xs z-10">
                             <Video className="w-3 h-3" /> Video
                           </span>
                         </div>
