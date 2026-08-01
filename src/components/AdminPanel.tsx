@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, CheckCircle2, XCircle, Search, RefreshCw, 
   Calendar, Shield, ShieldCheck, UserCheck, AlertCircle, Phone, Mail, Network, FileText, Trash2, Edit,
-  Globe, Video, Image as ImageIcon, Plus, Eye, EyeOff, Sparkles, Upload, Play, Check, ExternalLink, Layers
+  Globe, Video, Image as ImageIcon, Plus, Eye, EyeOff, Sparkles, Upload, Play, Check, ExternalLink, Layers, X
 } from 'lucide-react';
 import { User, SystemStats, ReferralTreeNode, WebsiteContent } from '../types.js';
 import VisualTree from './VisualTree.js';
@@ -35,7 +35,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
   const [websiteContents, setWebsiteContents] = useState<WebsiteContent[]>([]);
   const [websiteLoading, setWebsiteLoading] = useState(false);
   const [websiteFilter, setWebsiteFilter] = useState<'all' | 'photo' | 'video' | 'text'>('all');
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(true);
   
   // New content form fields
   const [newType, setNewType] = useState<'photo' | 'video' | 'text'>('photo');
@@ -109,16 +109,55 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
     fetchWebsiteContents();
   }, [adminUser.id]);
 
-  // Handle local file upload for photos or videos
+  // Handle local file upload for photos or videos with auto-compression for photos
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 15 * 1024 * 1024) {
-      alert('File size is larger than 15MB. Please choose a smaller file or paste an external media URL.');
+    if (file.size > 25 * 1024 * 1024) {
+      alert('File size is larger than 25MB. Please choose a smaller file or paste an external video link.');
       return;
     }
 
+    // If it's an image, compress it via canvas for optimal upload speed & small payload size
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1600;
+
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+            setNewMediaUrl(compressedDataUrl);
+          } else {
+            setNewMediaUrl(event.target?.result as string);
+          }
+        };
+        img.src = event.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    // For videos or other files, read directly
     const reader = new FileReader();
     reader.onloadend = () => {
       if (typeof reader.result === 'string') {
@@ -1059,48 +1098,241 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
       )}
         </>
       ) : (
-        /* WEBSITE MANAGEMENT TAB (ওয়েবসাইট কন্টেন্ট ম্যানেজমেন্ট) */
-        <div className="space-y-6 animate-fade-in">
-          {/* Header Banner */}
-          <div className="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative overflow-hidden">
-            <div className="absolute top-0 right-0 transform translate-x-8 -translate-y-8 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="space-y-2 relative z-10">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/30 text-xs font-bold">
-                <Globe className="w-3.5 h-3.5" /> Website Live Control Center
+        /* WEBSITE MANAGEMENT TAB (ওয়েবসাইট কন্টেন্ট ম্যানেজমেন্ট - COMPACT ELEGANT UI) */
+        <div className="space-y-5 animate-fade-in">
+          {/* Compact Header Bar */}
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                <Globe className="w-5 h-5" />
               </div>
-              <h3 className="text-2xl sm:text-3xl font-black">
-                Manage Website Content (ওয়েবসাইট কনটেন্ট)
-              </h3>
-              <p className="text-xs sm:text-sm text-indigo-200 max-w-xl">
-                Upload photos, videos, and text announcements here. Anything published here will instantly update and show on the main website portal for all users.
-              </p>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-black text-slate-900">
+                    Manage Website Content (ওয়েবসাইট কন্টেন্ট)
+                  </h3>
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 hidden sm:inline-block">
+                    Live Portal
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 font-medium">
+                  Upload photos, videos, and official notices directly to the live website homepage.
+                </p>
+              </div>
             </div>
 
             <button
-              onClick={() => setIsAddModalOpen(true)}
-              className="px-6 py-3.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl text-xs sm:text-sm transition-all shadow-lg shadow-amber-400/20 flex items-center gap-2 cursor-pointer shrink-0"
+              onClick={() => setIsAddModalOpen(!isAddModalOpen)}
+              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0 self-stretch sm:self-auto justify-center"
             >
-              <Plus className="w-4 h-4 stroke-[3]" /> Add New Media / Announcement
+              {isAddModalOpen ? (
+                <>
+                  <X className="w-4 h-4" /> Close Form
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4 stroke-[3]" /> Add New Content
+                </>
+              )}
             </button>
           </div>
 
-          {/* Quick Filter Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200/80 p-3 rounded-2xl shadow-xs">
+          {/* Compact Publisher Form Card */}
+          {isAddModalOpen && (
+            <div className="bg-white rounded-2xl border-2 border-indigo-200 shadow-lg overflow-hidden p-4 sm:p-5 space-y-4 animate-fade-in">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h4 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span>Publish New Content Item (নতুন বিষয় যুক্ত করুন)</span>
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateWebsiteContent} className="space-y-4">
+                {/* Type Selection */}
+                <div>
+                  <label className="block text-[11px] font-extrabold uppercase text-slate-700 mb-1.5">1. Select Content Type *</label>
+                  <div className="grid grid-cols-3 gap-2 bg-slate-100 p-1.5 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setNewType('photo')}
+                      className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                        newType === 'photo' ? 'bg-white text-indigo-950 shadow-xs ring-1 ring-indigo-500 font-extrabold' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <ImageIcon className="w-3.5 h-3.5 text-blue-600" /> Photo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewType('video')}
+                      className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                        newType === 'video' ? 'bg-white text-indigo-950 shadow-xs ring-1 ring-indigo-500 font-extrabold' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <Video className="w-3.5 h-3.5 text-rose-600" /> Video
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewType('text')}
+                      className={`py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                        newType === 'text' ? 'bg-white text-indigo-950 shadow-xs ring-1 ring-indigo-500 font-extrabold' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      <FileText className="w-3.5 h-3.5 text-emerald-600" /> Notice
+                    </button>
+                  </div>
+                </div>
+
+                {/* Form Fields Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  {/* Title */}
+                  <div className="md:col-span-2">
+                    <label className="block text-[11px] font-extrabold uppercase text-slate-700 mb-1">2. Headline / Title *</label>
+                    <input
+                      type="text"
+                      value={newTitle}
+                      onChange={(e) => setNewTitle(e.target.value)}
+                      placeholder={newType === 'photo' ? 'e.g., 50kW Commercial Rooftop Solar Installation' : newType === 'video' ? 'e.g., Solar Pump Live Demonstration' : 'e.g., PM Surya Ghar Free Electricity Subsidy Announcement'}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      required
+                    />
+                  </div>
+
+                  {/* Badge */}
+                  <div>
+                    <label className="block text-[11px] font-extrabold uppercase text-slate-700 mb-1">Badge Tag (e.g. OFFICIAL, REAL WORK)</label>
+                    <input
+                      type="text"
+                      value={newBadge}
+                      onChange={(e) => setNewBadge(e.target.value)}
+                      placeholder="e.g., OFFICIAL NOTICE"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+
+                  {/* Category */}
+                  <div>
+                    <label className="block text-[11px] font-extrabold uppercase text-slate-700 mb-1">Category</label>
+                    <input
+                      type="text"
+                      value={newCategory}
+                      onChange={(e) => setNewCategory(e.target.value)}
+                      placeholder="e.g., Solar Rooftop / Subsidy"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div className="md:col-span-2">
+                    <label className="block text-[11px] font-extrabold uppercase text-slate-700 mb-1">Description (বিবরণ)</label>
+                    <textarea
+                      rows={2}
+                      value={newDescription}
+                      onChange={(e) => setNewDescription(e.target.value)}
+                      placeholder="Write brief details about this installation or announcement..."
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Media File Upload or URL (for photo or video) */}
+                {newType !== 'text' && (
+                  <div className="space-y-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <label className="block text-[11px] font-extrabold uppercase text-slate-800">3. Media Source (Upload or Link)</label>
+                    
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                      {/* Local File Upload Button */}
+                      <label className="cursor-pointer px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl border border-indigo-700 transition-all shadow-xs flex items-center justify-center gap-1.5 shrink-0">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload File from Device</span>
+                        <input
+                          type="file"
+                          accept={newType === 'photo' ? 'image/*' : 'video/*'}
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                      </label>
+
+                      <span className="text-[10px] font-black text-slate-400 text-center uppercase">or</span>
+
+                      {/* URL input */}
+                      <input
+                        type="text"
+                        value={newMediaUrl}
+                        onChange={(e) => setNewMediaUrl(e.target.value)}
+                        placeholder={newType === 'photo' ? 'Paste image URL (e.g. https://...)' : 'Paste YouTube or video link'}
+                        className="flex-1 px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                    </div>
+
+                    {/* Media Preview */}
+                    {newMediaUrl && (
+                      <div className="mt-2 p-2 bg-white border border-slate-200 rounded-xl">
+                        <span className="text-[10px] font-extrabold text-slate-500 uppercase block mb-1">Media Preview:</span>
+                        {newType === 'photo' ? (
+                          <img src={newMediaUrl} alt="Preview" className="max-h-36 rounded-lg object-cover mx-auto shadow-xs" />
+                        ) : (
+                          <div className="text-[11px] font-mono text-rose-600 bg-rose-50 p-2 rounded-lg truncate">{newMediaUrl}</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Form Actions */}
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingContent}
+                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl transition-all cursor-pointer shadow-sm flex items-center gap-1.5"
+                  >
+                    {submittingContent ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        Publishing...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                        Publish Live Now
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Filter & Action Toolbar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 p-3 rounded-2xl shadow-xs">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-500 pl-2">Filter Type:</span>
+              <span className="text-xs font-bold text-slate-500 pl-1">Filter:</span>
               <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
                 <button
                   onClick={() => setWebsiteFilter('all')}
-                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                    websiteFilter === 'all' ? 'bg-white text-indigo-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
+                    websiteFilter === 'all' ? 'bg-white text-indigo-900 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   All ({websiteContents.length})
                 </button>
                 <button
                   onClick={() => setWebsiteFilter('photo')}
-                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                    websiteFilter === 'photo' ? 'bg-white text-indigo-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                    websiteFilter === 'photo' ? 'bg-white text-indigo-900 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   <ImageIcon className="w-3.5 h-3.5 text-blue-500" />
@@ -1108,8 +1340,8 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
                 </button>
                 <button
                   onClick={() => setWebsiteFilter('video')}
-                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                    websiteFilter === 'video' ? 'bg-white text-indigo-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                    websiteFilter === 'video' ? 'bg-white text-indigo-900 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   <Video className="w-3.5 h-3.5 text-rose-500" />
@@ -1117,8 +1349,8 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
                 </button>
                 <button
                   onClick={() => setWebsiteFilter('text')}
-                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                    websiteFilter === 'text' ? 'bg-white text-indigo-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                  className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                    websiteFilter === 'text' ? 'bg-white text-indigo-900 shadow-xs font-black' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   <FileText className="w-3.5 h-3.5 text-emerald-500" />
@@ -1137,59 +1369,59 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
 
           {/* Website Contents Grid */}
           {websiteLoading ? (
-            <div className="py-20 text-center space-y-3 bg-white rounded-3xl border border-slate-200">
-              <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin mx-auto" />
+            <div className="py-12 text-center space-y-2 bg-white rounded-2xl border border-slate-200">
+              <RefreshCw className="w-6 h-6 text-indigo-600 animate-spin mx-auto" />
               <p className="text-xs font-bold text-slate-600">Loading website contents...</p>
             </div>
           ) : websiteContents.filter(c => websiteFilter === 'all' || c.type === websiteFilter).length === 0 ? (
-            <div className="py-16 text-center space-y-4 bg-white rounded-3xl border border-slate-200 p-8">
-              <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto">
-                <Globe className="w-8 h-8" />
+            <div className="py-12 text-center space-y-3 bg-white rounded-2xl border border-slate-200 p-6">
+              <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center mx-auto">
+                <Globe className="w-6 h-6" />
               </div>
               <div className="space-y-1">
-                <h4 className="font-extrabold text-slate-800">No content items found</h4>
+                <h4 className="font-extrabold text-slate-800 text-sm">No content items found</h4>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  Click "Add New Media / Announcement" above to upload photos, videos or publish notices to the website.
+                  Click "Add New Content" above to publish photos, videos or announcements to the website.
                 </p>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(true)}
-                className="px-5 py-2.5 bg-indigo-600 text-white font-bold text-xs rounded-xl hover:bg-indigo-700 transition-all cursor-pointer shadow-sm"
+                className="px-5 py-2.5 bg-indigo-600 text-white font-black text-xs rounded-xl hover:bg-indigo-700 transition-all cursor-pointer shadow-xs"
               >
                 + Publish First Content Item
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {websiteContents
                 .filter(c => websiteFilter === 'all' || c.type === websiteFilter)
                 .map((item) => (
                   <div
                     key={item.id}
-                    className={`bg-white border rounded-3xl overflow-hidden transition-all hover:shadow-lg flex flex-col justify-between ${
-                      item.is_active ? 'border-slate-200' : 'border-slate-300 opacity-60 bg-slate-50/50'
+                    className={`bg-white border rounded-2xl overflow-hidden transition-all hover:shadow-md flex flex-col justify-between ${
+                      item.is_active ? 'border-slate-200 hover:border-indigo-300' : 'border-slate-300 opacity-60 bg-slate-50/50'
                     }`}
                   >
                     <div>
                       {/* Media Header Preview */}
                       {item.type === 'photo' && item.media_url && (
-                        <div className="relative h-48 bg-slate-900 overflow-hidden group">
+                        <div className="relative h-40 bg-slate-900 overflow-hidden group">
                           <img
                             src={item.media_url}
                             alt={item.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onError={(e) => {
                               (e.target as HTMLElement).style.display = 'none';
                             }}
                           />
-                          <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-blue-600 text-white text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-md">
+                          <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-blue-600 text-white text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-xs">
                             <ImageIcon className="w-3 h-3" /> Photo
                           </span>
                         </div>
                       )}
 
                       {item.type === 'video' && (
-                        <div className="relative h-48 bg-slate-950 flex items-center justify-center overflow-hidden">
+                        <div className="relative h-40 bg-slate-950 flex items-center justify-center overflow-hidden">
                           {item.media_url?.includes('youtube.com') || item.media_url?.includes('youtu.be') ? (
                             <iframe
                               src={item.media_url.replace('watch?v=', 'embed/')}
@@ -1199,49 +1431,49 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
                           ) : item.media_url?.startsWith('data:video') ? (
                             <video src={item.media_url} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="text-center p-4 space-y-2">
-                              <div className="w-12 h-12 rounded-full bg-rose-600 text-white flex items-center justify-center mx-auto shadow-lg">
-                                <Play className="w-6 h-6 fill-white ml-0.5" />
+                            <div className="text-center p-3 space-y-1">
+                              <div className="w-10 h-10 rounded-full bg-rose-600 text-white flex items-center justify-center mx-auto shadow-xs">
+                                <Play className="w-5 h-5 fill-white ml-0.5" />
                               </div>
-                              <span className="text-[11px] text-slate-300 font-mono block truncate max-w-xs">{item.media_url}</span>
+                              <span className="text-[10px] text-slate-300 font-mono block truncate max-w-xs">{item.media_url}</span>
                             </div>
                           )}
-                          <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-rose-600 text-white text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-md">
+                          <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-rose-600 text-white text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-xs">
                             <Video className="w-3 h-3" /> Video
                           </span>
                         </div>
                       )}
 
                       {item.type === 'text' && (
-                        <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50/50 border-b border-amber-100/80 flex items-center justify-between">
-                          <span className="px-2.5 py-1 rounded-full bg-amber-500 text-slate-950 text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1">
-                            <FileText className="w-3 h-3" /> Notice
+                        <div className="p-3 bg-amber-50 border-b border-amber-100 flex items-center justify-between">
+                          <span className="px-2.5 py-0.5 rounded-full bg-amber-500 text-slate-950 text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+                            <FileText className="w-3 h-3" /> Official Notice
                           </span>
-                          <Sparkles className="w-4 h-4 text-amber-500" />
+                          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                         </div>
                       )}
 
                       {/* Content Info */}
-                      <div className="p-5 space-y-3">
-                        <div className="flex items-center gap-2">
+                      <div className="p-4 space-y-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           {item.badge && (
-                            <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
                               {item.badge}
                             </span>
                           )}
                           {item.category && (
-                            <span className="text-[10px] font-semibold text-slate-500">
+                            <span className="text-[10px] font-bold text-slate-500">
                               • {item.category}
                             </span>
                           )}
                         </div>
 
-                        <h4 className="font-extrabold text-slate-900 text-sm leading-snug line-clamp-2">
+                        <h4 className="font-bold text-slate-900 text-xs sm:text-sm leading-snug line-clamp-2">
                           {item.title}
                         </h4>
 
                         {item.description && (
-                          <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
+                          <p className="text-[11px] text-slate-600 font-medium line-clamp-2 leading-relaxed">
                             {item.description}
                           </p>
                         )}
@@ -1249,10 +1481,10 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
                     </div>
 
                     {/* Card Actions Footer */}
-                    <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                    <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
                       <button
                         onClick={() => handleToggleActiveContent(item)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                        className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
                           item.is_active
                             ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
                             : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
@@ -1261,7 +1493,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
                         {item.is_active ? (
                           <>
                             <Eye className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>Live on Website</span>
+                            <span>Live</span>
                           </>
                         ) : (
                           <>
@@ -1273,201 +1505,17 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
 
                       <button
                         onClick={() => handleDeleteContent(item.id)}
-                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
-                        title="Delete this content"
+                        className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs rounded-lg transition-all cursor-pointer flex items-center gap-1 border border-rose-200"
+                        title="Delete this item"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete</span>
                       </button>
                     </div>
                   </div>
                 ))}
             </div>
           )}
-        </div>
-      )}
-
-      {/* Add New Website Content Modal */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden p-6 sm:p-8 space-y-6 my-8">
-            <div className="flex justify-between items-center pb-4 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md">
-                  <Globe className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-black text-slate-900 text-lg">Publish Website Content</h3>
-                  <p className="text-xs text-slate-500 font-medium">Upload photo, video or news notice</p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => setIsAddModalOpen(false)}
-                className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateWebsiteContent} className="space-y-4">
-              {/* Type Switcher */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-2">Select Content Type *</label>
-                <div className="grid grid-cols-3 gap-2 bg-slate-100 p-1.5 rounded-2xl">
-                  <button
-                    type="button"
-                    onClick={() => setNewType('photo')}
-                    className={`py-2 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                      newType === 'photo' ? 'bg-white text-indigo-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <ImageIcon className="w-4 h-4 text-blue-500" /> Photo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setNewType('video')}
-                    className={`py-2 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                      newType === 'video' ? 'bg-white text-indigo-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <Video className="w-4 h-4 text-rose-500" /> Video
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setNewType('text')}
-                    className={`py-2 px-3 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                      newType === 'text' ? 'bg-white text-indigo-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <FileText className="w-4 h-4 text-emerald-500" /> Notice
-                  </button>
-                </div>
-              </div>
-
-              {/* Title */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Title / Headline *</label>
-                <input
-                  type="text"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder={newType === 'photo' ? 'e.g., 100kW Solar Installation Site' : newType === 'video' ? 'e.g., Live Demonstration Video' : 'e.g., PM Surya Ghar Subsidy Update'}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-
-              {/* Category & Badge */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Badge Label (Optional)</label>
-                  <input
-                    type="text"
-                    value={newBadge}
-                    onChange={(e) => setNewBadge(e.target.value)}
-                    placeholder="e.g., OFFICIAL, NEW"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Category (Optional)</label>
-                  <input
-                    type="text"
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    placeholder="e.g., Rooftop Solar"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Description / Details</label>
-                <textarea
-                  rows={3}
-                  value={newDescription}
-                  onChange={(e) => setNewDescription(e.target.value)}
-                  placeholder="Write details or announcement description..."
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-
-              {/* Media File Upload or URL (for photo or video) */}
-              {newType !== 'text' && (
-                <div className="space-y-3 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                  <label className="block text-xs font-bold text-slate-800">Media Source (Upload or URL)</label>
-                  
-                  {/* Local Computer File Upload */}
-                  <div>
-                    <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl border border-indigo-200 transition-all">
-                      <Upload className="w-4 h-4" />
-                      <span>Choose File from Device</span>
-                      <input
-                        type="file"
-                        accept={newType === 'photo' ? 'image/*' : 'video/*'}
-                        onChange={handleFileUpload}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-
-                  <div className="relative text-center my-1">
-                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>
-                    <span className="relative bg-slate-50 px-2 text-[10px] font-bold text-slate-400 uppercase">OR Paste URL</span>
-                  </div>
-
-                  <input
-                    type="text"
-                    value={newMediaUrl}
-                    onChange={(e) => setNewMediaUrl(e.target.value)}
-                    placeholder={newType === 'photo' ? 'Paste image URL (e.g. https://...)' : 'Paste YouTube or video link'}
-                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-
-                  {/* Media Preview Box */}
-                  {newMediaUrl && (
-                    <div className="mt-2 p-2 bg-white border border-slate-200 rounded-xl">
-                      <span className="text-[10px] font-bold text-slate-500 block mb-1">Preview:</span>
-                      {newType === 'photo' ? (
-                        <img src={newMediaUrl} alt="Preview" className="max-h-32 rounded-lg object-cover mx-auto" />
-                      ) : (
-                        <div className="text-xs text-rose-600 font-mono truncate">{newMediaUrl}</div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Submit Buttons */}
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingContent}
-                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center gap-2"
-                >
-                  {submittingContent ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      Publishing...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 text-amber-300" />
-                      Publish Live
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       )}
 

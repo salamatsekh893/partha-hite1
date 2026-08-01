@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sun, Zap, ShieldCheck, MapPin, Phone, Mail, ArrowRight, CheckCircle2, 
-  Sparkles, BatteryCharging, Lightbulb, Compass, Award, FileText, Send, UserCheck, ChevronRight, X, Image as ImageIcon,
-  Check, Star, Video, Globe, Play
+  Sparkles, BatteryCharging, Lightbulb, Compass, Award, FileText, Send, UserCheck, ChevronRight, ChevronLeft, X, Image as ImageIcon,
+  Check, Star, Video, Globe, Play, Pause, Maximize2, Grid, Layers
 } from 'lucide-react';
 import { WebsiteContent } from '../types.js';
 
@@ -65,6 +65,10 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
 
   // Dynamic live website media & notices uploaded by Admin
   const [websiteContents, setWebsiteContents] = useState<WebsiteContent[]>([]);
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const [isAutoplay, setIsAutoplay] = useState(true);
+  const [viewMode, setViewMode] = useState<'slider' | 'grid'>('slider');
+  const [lightboxMedia, setLightboxMedia] = useState<WebsiteContent | null>(null);
 
   useEffect(() => {
     fetch('/api/website/contents')
@@ -76,6 +80,25 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
       })
       .catch(err => console.error('Failed to load website contents:', err));
   }, []);
+
+  // Automatic carousel slide rotation timer
+  useEffect(() => {
+    if (!isAutoplay || websiteContents.length <= 1) return;
+    const timer = setInterval(() => {
+      setActiveSlideIndex((prev) => (prev + 1) % websiteContents.length);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, [isAutoplay, websiteContents.length]);
+
+  const handleNextSlide = () => {
+    if (websiteContents.length === 0) return;
+    setActiveSlideIndex((prev) => (prev + 1) % websiteContents.length);
+  };
+
+  const handlePrevSlide = () => {
+    if (websiteContents.length === 0) return;
+    setActiveSlideIndex((prev) => (prev - 1 + websiteContents.length) % websiteContents.length);
+  };
 
   // Exact 9 Setup Solutions with high-res solar photos
   const setupSolutions = [
@@ -413,125 +436,433 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
         </motion.div>
       </section>
 
-      {/* Dynamic Admin Uploaded Media & Notices Section */}
+      {/* Dynamic Admin Uploaded Media & Notices Section (Single Frame Carousel & Grid View) */}
       {websiteContents.length > 0 && (
         <section className="space-y-6 pt-4 animate-fade-in">
-          <div className="text-center max-w-2xl mx-auto space-y-2">
-            <span className="text-xs font-black uppercase tracking-wider text-indigo-950 bg-indigo-100 border border-indigo-300 px-4 py-1.5 rounded-full inline-flex items-center gap-1.5 shadow-sm">
-              <Globe className="w-4 h-4 text-indigo-600" />
-              Live Official Uploads & Notices
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              Website Live Media & Updates
-            </h2>
-            <p className="text-xs text-slate-600 font-bold">
-              Latest field photos, demonstration videos, and official notices uploaded directly by management.
-            </p>
-          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 sm:p-6 rounded-3xl border-2 border-slate-200 shadow-sm">
+            <div className="space-y-1 text-center sm:text-left">
+              <span className="text-xs font-black uppercase tracking-wider text-indigo-950 bg-indigo-100 border border-indigo-300 px-3 py-1 rounded-full inline-flex items-center gap-1.5 shadow-sm">
+                <Globe className="w-3.5 h-3.5 text-indigo-600" />
+                Live Management Uploads
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                Website Official Photos & Media Frame
+              </h2>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {websiteContents.map((item) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -4 }}
-                className="bg-white border-2 border-slate-200 hover:border-indigo-400 rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
+            {/* View Mode Switcher */}
+            <div className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shrink-0">
+              <button
+                onClick={() => setViewMode('slider')}
+                className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  viewMode === 'slider'
+                    ? 'bg-amber-400 text-slate-950 shadow-md font-black'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
               >
-                <div>
-                  {/* Photo Preview */}
-                  {item.type === 'photo' && item.media_url && (
-                    <div className="relative h-52 bg-slate-900 overflow-hidden group">
-                      <img
-                        src={item.media_url}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        onError={(e) => {
-                          (e.target as HTMLElement).style.display = 'none';
-                        }}
-                      />
-                      <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase tracking-wider shadow-md flex items-center gap-1">
-                        <ImageIcon className="w-3.5 h-3.5" /> Photo Gallery
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Video Preview */}
-                  {item.type === 'video' && (
-                    <div className="relative h-52 bg-slate-950 flex items-center justify-center overflow-hidden">
-                      {item.media_url?.includes('youtube.com') || item.media_url?.includes('youtu.be') ? (
-                        <iframe
-                          src={item.media_url.replace('watch?v=', 'embed/')}
-                          title={item.title}
-                          className="w-full h-full border-0"
-                          allowFullScreen
-                        />
-                      ) : item.media_url?.startsWith('data:video') ? (
-                        <video src={item.media_url} controls className="w-full h-full object-cover" />
-                      ) : (
-                        <a
-                          href={item.media_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-center p-4 space-y-2 group"
-                        >
-                          <div className="w-14 h-14 rounded-full bg-rose-600 group-hover:bg-rose-500 text-white flex items-center justify-center mx-auto shadow-lg transition-transform group-hover:scale-110">
-                            <Play className="w-7 h-7 fill-white ml-1" />
-                          </div>
-                          <span className="text-xs font-extrabold text-slate-200 block underline">Watch Video Stream</span>
-                        </a>
-                      )}
-                      <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider shadow-md flex items-center gap-1">
-                        <Video className="w-3.5 h-3.5" /> Video Demonstration
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Text Notice Header */}
-                  {item.type === 'text' && (
-                    <div className="p-4 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-slate-950 border-b border-amber-400 flex items-center justify-between">
-                      <span className="px-3 py-1 rounded-full bg-slate-950 text-amber-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
-                        <FileText className="w-3.5 h-3.5" /> Official Notice
-                      </span>
-                      <Sparkles className="w-5 h-5 text-slate-900 animate-pulse" />
-                    </div>
-                  )}
-
-                  {/* Content Details */}
-                  <div className="p-6 space-y-2.5">
-                    <div className="flex items-center gap-2">
-                      {item.badge && (
-                        <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300">
-                          {item.badge}
-                        </span>
-                      )}
-                      {item.category && (
-                        <span className="text-[11px] font-bold text-slate-500">
-                          {item.category}
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className="font-extrabold text-slate-900 text-base leading-snug">
-                      {item.title}
-                    </h3>
-
-                    {item.description && (
-                      <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                        {item.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 text-[11px] font-bold text-slate-400 text-right">
-                  Published on SuccessIndia Portal
-                </div>
-              </motion.div>
-            ))}
+                <Layers className="w-4 h-4" /> Single Frame Showcase
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  viewMode === 'grid'
+                    ? 'bg-amber-400 text-slate-950 shadow-md font-black'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Grid className="w-4 h-4" /> All Grid View
+              </button>
+            </div>
           </div>
+
+          {/* SINGLE PHOTO/MEDIA CAROUSEL SHOWCASE FRAME (একেবারে একটি ফটো ফ্রেমে পর পর স্ক্রোল হবে) */}
+          {viewMode === 'slider' && (
+            <div className="bg-slate-950 border-4 border-amber-400/90 rounded-3xl shadow-2xl overflow-hidden relative text-white">
+              {/* Active Item Container */}
+              {(() => {
+                const safeIndex = activeSlideIndex >= websiteContents.length ? 0 : activeSlideIndex;
+                const current = websiteContents[safeIndex];
+                if (!current) return null;
+
+                return (
+                  <div className="flex flex-col lg:flex-row items-stretch min-h-[420px] lg:min-h-[480px]">
+                    {/* Left Media Stage */}
+                    <div className="lg:w-3/5 relative bg-black flex items-center justify-center overflow-hidden min-h-[300px] lg:min-h-full group">
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={current.id}
+                          initial={{ opacity: 0, scale: 0.96 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 1.04 }}
+                          transition={{ duration: 0.4 }}
+                          className="w-full h-full flex items-center justify-center"
+                        >
+                          {current.type === 'photo' && current.media_url && (
+                            <div className="relative w-full h-full min-h-[320px] lg:min-h-[460px]">
+                              <img
+                                src={current.media_url}
+                                alt={current.title}
+                                className="w-full h-full object-cover max-h-[500px]"
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = 'none';
+                                }}
+                              />
+                              <button
+                                onClick={() => setLightboxMedia(current)}
+                                className="absolute top-4 right-4 p-2.5 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white transition-all shadow-lg cursor-pointer flex items-center gap-1 text-xs font-extrabold"
+                              >
+                                <Maximize2 className="w-4 h-4" /> Full View
+                              </button>
+                            </div>
+                          )}
+
+                          {current.type === 'video' && (
+                            <div className="w-full h-full min-h-[320px] lg:min-h-[460px] bg-slate-950 flex items-center justify-center">
+                              {current.media_url?.includes('youtube.com') || current.media_url?.includes('youtu.be') ? (
+                                <iframe
+                                  src={current.media_url.replace('watch?v=', 'embed/')}
+                                  title={current.title}
+                                  className="w-full h-full min-h-[320px] lg:min-h-[460px] border-0"
+                                  allowFullScreen
+                                />
+                              ) : current.media_url?.startsWith('data:video') ? (
+                                <video src={current.media_url} controls className="w-full h-full object-contain" />
+                              ) : (
+                                <div className="text-center p-6 space-y-3">
+                                  <div className="w-16 h-16 rounded-full bg-rose-600 text-white flex items-center justify-center mx-auto shadow-2xl animate-pulse">
+                                    <Play className="w-8 h-8 fill-white ml-1" />
+                                  </div>
+                                  <a
+                                    href={current.media_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 rounded-full text-xs font-black text-white inline-block shadow-lg"
+                                  >
+                                    Open Video Stream
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {current.type === 'text' && (
+                            <div className="p-8 sm:p-12 w-full h-full bg-gradient-to-br from-indigo-950 via-slate-900 to-amber-950/40 flex flex-col justify-center items-center text-center space-y-4">
+                              <span className="w-16 h-16 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-xl text-2xl">
+                                📢
+                              </span>
+                              <h3 className="text-xl sm:text-2xl font-black text-amber-300 max-w-md leading-tight">
+                                {current.title}
+                              </h3>
+                              <p className="text-xs sm:text-sm text-slate-200 max-w-lg font-medium leading-relaxed">
+                                {current.description}
+                              </p>
+                            </div>
+                          )}
+                        </motion.div>
+                      </AnimatePresence>
+
+                      {/* Navigation Overlay Buttons */}
+                      {websiteContents.length > 1 && (
+                        <>
+                          <button
+                            onClick={handlePrevSlide}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white flex items-center justify-center transition-all shadow-xl border border-slate-700/80 cursor-pointer z-10"
+                          >
+                            <ChevronLeft className="w-6 h-6" />
+                          </button>
+                          <button
+                            onClick={handleNextSlide}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white flex items-center justify-center transition-all shadow-xl border border-slate-700/80 cursor-pointer z-10"
+                          >
+                            <ChevronRight className="w-6 h-6" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Right Info & Details Panel */}
+                    <div className="lg:w-2/5 p-6 sm:p-8 bg-slate-900 border-t lg:border-t-0 lg:border-l border-slate-800 flex flex-col justify-between space-y-6">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {current.type === 'photo' && (
+                              <span className="px-3 py-1 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow">
+                                <ImageIcon className="w-3.5 h-3.5" /> Photo Frame
+                              </span>
+                            )}
+                            {current.type === 'video' && (
+                              <span className="px-3 py-1 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow">
+                                <Video className="w-3.5 h-3.5" /> Field Video
+                              </span>
+                            )}
+                            {current.type === 'text' && (
+                              <span className="px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow">
+                                <FileText className="w-3.5 h-3.5" /> Notice
+                              </span>
+                            )}
+                            {current.badge && (
+                              <span className="px-2.5 py-0.5 rounded-md bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] font-black uppercase">
+                                {current.badge}
+                              </span>
+                            )}
+                          </div>
+
+                          <span className="text-[11px] font-mono text-slate-400 bg-slate-800 px-2.5 py-1 rounded-lg">
+                            {safeIndex + 1} / {websiteContents.length}
+                          </span>
+                        </div>
+
+                        <h3 className="text-xl sm:text-2xl font-black text-amber-300 leading-snug">
+                          {current.title}
+                        </h3>
+
+                        {current.description && (
+                          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
+                            {current.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Interactive Controls & Thumbnails Strip */}
+                      <div className="space-y-4 pt-4 border-t border-slate-800">
+                        {/* Play/Pause Autoplay Control */}
+                        <div className="flex items-center justify-between gap-2">
+                          <button
+                            onClick={() => setIsAutoplay(!isAutoplay)}
+                            className="text-xs font-extrabold px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-1.5 transition-all cursor-pointer border border-slate-700"
+                          >
+                            {isAutoplay ? (
+                              <>
+                                <Pause className="w-3.5 h-3.5 text-amber-400" /> Auto-Scroll Active
+                              </>
+                            ) : (
+                              <>
+                                <Play className="w-3.5 h-3.5 text-slate-400" /> Auto-Scroll Paused
+                              </>
+                            )}
+                          </button>
+
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={handlePrevSlide}
+                              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer"
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={handleNextSlide}
+                              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer"
+                            >
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Thumbnails Bar */}
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                          {websiteContents.map((thumb, idx) => (
+                            <button
+                              key={thumb.id}
+                              onClick={() => {
+                                setActiveSlideIndex(idx);
+                              }}
+                              className={`w-16 h-12 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer relative bg-slate-950 ${
+                                idx === safeIndex
+                                  ? 'border-amber-400 scale-105 shadow-md ring-2 ring-amber-400/40'
+                                  : 'border-slate-800 opacity-60 hover:opacity-100'
+                              }`}
+                            >
+                              {thumb.type === 'photo' && thumb.media_url ? (
+                                <img src={thumb.media_url} alt={thumb.title} className="w-full h-full object-cover" />
+                              ) : thumb.type === 'video' ? (
+                                <div className="w-full h-full bg-rose-950 text-rose-300 flex items-center justify-center text-xs font-black">
+                                  ▶ Video
+                                </div>
+                              ) : (
+                                <div className="w-full h-full bg-indigo-950 text-amber-300 flex items-center justify-center text-[10px] font-black p-1 text-center">
+                                  📢
+                                </div>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* GRID VIEW MODE (IF USER CLICKS 'ALL GRID VIEW') */}
+          {viewMode === 'grid' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+              {websiteContents.map((item) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  whileHover={{ y: -4 }}
+                  className="bg-white border-2 border-slate-200 hover:border-amber-400 rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
+                >
+                  <div>
+                    {/* Photo Preview */}
+                    {item.type === 'photo' && item.media_url && (
+                      <div className="relative h-52 bg-slate-900 overflow-hidden group">
+                        <img
+                          src={item.media_url}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = 'none';
+                          }}
+                        />
+                        <button
+                          onClick={() => setLightboxMedia(item)}
+                          className="absolute top-3 right-3 p-2 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white text-xs font-black shadow-md cursor-pointer flex items-center gap-1"
+                        >
+                          <Maximize2 className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase tracking-wider shadow-md flex items-center gap-1">
+                          <ImageIcon className="w-3.5 h-3.5" /> Photo Gallery
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Video Preview */}
+                    {item.type === 'video' && (
+                      <div className="relative h-52 bg-slate-950 flex items-center justify-center overflow-hidden">
+                        {item.media_url?.includes('youtube.com') || item.media_url?.includes('youtu.be') ? (
+                          <iframe
+                            src={item.media_url.replace('watch?v=', 'embed/')}
+                            title={item.title}
+                            className="w-full h-full border-0"
+                            allowFullScreen
+                          />
+                        ) : item.media_url?.startsWith('data:video') ? (
+                          <video src={item.media_url} controls className="w-full h-full object-cover" />
+                        ) : (
+                          <a
+                            href={item.media_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-center p-4 space-y-2 group"
+                          >
+                            <div className="w-14 h-14 rounded-full bg-rose-600 group-hover:bg-rose-500 text-white flex items-center justify-center mx-auto shadow-lg transition-transform group-hover:scale-110">
+                              <Play className="w-7 h-7 fill-white ml-1" />
+                            </div>
+                            <span className="text-xs font-extrabold text-slate-200 block underline">Watch Video Stream</span>
+                          </a>
+                        )}
+                        <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider shadow-md flex items-center gap-1">
+                          <Video className="w-3.5 h-3.5" /> Video Demonstration
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Text Notice Header */}
+                    {item.type === 'text' && (
+                      <div className="p-4 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-slate-950 border-b border-amber-400 flex items-center justify-between">
+                        <span className="px-3 py-1 rounded-full bg-slate-950 text-amber-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                          <FileText className="w-3.5 h-3.5" /> Official Notice
+                        </span>
+                        <Sparkles className="w-5 h-5 text-slate-900 animate-pulse" />
+                      </div>
+                    )}
+
+                    {/* Content Details */}
+                    <div className="p-6 space-y-2.5">
+                      <div className="flex items-center gap-2">
+                        {item.badge && (
+                          <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300">
+                            {item.badge}
+                          </span>
+                        )}
+                        {item.category && (
+                          <span className="text-[11px] font-bold text-slate-500">
+                            {item.category}
+                          </span>
+                        )}
+                      </div>
+
+                      <h3 className="font-extrabold text-slate-900 text-base leading-snug">
+                        {item.title}
+                      </h3>
+
+                      {item.description && (
+                        <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                          {item.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 text-[11px] font-bold text-slate-400 text-right">
+                    Published on SuccessIndia Portal
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </section>
+      )}
+
+      {/* FULLSCREEN LIGHTBOX MODAL FOR HIGH-RES MEDIA */}
+      {lightboxMedia && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-slate-950 border-2 border-amber-400 rounded-3xl overflow-hidden max-w-4xl w-full max-h-[90vh] flex flex-col relative text-white shadow-2xl">
+            <button
+              onClick={() => setLightboxMedia(null)}
+              className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-slate-900/80 hover:bg-rose-600 text-white flex items-center justify-center transition-colors cursor-pointer border border-slate-700"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="p-6 bg-slate-900 border-b border-slate-800 flex items-center gap-3">
+              <span className="px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-black uppercase">
+                {lightboxMedia.badge || lightboxMedia.type}
+              </span>
+              <h3 className="text-lg font-black text-amber-300 pr-10 truncate">{lightboxMedia.title}</h3>
+            </div>
+
+            <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-black">
+              {lightboxMedia.type === 'photo' && lightboxMedia.media_url && (
+                <img
+                  src={lightboxMedia.media_url}
+                  alt={lightboxMedia.title}
+                  className="max-w-full max-h-[70vh] object-contain rounded-2xl"
+                />
+              )}
+              {lightboxMedia.type === 'video' && (
+                <div className="w-full h-[60vh] max-h-[500px]">
+                  {lightboxMedia.media_url?.includes('youtube.com') || lightboxMedia.media_url?.includes('youtu.be') ? (
+                    <iframe
+                      src={lightboxMedia.media_url.replace('watch?v=', 'embed/')}
+                      title={lightboxMedia.title}
+                      className="w-full h-full border-0 rounded-2xl"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <video src={lightboxMedia.media_url} controls className="w-full h-full rounded-2xl object-contain" />
+                  )}
+                </div>
+              )}
+              {lightboxMedia.type === 'text' && (
+                <div className="p-8 text-center space-y-4 max-w-xl">
+                  <h3 className="text-2xl font-black text-amber-300">{lightboxMedia.title}</h3>
+                  <p className="text-sm text-slate-300 leading-relaxed font-medium">{lightboxMedia.description}</p>
+                </div>
+              )}
+            </div>
+
+            {lightboxMedia.description && lightboxMedia.type !== 'text' && (
+              <div className="p-5 bg-slate-900 border-t border-slate-800 text-xs text-slate-300 font-medium">
+                {lightboxMedia.description}
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {/* 3. Real On-Site Solar Executions Photo Gallery */}

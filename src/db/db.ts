@@ -1,35 +1,35 @@
 import mysql from 'mysql2/promise';
 import { User, DownlineMember, ReferralTreeNode, SystemStats, DBConfigStatus, WebsiteContent } from '../types.js';
 
-// In-memory fallback array for website contents
+// In-memory fallback array for website contents (Clean official defaults)
 let inMemoryWebsiteContents: WebsiteContent[] = [
   {
     id: 1,
+    type: 'photo',
+    title: '100kW Commercial Rooftop Solar Power Plant',
+    description: 'High-efficiency Mono PERC solar panel installation powering industrial facilities under PM Surya Ghar & State Solar Green Policy.',
+    media_url: 'https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=1200&q=80',
+    badge: 'REAL FIELD WORK',
+    category: 'Rooftop Solar Plant',
+    is_active: true,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 2,
     type: 'text',
-    title: '☀️ PM Surya Ghar Muft Bijli Yojana Active',
-    description: 'Get up to ₹78,000 Government Subsidy for 3kW Rooftop Solar Installation through SuccessIndia Referral Portal.',
+    title: '☀️ PM Surya Ghar Muft Bijli Yojana Official Subsidy Active',
+    description: 'Avail up to ₹78,000 direct Government subsidy for 3kW Rooftop Solar Installation through SuccessIndia authorized channel partners.',
     badge: 'OFFICIAL NOTICE',
     category: 'Government Subsidy',
     is_active: true,
     created_at: new Date().toISOString()
   },
   {
-    id: 2,
-    type: 'photo',
-    title: '50kW Commercial Rooftop Solar Field Installation',
-    description: 'High-efficiency Mono PERC solar panels installed with 25-year warranty.',
-    media_url: 'https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=1200&q=80',
-    badge: 'REAL PROJECT',
-    category: 'Solar Field',
-    is_active: true,
-    created_at: new Date().toISOString()
-  },
-  {
     id: 3,
     type: 'video',
-    title: 'SuccessIndia Solar Water Pump Live Demonstration',
-    description: '5HP Solar Water Pump running continuously in agricultural field.',
-    media_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    title: '5HP Agricultural Solar Water Pump Live Field Demonstration',
+    description: 'Watch 5HP solar water pump running continuously supplying clean water for agricultural irrigation.',
+    media_url: 'https://images.unsplash.com/photo-1542332213-9b5a5a3fad35?auto=format&fit=crop&w=1200&q=80',
     badge: 'DEMO VIDEO',
     category: 'Solar Agriculture',
     is_active: true,
