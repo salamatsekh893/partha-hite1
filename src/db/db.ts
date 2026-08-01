@@ -532,7 +532,7 @@ export const DB = {
           ? 'SELECT * FROM website_contents WHERE is_active = 1 ORDER BY id DESC' 
           : 'SELECT * FROM website_contents ORDER BY id DESC';
         const [rows]: any = await pool.query(query);
-        if (rows && rows.length > 0) {
+        if (rows) {
           return rows.map((r: any) => ({
             ...r,
             is_active: Boolean(r.is_active),

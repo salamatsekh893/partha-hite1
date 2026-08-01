@@ -238,6 +238,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
 
       // Refresh list
       fetchWebsiteContents();
+      window.dispatchEvent(new Event('website-contents-updated'));
     } catch (err: any) {
       setError(err.message);
       showSweetToast('error', err.message || 'Failed to create content.');
@@ -263,6 +264,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
         setWebsiteContents(prev =>
           prev.map(c => c.id === item.id ? { ...c, is_active: !item.is_active } : c)
         );
+        window.dispatchEvent(new Event('website-contents-updated'));
         showSweetToast('info', item.is_active ? 'Content hidden from live website.' : 'Content is now live on website!');
       }
     } catch (err) {
@@ -290,6 +292,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
           });
           if (res.ok) {
             setWebsiteContents(prev => prev.filter(c => c.id !== item.id));
+            window.dispatchEvent(new Event('website-contents-updated'));
             showSweetToast('success', `"${item.title}" item deleted successfully!`);
           } else {
             const data = await res.json();

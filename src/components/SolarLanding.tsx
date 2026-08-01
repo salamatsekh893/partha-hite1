@@ -70,7 +70,7 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
   const [viewMode, setViewMode] = useState<'slider' | 'grid'>('slider');
   const [lightboxMedia, setLightboxMedia] = useState<WebsiteContent | null>(null);
 
-  useEffect(() => {
+  const loadWebsiteContents = () => {
     fetch('/api/website/contents')
       .then(res => res.json())
       .then(data => {
@@ -79,6 +79,19 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
         }
       })
       .catch(err => console.error('Failed to load website contents:', err));
+  };
+
+  useEffect(() => {
+    loadWebsiteContents();
+    const timer = setInterval(loadWebsiteContents, 4000);
+    window.addEventListener('website-contents-updated', loadWebsiteContents);
+    window.addEventListener('focus', loadWebsiteContents);
+
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('website-contents-updated', loadWebsiteContents);
+      window.removeEventListener('focus', loadWebsiteContents);
+    };
   }, []);
 
   // Automatic carousel slide rotation timer
@@ -468,9 +481,9 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
             </div>
           </div>
 
-          {/* SINGLE PHOTO/MEDIA CAROUSEL SHOWCASE FRAME (Sleek Compact Media Frame) */}
+          {/* SINGLE PHOTO/MEDIA CAROUSEL SHOWCASE FRAME (Flipkart-Style Sleek Media Frame) */}
           {viewMode === 'slider' && (
-            <div className="bg-slate-950 border-2 border-amber-400 rounded-2xl shadow-xl overflow-hidden relative text-white">
+            <div className="bg-slate-950 border border-amber-400/80 rounded-xl shadow-lg overflow-hidden relative text-white">
               {/* Active Item Container */}
               {(() => {
                 const safeIndex = activeSlideIndex >= websiteContents.length ? 0 : activeSlideIndex;
@@ -478,60 +491,60 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
                 if (!current) return null;
 
                 return (
-                  <div className="flex flex-col lg:flex-row items-stretch min-h-[280px] lg:min-h-[340px]">
+                  <div className="flex flex-col lg:flex-row items-stretch min-h-[200px] lg:min-h-[240px]">
                     {/* Left Media Stage */}
-                    <div className="lg:w-3/5 relative bg-black flex items-center justify-center overflow-hidden min-h-[220px] lg:min-h-full group">
+                    <div className="lg:w-3/5 relative bg-black flex items-center justify-center overflow-hidden min-h-[180px] lg:min-h-full group">
                       <AnimatePresence mode="wait">
                         <motion.div
                           key={current.id}
-                          initial={{ opacity: 0, scale: 0.96 }}
+                          initial={{ opacity: 0, scale: 0.97 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 1.04 }}
-                          transition={{ duration: 0.4 }}
+                          exit={{ opacity: 0, scale: 1.03 }}
+                          transition={{ duration: 0.3 }}
                           className="w-full h-full flex items-center justify-center"
                         >
                           {current.type === 'photo' && current.media_url && (
-                            <div className="relative w-full h-full min-h-[220px] lg:min-h-[340px]">
+                            <div className="relative w-full h-full min-h-[180px] lg:min-h-[240px]">
                               <img
                                 src={current.media_url}
                                 alt={current.title}
-                                className="w-full h-full object-cover max-h-[360px]"
+                                className="w-full h-full object-cover max-h-[260px]"
                                 onError={(e) => {
                                   (e.target as HTMLElement).style.display = 'none';
                                 }}
                               />
                               <button
                                 onClick={() => setLightboxMedia(current)}
-                                className="absolute top-3 right-3 p-2 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white transition-all shadow-md cursor-pointer flex items-center gap-1 text-[11px] font-extrabold"
+                                className="absolute top-2 right-2 p-1.5 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white transition-all shadow-xs cursor-pointer flex items-center gap-1 text-[10px] font-extrabold px-2"
                               >
-                                <Maximize2 className="w-3.5 h-3.5" /> Full View
+                                <Maximize2 className="w-3 h-3" /> Full View
                               </button>
                             </div>
                           )}
 
                           {current.type === 'video' && (
-                            <div className="w-full h-full min-h-[220px] lg:min-h-[340px] bg-slate-950 flex items-center justify-center">
+                            <div className="w-full h-full min-h-[180px] lg:min-h-[240px] bg-slate-950 flex items-center justify-center">
                               {current.media_url?.includes('youtube.com') || current.media_url?.includes('youtu.be') ? (
                                 <iframe
                                   src={current.media_url.replace('watch?v=', 'embed/')}
                                   title={current.title}
-                                  className="w-full h-full min-h-[220px] lg:min-h-[340px] border-0"
+                                  className="w-full h-full min-h-[180px] lg:min-h-[240px] border-0"
                                   allowFullScreen
                                 />
                               ) : current.media_url?.startsWith('data:video') ? (
                                 <video src={current.media_url} controls className="w-full h-full object-contain" />
                               ) : (
-                                <div className="text-center p-4 space-y-2">
-                                  <div className="w-12 h-12 rounded-full bg-rose-600 text-white flex items-center justify-center mx-auto shadow-lg animate-pulse">
-                                    <Play className="w-6 h-6 fill-white ml-0.5" />
+                                <div className="text-center p-3 space-y-1.5">
+                                  <div className="w-10 h-10 rounded-full bg-rose-600 text-white flex items-center justify-center mx-auto shadow-md">
+                                    <Play className="w-5 h-5 fill-white ml-0.5" />
                                   </div>
                                   <a
                                     href={current.media_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="px-4 py-2 bg-rose-600 hover:bg-rose-500 rounded-full text-[11px] font-black text-white inline-block shadow-md"
+                                    className="px-3 py-1 bg-rose-600 hover:bg-rose-500 rounded-full text-[10px] font-black text-white inline-block shadow-xs"
                                   >
-                                    Open Video Stream
+                                    Open Stream
                                   </a>
                                 </div>
                               )}
@@ -539,14 +552,14 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
                           )}
 
                           {current.type === 'text' && (
-                            <div className="p-8 sm:p-12 w-full h-full bg-gradient-to-br from-indigo-950 via-slate-900 to-amber-950/40 flex flex-col justify-center items-center text-center space-y-4">
-                              <span className="w-16 h-16 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-xl text-2xl">
+                            <div className="p-6 w-full h-full bg-gradient-to-br from-indigo-950 via-slate-900 to-amber-950/40 flex flex-col justify-center items-center text-center space-y-2">
+                              <span className="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-md text-lg">
                                 📢
                               </span>
-                              <h3 className="text-xl sm:text-2xl font-black text-amber-300 max-w-md leading-tight">
+                              <h3 className="text-base font-bold text-amber-300 max-w-md leading-tight">
                                 {current.title}
                               </h3>
-                              <p className="text-xs sm:text-sm text-slate-200 max-w-lg font-medium leading-relaxed">
+                              <p className="text-xs text-slate-200 max-w-md font-medium leading-relaxed line-clamp-3">
                                 {current.description}
                               </p>
                             </div>
@@ -559,78 +572,78 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
                         <>
                           <button
                             onClick={handlePrevSlide}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white flex items-center justify-center transition-all shadow-xl border border-slate-700/80 cursor-pointer z-10"
+                            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white flex items-center justify-center transition-all shadow-md border border-slate-700/80 cursor-pointer z-10"
                           >
-                            <ChevronLeft className="w-6 h-6" />
+                            <ChevronLeft className="w-4 h-4" />
                           </button>
                           <button
                             onClick={handleNextSlide}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white flex items-center justify-center transition-all shadow-xl border border-slate-700/80 cursor-pointer z-10"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white flex items-center justify-center transition-all shadow-md border border-slate-700/80 cursor-pointer z-10"
                           >
-                            <ChevronRight className="w-6 h-6" />
+                            <ChevronRight className="w-4 h-4" />
                           </button>
                         </>
                       )}
                     </div>
 
                     {/* Right Info & Details Panel */}
-                    <div className="lg:w-2/5 p-6 sm:p-8 bg-slate-900 border-t lg:border-t-0 lg:border-l border-slate-800 flex flex-col justify-between space-y-6">
-                      <div className="space-y-4">
+                    <div className="lg:w-2/5 p-4 sm:p-5 bg-slate-900 border-t lg:border-t-0 lg:border-l border-slate-800 flex flex-col justify-between space-y-4">
+                      <div className="space-y-2">
                         <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 flex-wrap">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             {current.type === 'photo' && (
-                              <span className="px-3 py-1 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow">
-                                <ImageIcon className="w-3.5 h-3.5" /> Photo Frame
+                              <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[9px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-xs">
+                                <ImageIcon className="w-3 h-3" /> Photo
                               </span>
                             )}
                             {current.type === 'video' && (
-                              <span className="px-3 py-1 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow">
-                                <Video className="w-3.5 h-3.5" /> Field Video
+                              <span className="px-2 py-0.5 rounded-full bg-rose-600 text-white text-[9px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-xs">
+                                <Video className="w-3 h-3" /> Video
                               </span>
                             )}
                             {current.type === 'text' && (
-                              <span className="px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 shadow">
-                                <FileText className="w-3.5 h-3.5" /> Notice
+                              <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[9px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-xs">
+                                <FileText className="w-3 h-3" /> Notice
                               </span>
                             )}
                             {current.badge && (
-                              <span className="px-2.5 py-0.5 rounded-md bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] font-black uppercase">
+                              <span className="px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[9px] font-bold uppercase">
                                 {current.badge}
                               </span>
                             )}
                           </div>
 
-                          <span className="text-[11px] font-mono text-slate-400 bg-slate-800 px-2.5 py-1 rounded-lg">
+                          <span className="text-[10px] font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded">
                             {safeIndex + 1} / {websiteContents.length}
                           </span>
                         </div>
 
-                        <h3 className="text-xl sm:text-2xl font-black text-amber-300 leading-snug">
+                        <h3 className="text-sm sm:text-base font-bold text-amber-300 leading-snug line-clamp-1">
                           {current.title}
                         </h3>
 
                         {current.description && (
-                          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
+                          <p className="text-xs text-slate-300 leading-snug font-normal line-clamp-3">
                             {current.description}
                           </p>
                         )}
                       </div>
 
                       {/* Interactive Controls & Thumbnails Strip */}
-                      <div className="space-y-4 pt-4 border-t border-slate-800">
+                      <div className="space-y-2 pt-2 border-t border-slate-800">
                         {/* Play/Pause Autoplay Control */}
                         <div className="flex items-center justify-between gap-2">
                           <button
                             onClick={() => setIsAutoplay(!isAutoplay)}
-                            className="text-xs font-extrabold px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-1.5 transition-all cursor-pointer border border-slate-700"
+                            className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-1 transition-all cursor-pointer border border-slate-700"
                           >
                             {isAutoplay ? (
                               <>
-                                <Pause className="w-3.5 h-3.5 text-amber-400" /> Auto-Scroll Active
+                                <Pause className="w-3 h-3 text-amber-400" /> Auto
                               </>
                             ) : (
                               <>
-                                <Play className="w-3.5 h-3.5 text-slate-400" /> Auto-Scroll Paused
+                                <Play className="w-3 h-3 text-slate-400" /> Paused
                               </>
                             )}
                           </button>
@@ -638,41 +651,41 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
                           <div className="flex items-center gap-1">
                             <button
                               onClick={handlePrevSlide}
-                              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer"
+                              className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
                             >
-                              <ChevronLeft className="w-4 h-4" />
+                              <ChevronLeft className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={handleNextSlide}
-                              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition-colors cursor-pointer"
+                              className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
                             >
-                              <ChevronRight className="w-4 h-4" />
+                              <ChevronRight className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </div>
 
                         {/* Thumbnails Bar */}
-                        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                           {websiteContents.map((thumb, idx) => (
                             <button
                               key={thumb.id}
                               onClick={() => {
                                 setActiveSlideIndex(idx);
                               }}
-                              className={`w-16 h-12 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer relative bg-slate-950 ${
+                              className={`w-12 h-9 rounded-lg overflow-hidden shrink-0 border transition-all cursor-pointer relative bg-slate-950 ${
                                 idx === safeIndex
-                                  ? 'border-amber-400 scale-105 shadow-md ring-2 ring-amber-400/40'
+                                  ? 'border-amber-400 ring-2 ring-amber-400/50 scale-105'
                                   : 'border-slate-800 opacity-60 hover:opacity-100'
                               }`}
                             >
                               {thumb.type === 'photo' && thumb.media_url ? (
                                 <img src={thumb.media_url} alt={thumb.title} className="w-full h-full object-cover" />
                               ) : thumb.type === 'video' ? (
-                                <div className="w-full h-full bg-rose-950 text-rose-300 flex items-center justify-center text-xs font-black">
-                                  ▶ Video
+                                <div className="w-full h-full bg-rose-950 text-rose-300 flex items-center justify-center text-[10px] font-bold">
+                                  ▶
                                 </div>
                               ) : (
-                                <div className="w-full h-full bg-indigo-950 text-amber-300 flex items-center justify-center text-[10px] font-black p-1 text-center">
+                                <div className="w-full h-full bg-indigo-950 text-amber-300 flex items-center justify-center text-[9px] font-bold">
                                   📢
                                 </div>
                               )}
@@ -687,22 +700,22 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
             </div>
           )}
 
-          {/* GRID VIEW MODE (IF USER CLICKS 'ALL GRID VIEW') */}
+          {/* GRID VIEW MODE (Flipkart-Style Compact High Density Grid) */}
           {viewMode === 'grid' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 animate-fade-in">
               {websiteContents.map((item) => (
                 <motion.div
                   key={item.id}
-                  initial={{ opacity: 0, y: 15 }}
+                  initial={{ opacity: 0, y: 10 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  whileHover={{ y: -4 }}
-                  className="bg-white border-2 border-slate-200 hover:border-amber-400 rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
+                  whileHover={{ y: -3 }}
+                  className="bg-white border border-slate-200 hover:border-amber-400 rounded-xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between p-2.5 sm:p-3"
                 >
-                  <div>
+                  <div className="space-y-2">
                     {/* Photo Preview */}
                     {item.type === 'photo' && item.media_url && (
-                      <div className="relative h-52 bg-slate-900 overflow-hidden group">
+                      <div className="relative h-32 sm:h-36 rounded-lg bg-slate-900 overflow-hidden group">
                         <img
                           src={item.media_url}
                           alt={item.title}
@@ -713,19 +726,19 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
                         />
                         <button
                           onClick={() => setLightboxMedia(item)}
-                          className="absolute top-3 right-3 p-2 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white text-xs font-black shadow-md cursor-pointer flex items-center gap-1"
+                          className="absolute top-1.5 right-1.5 p-1 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white text-[10px] font-black shadow-xs cursor-pointer flex items-center gap-0.5"
                         >
-                          <Maximize2 className="w-3.5 h-3.5" />
+                          <Maximize2 className="w-3 h-3" />
                         </button>
-                        <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase tracking-wider shadow-md flex items-center gap-1">
-                          <ImageIcon className="w-3.5 h-3.5" /> Photo Gallery
+                        <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-blue-600 text-white text-[9px] font-bold uppercase tracking-wider shadow-xs flex items-center gap-1">
+                          <ImageIcon className="w-3 h-3" /> Photo
                         </span>
                       </div>
                     )}
 
                     {/* Video Preview */}
                     {item.type === 'video' && (
-                      <div className="relative h-52 bg-slate-950 flex items-center justify-center overflow-hidden">
+                      <div className="relative h-32 sm:h-36 rounded-lg bg-slate-950 flex items-center justify-center overflow-hidden">
                         {item.media_url?.includes('youtube.com') || item.media_url?.includes('youtu.be') ? (
                           <iframe
                             src={item.media_url.replace('watch?v=', 'embed/')}
@@ -740,59 +753,59 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
                             href={item.media_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-center p-4 space-y-2 group"
+                            className="text-center p-2 space-y-1 group"
                           >
-                            <div className="w-14 h-14 rounded-full bg-rose-600 group-hover:bg-rose-500 text-white flex items-center justify-center mx-auto shadow-lg transition-transform group-hover:scale-110">
-                              <Play className="w-7 h-7 fill-white ml-1" />
+                            <div className="w-10 h-10 rounded-full bg-rose-600 group-hover:bg-rose-500 text-white flex items-center justify-center mx-auto shadow-md transition-transform group-hover:scale-105">
+                              <Play className="w-5 h-5 fill-white ml-0.5" />
                             </div>
-                            <span className="text-xs font-extrabold text-slate-200 block underline">Watch Video Stream</span>
+                            <span className="text-[10px] font-bold text-slate-200 block underline">Stream Video</span>
                           </a>
                         )}
-                        <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider shadow-md flex items-center gap-1">
-                          <Video className="w-3.5 h-3.5" /> Video Demonstration
+                        <span className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-rose-600 text-white text-[9px] font-bold uppercase tracking-wider shadow-xs flex items-center gap-1">
+                          <Video className="w-3 h-3" /> Video
                         </span>
                       </div>
                     )}
 
                     {/* Text Notice Header */}
                     {item.type === 'text' && (
-                      <div className="p-4 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-slate-950 border-b border-amber-400 flex items-center justify-between">
-                        <span className="px-3 py-1 rounded-full bg-slate-950 text-amber-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
-                          <FileText className="w-3.5 h-3.5" /> Official Notice
+                      <div className="p-2.5 rounded-lg bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-slate-950 flex items-center justify-between">
+                        <span className="px-2 py-0.5 rounded bg-slate-950 text-amber-300 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1">
+                          <FileText className="w-3 h-3" /> Notice
                         </span>
-                        <Sparkles className="w-5 h-5 text-slate-900 animate-pulse" />
+                        <Sparkles className="w-4 h-4 text-slate-900 animate-pulse" />
                       </div>
                     )}
 
                     {/* Content Details */}
-                    <div className="p-6 space-y-2.5">
-                      <div className="flex items-center gap-2">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         {item.badge && (
-                          <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300">
+                          <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
                             {item.badge}
                           </span>
                         )}
                         {item.category && (
-                          <span className="text-[11px] font-bold text-slate-500">
+                          <span className="text-[10px] font-bold text-slate-500">
                             {item.category}
                           </span>
                         )}
                       </div>
 
-                      <h3 className="font-extrabold text-slate-900 text-base leading-snug">
+                      <h3 className="font-bold text-slate-900 text-xs sm:text-sm leading-snug line-clamp-1">
                         {item.title}
                       </h3>
 
                       {item.description && (
-                        <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                        <p className="text-[11px] text-slate-500 font-normal leading-snug line-clamp-2">
                           {item.description}
                         </p>
                       )}
                     </div>
                   </div>
 
-                  <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 text-[11px] font-bold text-slate-400 text-right">
-                    Published on SuccessIndia Portal
+                  <div className="pt-2 border-t border-slate-100 text-[10px] font-semibold text-slate-400 text-right">
+                    SuccessIndia Portal
                   </div>
                 </motion.div>
               ))}
