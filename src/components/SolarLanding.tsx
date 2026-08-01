@@ -66,9 +66,7 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
 
   // Dynamic live website media & notices uploaded by Admin
   const [websiteContents, setWebsiteContents] = useState<WebsiteContent[]>([]);
-  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
-  const [isAutoplay, setIsAutoplay] = useState(true);
-  const [viewMode, setViewMode] = useState<'slider' | 'grid'>('slider');
+  const [galleryFilter, setGalleryFilter] = useState<'all' | 'photo' | 'video' | 'text'>('all');
   const [lightboxMedia, setLightboxMedia] = useState<WebsiteContent | null>(null);
 
   const loadWebsiteContents = () => {
@@ -94,25 +92,6 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
       window.removeEventListener('focus', loadWebsiteContents);
     };
   }, []);
-
-  // Automatic carousel slide rotation timer
-  useEffect(() => {
-    if (!isAutoplay || websiteContents.length <= 1) return;
-    const timer = setInterval(() => {
-      setActiveSlideIndex((prev) => (prev + 1) % websiteContents.length);
-    }, 4500);
-    return () => clearInterval(timer);
-  }, [isAutoplay, websiteContents.length]);
-
-  const handleNextSlide = () => {
-    if (websiteContents.length === 0) return;
-    setActiveSlideIndex((prev) => (prev + 1) % websiteContents.length);
-  };
-
-  const handlePrevSlide = () => {
-    if (websiteContents.length === 0) return;
-    setActiveSlideIndex((prev) => (prev - 1 + websiteContents.length) % websiteContents.length);
-  };
 
   // Exact 9 Setup Solutions with high-res solar photos
   const setupSolutions = [
@@ -443,7 +422,7 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
         </motion.div>
       </section>
 
-      {/* Dynamic Admin Uploaded Media & Notices Section (Single Frame Carousel & Grid View) */}
+      {/* Dynamic Admin Uploaded Media & Gallery Section (Clean Responsive Grid) */}
       {websiteContents.length > 0 && (
         <section className="space-y-6 pt-4 animate-fade-in">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs">
@@ -457,243 +436,40 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
               </h2>
             </div>
 
-            {/* View Mode Switcher */}
-            <div className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200 shrink-0">
-              <button
-                type="button"
-                onClick={() => setViewMode('slider')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                  viewMode === 'slider'
-                    ? 'bg-amber-400 text-slate-950 shadow-xs font-extrabold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5" /> Single Frame
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('grid')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                  viewMode === 'grid'
-                    ? 'bg-amber-400 text-slate-950 shadow-xs font-extrabold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Grid className="w-3.5 h-3.5" /> All Grid View
-              </button>
+            {/* Gallery Category Filter Pills */}
+            <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200 shrink-0 flex-wrap justify-center">
+              {[
+                { id: 'all', label: 'All Media', icon: Grid },
+                { id: 'photo', label: 'Photos', icon: ImageIcon },
+                { id: 'video', label: 'Videos', icon: Video },
+                { id: 'text', label: 'Notices', icon: FileText },
+              ].map((tab) => {
+                const IconComp = tab.icon;
+                const isActive = galleryFilter === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setGalleryFilter(tab.id as any)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-amber-400 text-slate-950 shadow-xs font-extrabold'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                    }`}
+                  >
+                    <IconComp className="w-3.5 h-3.5" />
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* SINGLE PHOTO/MEDIA CAROUSEL SHOWCASE FRAME (Flipkart-Style Sleek Media Frame) */}
-          {viewMode === 'slider' && (
-            <div className="bg-slate-950 border border-amber-400/80 rounded-xl shadow-lg overflow-hidden relative text-white">
-              {/* Active Item Container */}
-              {(() => {
-                const safeIndex = activeSlideIndex >= websiteContents.length ? 0 : activeSlideIndex;
-                const current = websiteContents[safeIndex];
-                if (!current) return null;
-
-                return (
-                  <div className="flex flex-col lg:flex-row items-stretch min-h-[200px] lg:min-h-[240px]">
-                    {/* Left Media Stage */}
-                    <div className="lg:w-3/5 relative bg-black flex items-center justify-center overflow-hidden min-h-[180px] lg:min-h-full group">
-                      <AnimatePresence mode="wait">
-                        <motion.div
-                          key={current.id}
-                          initial={{ opacity: 0, scale: 0.97 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 1.03 }}
-                          transition={{ duration: 0.3 }}
-                          className="w-full h-full flex items-center justify-center"
-                        >
-                          {current.type === 'photo' && current.media_url && (
-                            <div className="relative w-full h-full min-h-[180px] lg:min-h-[240px]">
-                              <img
-                                src={getDirectImageUrl(current.media_url)}
-                                alt={current.title}
-                                className="w-full h-full object-cover max-h-[260px]"
-                                onError={(e) => {
-                                  (e.target as HTMLElement).style.display = 'none';
-                                }}
-                              />
-                              <button
-                                onClick={() => setLightboxMedia(current)}
-                                className="absolute top-2 right-2 p-1.5 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white transition-all shadow-xs cursor-pointer flex items-center gap-1 text-[10px] font-extrabold px-2"
-                              >
-                                <Maximize2 className="w-3 h-3" /> Full View
-                              </button>
-                            </div>
-                          )}
-
-                          {current.type === 'video' && (
-                            <div className="w-full h-full min-h-[180px] lg:min-h-[240px] bg-slate-950 flex items-center justify-center">
-                              {current.media_url?.startsWith('data:video') ? (
-                                <video src={current.media_url} controls className="w-full h-full object-contain" />
-                              ) : (
-                                <iframe
-                                  src={getEmbedVideoUrl(current.media_url)}
-                                  title={current.title}
-                                  className="w-full h-full min-h-[180px] lg:min-h-[240px] border-0"
-                                  allowFullScreen
-                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                />
-                              )}
-                            </div>
-                          )}
-
-                          {current.type === 'text' && (
-                            <div className="p-6 w-full h-full bg-gradient-to-br from-indigo-950 via-slate-900 to-amber-950/40 flex flex-col justify-center items-center text-center space-y-2">
-                              <span className="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-md text-lg">
-                                📢
-                              </span>
-                              <h3 className="text-base font-bold text-amber-300 max-w-md leading-tight">
-                                {current.title}
-                              </h3>
-                              <p className="text-xs text-slate-200 max-w-md font-medium leading-relaxed line-clamp-3">
-                                {current.description}
-                              </p>
-                            </div>
-                          )}
-                        </motion.div>
-                      </AnimatePresence>
-
-                      {/* Navigation Overlay Buttons */}
-                      {websiteContents.length > 1 && (
-                        <>
-                          <button
-                            onClick={handlePrevSlide}
-                            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white flex items-center justify-center transition-all shadow-md border border-slate-700/80 cursor-pointer z-10"
-                          >
-                            <ChevronLeft className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={handleNextSlide}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white flex items-center justify-center transition-all shadow-md border border-slate-700/80 cursor-pointer z-10"
-                          >
-                            <ChevronRight className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Right Info & Details Panel */}
-                    <div className="lg:w-2/5 p-4 sm:p-5 bg-slate-900 border-t lg:border-t-0 lg:border-l border-slate-800 flex flex-col justify-between space-y-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            {current.type === 'photo' && (
-                              <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[9px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-xs">
-                                <ImageIcon className="w-3 h-3" /> Photo
-                              </span>
-                            )}
-                            {current.type === 'video' && (
-                              <span className="px-2 py-0.5 rounded-full bg-rose-600 text-white text-[9px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-xs">
-                                <Video className="w-3 h-3" /> Video
-                              </span>
-                            )}
-                            {current.type === 'text' && (
-                              <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[9px] font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-xs">
-                                <FileText className="w-3 h-3" /> Notice
-                              </span>
-                            )}
-                            {current.badge && (
-                              <span className="px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[9px] font-bold uppercase">
-                                {current.badge}
-                              </span>
-                            )}
-                          </div>
-
-                          <span className="text-[10px] font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded">
-                            {safeIndex + 1} / {websiteContents.length}
-                          </span>
-                        </div>
-
-                        <h3 className="text-sm sm:text-base font-bold text-amber-300 leading-snug line-clamp-1">
-                          {current.title}
-                        </h3>
-
-                        {current.description && (
-                          <p className="text-xs text-slate-300 leading-snug font-normal line-clamp-3">
-                            {current.description}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* Interactive Controls & Thumbnails Strip */}
-                      <div className="space-y-2 pt-2 border-t border-slate-800">
-                        {/* Play/Pause Autoplay Control */}
-                        <div className="flex items-center justify-between gap-2">
-                          <button
-                            onClick={() => setIsAutoplay(!isAutoplay)}
-                            className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-1 transition-all cursor-pointer border border-slate-700"
-                          >
-                            {isAutoplay ? (
-                              <>
-                                <Pause className="w-3 h-3 text-amber-400" /> Auto
-                              </>
-                            ) : (
-                              <>
-                                <Play className="w-3 h-3 text-slate-400" /> Paused
-                              </>
-                            )}
-                          </button>
-
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={handlePrevSlide}
-                              className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
-                            >
-                              <ChevronLeft className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={handleNextSlide}
-                              className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
-                            >
-                              <ChevronRight className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Thumbnails Bar */}
-                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                          {websiteContents.map((thumb, idx) => (
-                            <button
-                              key={thumb.id}
-                              onClick={() => {
-                                setActiveSlideIndex(idx);
-                              }}
-                              className={`w-12 h-9 rounded-lg overflow-hidden shrink-0 border transition-all cursor-pointer relative bg-slate-950 ${
-                                idx === safeIndex
-                                  ? 'border-amber-400 ring-2 ring-amber-400/50 scale-105'
-                                  : 'border-slate-800 opacity-60 hover:opacity-100'
-                              }`}
-                            >
-                              {thumb.type === 'photo' && thumb.media_url ? (
-                                <img src={thumb.media_url} alt={thumb.title} className="w-full h-full object-cover" />
-                              ) : thumb.type === 'video' ? (
-                                <div className="w-full h-full bg-rose-950 text-rose-300 flex items-center justify-center text-[10px] font-bold">
-                                  ▶
-                                </div>
-                              ) : (
-                                <div className="w-full h-full bg-indigo-950 text-amber-300 flex items-center justify-center text-[9px] font-bold">
-                                  📢
-                                </div>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-
-          {/* GRID VIEW MODE (Flipkart-Style Compact High Density Grid) */}
-          {viewMode === 'grid' && (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 animate-fade-in">
-              {websiteContents.map((item) => (
+          {/* GRID VIEW GALLERY */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 animate-fade-in">
+            {websiteContents
+              .filter((item) => galleryFilter === 'all' || item.type === galleryFilter)
+              .map((item) => (
                 <motion.div
                   key={item.id}
                   initial={{ opacity: 0, y: 10 }}
@@ -784,8 +560,7 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
                   </div>
                 </motion.div>
               ))}
-            </div>
-          )}
+          </div>
         </section>
       )}
 
