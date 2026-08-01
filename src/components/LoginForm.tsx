@@ -71,6 +71,24 @@ export default function LoginForm({ onLoginSuccess, onToggleRegister }: LoginFor
     return `${selectedCountry.code}${cleanNum}`;
   };
 
+  const safeParseJson = async (res: Response) => {
+    const contentType = res.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return await res.json();
+    }
+    if (!res.ok) {
+      if (res.status === 404) {
+        throw new Error('Authentication endpoint not found on server (404).');
+      }
+      throw new Error(`Server returned unexpected response status ${res.status}.`);
+    }
+    try {
+      return await res.json();
+    } catch {
+      throw new Error('Invalid JSON response received from server.');
+    }
+  };
+
   const handleSendOtp = async () => {
     setError(null);
     setOtpNotice(null);
@@ -93,7 +111,7 @@ export default function LoginForm({ onLoginSuccess, onToggleRegister }: LoginFor
         }),
       });
 
-      const data = await res.json();
+      const data = await safeParseJson(res);
       if (!res.ok) {
         throw new Error(data.error || 'Failed to send OTP.');
       }
@@ -136,7 +154,7 @@ export default function LoginForm({ onLoginSuccess, onToggleRegister }: LoginFor
           body: JSON.stringify({ mobile: fullMobile, otp: otpCode }),
         });
 
-        const data = await res.json();
+        const data = await safeParseJson(res);
         if (!res.ok) {
           throw new Error(data.error || 'OTP verification failed.');
         }
@@ -181,7 +199,7 @@ export default function LoginForm({ onLoginSuccess, onToggleRegister }: LoginFor
         body: JSON.stringify({ email: identifier, password }),
       });
 
-      const data = await res.json();
+      const data = await safeParseJson(res);
 
       if (!res.ok) {
         throw new Error(data.error || 'Login attempt failed.');

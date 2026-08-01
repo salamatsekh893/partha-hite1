@@ -659,6 +659,11 @@ app.post('/api/admin/delete', authenticateUser, requireAdmin, async (req, res) =
 
 // --- CLIENT SERVING ---
 
+// Catch-all for undefined /api routes so they return JSON instead of falling through to HTML
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: `API endpoint '${req.originalUrl}' not found.` });
+});
+
 async function bootstrap() {
   // 1. Initialize DB (Auto create tables / Seed Admin)
   try {

@@ -1,14 +1,32 @@
-import { useState, useEffect, FormEvent, ChangeEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent, ChangeEvent } from 'react';
 import { 
   User, UserPlus, Phone, Mail, Lock, ShieldCheck, ArrowLeft, ArrowRight, 
   CheckCircle, AlertCircle, MapPin, Landmark, Award, Users, FileText, Camera, Upload,
-  Send, MessageSquare
+  Send, MessageSquare, ChevronDown, Search, Check, Eye, EyeOff, HelpCircle, Sparkles
 } from 'lucide-react';
 
 interface RegisterFormProps {
   onRegisterSuccess: () => void;
   onToggleLogin: () => void;
 }
+
+// Country codes list with flags
+const COUNTRY_CODES = [
+  { code: '+91', country: 'India', flag: '🇮🇳' },
+  { code: '+880', country: 'Bangladesh', flag: '🇧🇩' },
+  { code: '+1', country: 'USA / Canada', flag: '🇺🇸' },
+  { code: '+44', country: 'United Kingdom', flag: '🇬🇧' },
+  { code: '+971', country: 'UAE', flag: '🇦🇪' },
+  { code: '+966', country: 'Saudi Arabia', flag: '🇸🇦' },
+  { code: '+60', country: 'Malaysia', flag: '🇲🇾' },
+  { code: '+65', country: 'Singapore', flag: '🇸🇬' },
+  { code: '+92', country: 'Pakistan', flag: '🇵🇰' },
+  { code: '+977', country: 'Nepal', flag: '🇳🇵' },
+  { code: '+94', country: 'Sri Lanka', flag: '🇱🇰' },
+  { code: '+968', country: 'Oman', flag: '🇴🇲' },
+  { code: '+974', country: 'Qatar', flag: '🇶🇦' },
+  { code: '+965', country: 'Kuwait', flag: '🇰🇼' },
+];
 
 export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: RegisterFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -18,8 +36,56 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showRegPassword, setShowRegPassword] = useState(false);
   const [sponsorId, setSponsorId] = useState('');
   const [sponsorLocked, setSponsorLocked] = useState(false);
+
+  // Country code selector state
+  const [selectedRegCountry, setSelectedRegCountry] = useState(COUNTRY_CODES[0]); // default +91 India
+  const [isRegCountryMenuOpen, setIsRegCountryMenuOpen] = useState(false);
+  const [regCountrySearch, setRegCountrySearch] = useState('');
+  const regCountryDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close country dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (regCountryDropdownRef.current && !regCountryDropdownRef.current.contains(event.target as Node)) {
+        setIsRegCountryMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredRegCountries = COUNTRY_CODES.filter(
+    (c) =>
+      c.country.toLowerCase().includes(regCountrySearch.toLowerCase()) ||
+      c.code.includes(regCountrySearch)
+  );
+
+  const getFullRegPhone = () => {
+    const cleanNum = phone.trim();
+    if (cleanNum.startsWith('+')) return cleanNum;
+    return `${selectedRegCountry.code}${cleanNum}`;
+  };
+
+  const safeParseJson = async (res: Response) => {
+    const contentType = res.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return await res.json();
+    }
+    if (!res.ok) {
+      if (res.status === 404) {
+        throw new Error('Registration API endpoint not found on server (404).');
+      }
+      throw new Error(`Server returned unexpected error status ${res.status}.`);
+    }
+    try {
+      return await res.json();
+    } catch {
+      throw new Error('Invalid server JSON response.');
+    }
+  };
 
   // OTP Verification States for Phone
   const [regOtpChannel, setRegOtpChannel] = useState<'sms' | 'whatsapp'>('sms');
@@ -183,16 +249,18 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
 
     setRegSendingOtp(true);
     try {
+      const fullMobile = getFullRegPhone();
       const res = await fetch('/api/otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mobile: phone.trim(),
+          mobile: fullMobile,
           channel: regOtpChannel,
+          country: selectedRegCountry.code.replace('+', ''),
         }),
       });
 
-      const data = await res.json();
+      const data = await safeParseJson(res);
       if (!res.ok) {
         throw new Error(data.error || 'Failed to send OTP code.');
       }
@@ -202,7 +270,7 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
         setRegOtpNotice(`OTP Sent! (Demo Mode Code: ${data.otp})`);
         setRegOtpCode(data.otp); // pre-fill demo OTP
       } else {
-        setRegOtpNotice(`OTP verification code sent via ${regOtpChannel.toUpperCase()}!`);
+        setRegOtpNotice(`OTP verification code sent via ${regOtpChannel.toUpperCase()} to ${fullMobile}!`);
       }
     } catch (err: any) {
       setError(err.message || 'Error sending OTP via apitxt.com API.');
@@ -223,16 +291,17 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
 
     setRegVerifyingOtp(true);
     try {
+      const fullMobile = getFullRegPhone();
       const res = await fetch('/api/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          mobile: phone.trim(),
+          mobile: fullMobile,
           otp: regOtpCode.trim(),
         }),
       });
 
-      const data = await res.json();
+      const data = await safeParseJson(res);
       if (!res.ok) {
         throw new Error(data.error || 'OTP verification failed.');
       }
@@ -292,6 +361,7 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
 
     setLoading(true);
     try {
+      const fullMobile = getFullRegPhone();
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -299,7 +369,7 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
         },
         body: JSON.stringify({
           name,
-          phone,
+          phone: fullMobile,
           email,
           password,
           sponsorId: sponsorId ? parseInt(sponsorId, 10) : null,
@@ -344,7 +414,7 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
         }),
       });
 
-      const data = await res.json();
+      const data = await safeParseJson(res);
 
       if (!res.ok) {
         throw new Error(data.error || 'Could not complete registration.');
@@ -374,8 +444,8 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
   };
 
   return (
-    <div id="register-form-container" className="w-full max-w-3xl mx-auto px-4 py-4">
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden">
+    <div id="register-form-container" className="w-full mx-auto p-1 sm:p-2">
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden">
         
         {/* Success India Form Header */}
         <div className="bg-indigo-600 px-6 py-6 text-white text-center relative">
@@ -621,21 +691,89 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
                         </div>
                       </div>
 
-                      {/* Primary Contact Number with optional OTP Verification */}
+                      {/* Primary Contact Number with Country Code Selector and optional OTP Verification */}
                       <div>
                         <div className="flex items-center justify-between mb-1.5">
                           <label htmlFor="reg-phone" className="block text-xs font-semibold text-slate-700">
-                            Primary Contact Number (Login Field) <span className="text-rose-500">*</span>
+                            Primary Mobile Number (Login Identifier) <span className="text-rose-500">*</span>
                           </label>
-                          {regOtpVerified && (
+                          {regOtpVerified ? (
                             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                              <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                               OTP Verified
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-slate-600 font-medium flex items-center gap-1">
+                              <HelpCircle className="w-3 h-3 text-indigo-500" />
+                              Select Country Code & Enter Mobile
                             </span>
                           )}
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 items-stretch">
+                          {/* Country Code Dropdown Button */}
+                          <div className="relative shrink-0" ref={regCountryDropdownRef}>
+                            <button
+                              type="button"
+                              onClick={() => setIsRegCountryMenuOpen(!isRegCountryMenuOpen)}
+                              className="h-full px-3 py-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 hover:border-slate-300 rounded-xl flex items-center gap-1.5 text-xs font-bold text-slate-800 transition-all cursor-pointer shadow-xs"
+                            >
+                              <span className="text-base leading-none">{selectedRegCountry.flag}</span>
+                              <span>{selectedRegCountry.code}</span>
+                              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                            </button>
+
+                            {/* Dropdown Menu */}
+                            {isRegCountryMenuOpen && (
+                              <div className="absolute left-0 top-full mt-1.5 w-60 bg-white border border-slate-200 rounded-2xl shadow-xl z-50 p-2 space-y-1 animate-in fade-in slide-in-from-top-2 duration-150">
+                                {/* Search input */}
+                                <div className="relative mb-1">
+                                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                                  <input
+                                    type="text"
+                                    value={regCountrySearch}
+                                    onChange={(e) => setRegCountrySearch(e.target.value)}
+                                    placeholder="Search country or code..."
+                                    className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                    autoFocus
+                                  />
+                                </div>
+
+                                <div className="max-h-48 overflow-y-auto space-y-0.5 scrollbar-thin">
+                                  {filteredRegCountries.length > 0 ? (
+                                    filteredRegCountries.map((c) => (
+                                      <button
+                                        key={c.code + c.country}
+                                        type="button"
+                                        onClick={() => {
+                                          setSelectedRegCountry(c);
+                                          setIsRegCountryMenuOpen(false);
+                                          setRegCountrySearch('');
+                                        }}
+                                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium cursor-pointer transition-colors ${
+                                          selectedRegCountry.code === c.code && selectedRegCountry.country === c.country
+                                            ? 'bg-indigo-50 text-indigo-700 font-bold'
+                                            : 'hover:bg-slate-50 text-slate-700'
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-base">{c.flag}</span>
+                                          <span>{c.country}</span>
+                                        </div>
+                                        <span className="font-mono text-slate-600 font-semibold">{c.code}</span>
+                                      </button>
+                                    ))
+                                  ) : (
+                                    <div className="p-3 text-center text-xs text-slate-400">
+                                      No country matches search
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Primary Phone Input Field */}
                           <div className="relative flex-1">
                             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                               <Phone className="w-4 h-4 text-slate-400" />
@@ -649,7 +787,7 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
                                 setRegOtpVerified(false);
                               }}
                               className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium"
-                              placeholder="e.g. 9814522052"
+                              placeholder="Phone number without country code"
                               required
                             />
                           </div>
@@ -659,7 +797,7 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
                               type="button"
                               onClick={handleRegSendOtp}
                               disabled={regSendingOtp || !phone.trim()}
-                              className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl flex items-center gap-1 transition-all cursor-pointer shrink-0 disabled:opacity-50"
+                              className="px-3.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shrink-0 disabled:opacity-50 shadow-sm"
                             >
                               <Send className="w-3.5 h-3.5" />
                               {regSendingOtp ? 'Sending...' : regOtpSent ? 'Resend' : 'Send OTP'}
@@ -671,15 +809,17 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
                         {!regOtpVerified && (
                           <div className="mt-2.5 p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
                             <div className="flex items-center justify-between text-xs text-slate-600 font-medium">
-                              <span>Channel:</span>
+                              <span className="flex items-center gap-1 font-semibold text-slate-700">
+                                <Sparkles className="w-3.5 h-3.5 text-indigo-500" /> OTP Method:
+                              </span>
                               <div className="flex items-center gap-1">
                                 <button
                                   type="button"
                                   onClick={() => setRegOtpChannel('sms')}
-                                  className={`px-2 py-0.5 rounded-lg text-[11px] font-bold cursor-pointer transition-all ${
+                                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all ${
                                     regOtpChannel === 'sms'
-                                      ? 'bg-indigo-100 text-indigo-700 border border-indigo-300'
-                                      : 'bg-white text-slate-600 border border-slate-200'
+                                      ? 'bg-indigo-600 text-white shadow-xs'
+                                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
                                   }`}
                                 >
                                   SMS
@@ -687,10 +827,10 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
                                 <button
                                   type="button"
                                   onClick={() => setRegOtpChannel('whatsapp')}
-                                  className={`px-2 py-0.5 rounded-lg text-[11px] font-bold cursor-pointer transition-all ${
+                                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition-all ${
                                     regOtpChannel === 'whatsapp'
-                                      ? 'bg-emerald-100 text-emerald-700 border border-emerald-300'
-                                      : 'bg-white text-slate-600 border border-slate-200'
+                                      ? 'bg-emerald-600 text-white shadow-xs'
+                                      : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
                                   }`}
                                 >
                                   WhatsApp
@@ -699,7 +839,7 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
                             </div>
 
                             {regOtpNotice && (
-                              <p className="text-xs text-indigo-700 font-bold bg-white p-2 rounded-lg border border-indigo-100">
+                              <p className="text-xs text-indigo-700 font-bold bg-white p-2 rounded-lg border border-indigo-100 shadow-xs">
                                 {regOtpNotice}
                               </p>
                             )}
@@ -711,7 +851,7 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
                                   maxLength={6}
                                   value={regOtpCode}
                                   onChange={(e) => setRegOtpCode(e.target.value)}
-                                  placeholder="Enter OTP"
+                                  placeholder="Enter 4 or 6-digit OTP"
                                   className="w-full px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono font-bold tracking-wider"
                                 />
                                 <button
@@ -760,13 +900,24 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
                           </div>
                           <input
                             id="reg-password"
-                            type="password"
+                            type={showRegPassword ? 'text' : 'password'}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium"
-                            placeholder="Password for portal login"
+                            className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium"
+                            placeholder="Set a strong password for portal login"
                             required
                           />
+                          <button
+                            type="button"
+                            onClick={() => setShowRegPassword(!showRegPassword)}
+                            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                          >
+                            {showRegPassword ? (
+                              <EyeOff className="w-4 h-4 text-slate-500" />
+                            ) : (
+                              <Eye className="w-4 h-4 text-slate-500" />
+                            )}
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1341,38 +1492,42 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
                   </div>
                 )}
 
-                {/* Form Navigation Actions */}
-                <div className="flex justify-between items-center pt-4 border-t border-slate-100">
-                  {currentStep > 1 ? (
-                    <button
-                      type="button"
-                      onClick={handlePrev}
-                      className="inline-flex items-center gap-1.5 px-4 py-2.5 border border-slate-300 hover:border-slate-400 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer"
-                    >
-                      <ArrowLeft className="w-3.5 h-3.5" /> Previous Step
-                    </button>
-                  ) : (
-                    <div></div>
-                  )}
+                {/* Form Navigation Actions - Sticky Bottom for high user-friendliness */}
+                <div className="sticky bottom-2 sm:static z-20 mt-6 bg-white/95 backdrop-blur-md p-3 sm:p-0 rounded-2xl border sm:border-0 border-slate-200/80 shadow-lg sm:shadow-none flex justify-between items-center transition-all">
+                  <div className="text-[11px] font-semibold text-slate-500">
+                    Step <span className="font-bold text-indigo-600">{currentStep}</span> of 4
+                  </div>
 
-                  {currentStep < 4 ? (
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow cursor-pointer"
-                    >
-                      Next Step <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  ) : (
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg cursor-pointer"
-                    >
-                      {loading ? 'Submitting Form...' : 'Submit Application'}
-                      <CheckCircle className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {currentStep > 1 && (
+                      <button
+                        type="button"
+                        onClick={handlePrev}
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 border border-slate-300 hover:border-slate-400 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer shadow-xs"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" /> Previous
+                      </button>
+                    )}
+
+                    {currentStep < 4 ? (
+                      <button
+                        type="button"
+                        onClick={handleNext}
+                        className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg cursor-pointer"
+                      >
+                        Next Step <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    ) : (
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg cursor-pointer"
+                      >
+                        {loading ? 'Submitting Form...' : 'Submit Application'}
+                        <CheckCircle className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
               </form>
