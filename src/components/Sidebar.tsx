@@ -1,4 +1,4 @@
-import { X, LogOut, Shield, User as UserIcon, LayoutDashboard, Phone, Mail, Award, Edit3, ChevronRight, Sparkles } from 'lucide-react';
+import { X, LogOut, Shield, User as UserIcon, LayoutDashboard, Phone, Mail, Award, Edit3, ChevronRight, Sparkles, Globe, Video, Image as ImageIcon } from 'lucide-react';
 import { User } from '../types.js';
 
 interface SidebarProps {
@@ -7,9 +7,10 @@ interface SidebarProps {
   user: User | null;
   onLogout: () => void;
   currentView: 'dashboard' | 'admin' | 'auth';
-  setView: (view: 'dashboard' | 'admin') => void;
+  setView: (view: 'dashboard' | 'admin', adminTab?: 'members' | 'website') => void;
   onEditProfileClick: () => void;
 }
+
 
 export default function Sidebar({ isOpen, onClose, user, onLogout, currentView, setView, onEditProfileClick }: SidebarProps) {
   if (!user) return null;
@@ -179,28 +180,56 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, currentView, 
 
             {/* Admin Panel Navigation */}
             {user.role === 'admin' && (
-              <button
-                onClick={() => setView('admin')}
-                className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer ${
-                  currentView === 'admin'
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md shadow-amber-500/20'
-                    : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Shield className={`w-4 h-4 shrink-0 ${currentView === 'admin' ? 'text-white' : 'text-amber-500'}`} />
-                  <span>Admin Panel</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
-                    currentView === 'admin' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-800'
-                  }`}>
-                    Admin
+              <div className="space-y-2 pt-1 border-t border-slate-200/60">
+                <button
+                  onClick={() => {
+                    setView('admin', 'members');
+                    onClose();
+                  }}
+                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-bold text-xs transition-all cursor-pointer ${
+                    currentView === 'admin'
+                      ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md shadow-amber-500/20'
+                      : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Shield className={`w-4 h-4 shrink-0 ${currentView === 'admin' ? 'text-white' : 'text-amber-500'}`} />
+                    <span>Admin Panel</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
+                      currentView === 'admin' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-800'
+                    }`}>
+                      Admin
+                    </span>
+                    <ChevronRight className={`w-3.5 h-3.5 ${currentView === 'admin' ? 'text-amber-100' : 'text-slate-400'}`} />
+                  </div>
+                </button>
+
+                {/* Manage Website Option requested by user */}
+                <button
+                  onClick={() => {
+                    setView('admin', 'website');
+                    onClose();
+                  }}
+                  className="w-full flex items-center justify-between px-3.5 py-3 rounded-2xl font-bold text-xs text-indigo-950 bg-gradient-to-r from-indigo-50 to-indigo-100/80 hover:from-indigo-100 hover:to-indigo-200/80 border border-indigo-200/80 transition-all cursor-pointer shadow-xs"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
+                      <Globe className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-extrabold text-indigo-950">Manage Website</div>
+                      <div className="text-[10px] text-indigo-600 font-semibold">Upload Photo, Video & Text</div>
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-indigo-600 text-white">
+                    LIVE
                   </span>
-                  <ChevronRight className={`w-3.5 h-3.5 ${currentView === 'admin' ? 'text-amber-100' : 'text-slate-400'}`} />
-                </div>
-              </button>
+                </button>
+              </div>
             )}
+
           </div>
 
         </div>

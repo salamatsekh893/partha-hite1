@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { 
   Sun, Zap, ShieldCheck, MapPin, Phone, Mail, ArrowRight, CheckCircle2, 
   Sparkles, BatteryCharging, Lightbulb, Compass, Award, FileText, Send, UserCheck, ChevronRight, X, Image as ImageIcon,
-  Check, Star
+  Check, Star, Video, Globe, Play
 } from 'lucide-react';
+import { WebsiteContent } from '../types.js';
 
 interface SolarLandingProps {
   onOpenAuthModal: (mode: 'login' | 'register') => void;
@@ -61,6 +62,20 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
   const [inquirySetup, setInquirySetup] = useState('On Grid Setup');
   const [inquiryMsg, setInquiryMsg] = useState('');
   const [inquirySubmitted, setInquirySubmitted] = useState(false);
+
+  // Dynamic live website media & notices uploaded by Admin
+  const [websiteContents, setWebsiteContents] = useState<WebsiteContent[]>([]);
+
+  useEffect(() => {
+    fetch('/api/website/contents')
+      .then(res => res.json())
+      .then(data => {
+        if (data.contents) {
+          setWebsiteContents(data.contents);
+        }
+      })
+      .catch(err => console.error('Failed to load website contents:', err));
+  }, []);
 
   // Exact 9 Setup Solutions with high-res solar photos
   const setupSolutions = [
@@ -397,6 +412,127 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
           </p>
         </motion.div>
       </section>
+
+      {/* Dynamic Admin Uploaded Media & Notices Section */}
+      {websiteContents.length > 0 && (
+        <section className="space-y-6 pt-4 animate-fade-in">
+          <div className="text-center max-w-2xl mx-auto space-y-2">
+            <span className="text-xs font-black uppercase tracking-wider text-indigo-950 bg-indigo-100 border border-indigo-300 px-4 py-1.5 rounded-full inline-flex items-center gap-1.5 shadow-sm">
+              <Globe className="w-4 h-4 text-indigo-600" />
+              Live Official Uploads & Notices
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+              Website Live Media & Updates
+            </h2>
+            <p className="text-xs text-slate-600 font-bold">
+              Latest field photos, demonstration videos, and official notices uploaded directly by management.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {websiteContents.map((item) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 15 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -4 }}
+                className="bg-white border-2 border-slate-200 hover:border-indigo-400 rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all flex flex-col justify-between"
+              >
+                <div>
+                  {/* Photo Preview */}
+                  {item.type === 'photo' && item.media_url && (
+                    <div className="relative h-52 bg-slate-900 overflow-hidden group">
+                      <img
+                        src={item.media_url}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          (e.target as HTMLElement).style.display = 'none';
+                        }}
+                      />
+                      <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase tracking-wider shadow-md flex items-center gap-1">
+                        <ImageIcon className="w-3.5 h-3.5" /> Photo Gallery
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Video Preview */}
+                  {item.type === 'video' && (
+                    <div className="relative h-52 bg-slate-950 flex items-center justify-center overflow-hidden">
+                      {item.media_url?.includes('youtube.com') || item.media_url?.includes('youtu.be') ? (
+                        <iframe
+                          src={item.media_url.replace('watch?v=', 'embed/')}
+                          title={item.title}
+                          className="w-full h-full border-0"
+                          allowFullScreen
+                        />
+                      ) : item.media_url?.startsWith('data:video') ? (
+                        <video src={item.media_url} controls className="w-full h-full object-cover" />
+                      ) : (
+                        <a
+                          href={item.media_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-center p-4 space-y-2 group"
+                        >
+                          <div className="w-14 h-14 rounded-full bg-rose-600 group-hover:bg-rose-500 text-white flex items-center justify-center mx-auto shadow-lg transition-transform group-hover:scale-110">
+                            <Play className="w-7 h-7 fill-white ml-1" />
+                          </div>
+                          <span className="text-xs font-extrabold text-slate-200 block underline">Watch Video Stream</span>
+                        </a>
+                      )}
+                      <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-rose-600 text-white text-[10px] font-black uppercase tracking-wider shadow-md flex items-center gap-1">
+                        <Video className="w-3.5 h-3.5" /> Video Demonstration
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Text Notice Header */}
+                  {item.type === 'text' && (
+                    <div className="p-4 bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 text-slate-950 border-b border-amber-400 flex items-center justify-between">
+                      <span className="px-3 py-1 rounded-full bg-slate-950 text-amber-300 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                        <FileText className="w-3.5 h-3.5" /> Official Notice
+                      </span>
+                      <Sparkles className="w-5 h-5 text-slate-900 animate-pulse" />
+                    </div>
+                  )}
+
+                  {/* Content Details */}
+                  <div className="p-6 space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      {item.badge && (
+                        <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-300">
+                          {item.badge}
+                        </span>
+                      )}
+                      {item.category && (
+                        <span className="text-[11px] font-bold text-slate-500">
+                          {item.category}
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className="font-extrabold text-slate-900 text-base leading-snug">
+                      {item.title}
+                    </h3>
+
+                    {item.description && (
+                      <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="px-6 py-3 bg-slate-50 border-t border-slate-100 text-[11px] font-bold text-slate-400 text-right">
+                  Published on SuccessIndia Portal
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* 3. Real On-Site Solar Executions Photo Gallery */}
       <section className="space-y-6 pt-4">

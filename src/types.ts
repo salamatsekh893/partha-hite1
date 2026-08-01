@@ -47,3 +47,15 @@ export interface DBConfigStatus {
   database?: string;
   error?: string | null;
 }
+
+export interface WebsiteContent {
+  id: number;
+  type: 'video' | 'photo' | 'text';
+  title: string;
+  description?: string;
+  media_url?: string;
+  badge?: string;
+  category?: string;
+  is_active: boolean | number;
+  created_at: string;
+}

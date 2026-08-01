@@ -13,11 +13,20 @@ import SolarLanding from './components/SolarLanding.js';
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [currentView, setView] = useState<'dashboard' | 'admin' | 'solar' | 'auth'>('solar');
+  const [adminTab, setAdminTab] = useState<'members' | 'website'>('members');
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [initializing, setInitializing] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
+  const handleSetView = (view: 'dashboard' | 'admin' | 'solar' | 'auth', tab?: 'members' | 'website') => {
+    setView(view);
+    if (tab) {
+      setAdminTab(tab);
+    }
+  };
+
 
   // Restore session from localStorage on startup & detect referral link
   useEffect(() => {
@@ -99,8 +108,8 @@ export default function App() {
         user={user}
         onLogout={handleLogout}
         currentView={user ? (currentView === 'admin' ? 'admin' : 'dashboard') : 'auth'}
-        setView={(v) => {
-          setView(v);
+        setView={(v, tab) => {
+          handleSetView(v, tab);
           setIsSidebarOpen(false);
         }}
         onEditProfileClick={() => setIsProfileModalOpen(true)}
@@ -122,7 +131,7 @@ export default function App() {
         {user ? (
           /* LOGGED IN VIEWS */
           currentView === 'admin' && user.role === 'admin' ? (
-            <AdminPanel adminUser={user} />
+            <AdminPanel adminUser={user} initialTab={adminTab} />
           ) : (
             <UserDashboard user={user} />
           )

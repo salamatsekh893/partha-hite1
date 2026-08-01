@@ -657,6 +657,101 @@ app.post('/api/admin/delete', authenticateUser, requireAdmin, async (req, res) =
   }
 });
 
+// --- WEBSITE CONTENT API ROUTES ---
+
+// Public GET active website contents (photos, videos, announcements)
+app.get('/api/website/contents', async (req, res) => {
+  try {
+    const contents = await DB.getWebsiteContents(true);
+    res.json({ contents });
+  } catch (err: any) {
+    console.error('Error fetching website contents:', err);
+    res.status(500).json({ error: 'Failed to retrieve website contents.' });
+  }
+});
+
+// Admin GET all website contents (including inactive)
+app.get('/api/admin/website/contents', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const contents = await DB.getWebsiteContents(false);
+    res.json({ contents });
+  } catch (err: any) {
+    console.error('Error fetching admin website contents:', err);
+    res.status(500).json({ error: 'Failed to retrieve website contents for admin.' });
+  }
+});
+
+// Admin POST create new website content (photo, video, or text)
+app.post('/api/admin/website/contents', authenticateUser, requireAdmin, async (req, res) => {
+  const { type, title, description, media_url, badge, category, is_active } = req.body;
+  if (!type || !title) {
+    return res.status(400).json({ error: 'Content type and title are required.' });
+  }
+
+  try {
+    const newItem = await DB.createWebsiteContent({
+      type,
+      title,
+      description,
+      media_url,
+      badge,
+      category,
+      is_active: is_active ?? true,
+      created_at: new Date().toISOString(),
+    });
+
+    res.json({
+      message: 'Website content added successfully!',
+      content: newItem,
+    });
+  } catch (err: any) {
+    console.error('Error creating website content:', err);
+    res.status(500).json({ error: 'Failed to save website content.' });
+  }
+});
+
+// Admin PUT update website content
+app.put('/api/admin/website/contents/:id', authenticateUser, requireAdmin, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    return res.status(400).json({ error: 'Invalid content ID.' });
+  }
+
+  try {
+    const updated = await DB.updateWebsiteContent(id, req.body);
+    if (!updated) {
+      return res.status(404).json({ error: 'Website content item not found.' });
+    }
+    res.json({
+      message: 'Website content updated successfully!',
+      content: updated,
+    });
+  } catch (err: any) {
+    console.error('Error updating website content:', err);
+    res.status(500).json({ error: 'Failed to update website content.' });
+  }
+});
+
+// Admin DELETE website content
+app.delete('/api/admin/website/contents/:id', authenticateUser, requireAdmin, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) {
+    return res.status(400).json({ error: 'Invalid content ID.' });
+  }
+
+  try {
+    await DB.deleteWebsiteContent(id);
+    res.json({
+      message: 'Website content deleted successfully!',
+      success: true,
+    });
+  } catch (err: any) {
+    console.error('Error deleting website content:', err);
+    res.status(500).json({ error: 'Failed to delete website content.' });
+  }
+});
+
+
 // --- CLIENT SERVING ---
 
 // Catch-all for undefined /api routes so they return JSON instead of falling through to HTML

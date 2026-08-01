@@ -1,5 +1,41 @@
 import mysql from 'mysql2/promise';
-import { User, DownlineMember, ReferralTreeNode, SystemStats, DBConfigStatus } from '../types.js';
+import { User, DownlineMember, ReferralTreeNode, SystemStats, DBConfigStatus, WebsiteContent } from '../types.js';
+
+// In-memory fallback array for website contents
+let inMemoryWebsiteContents: WebsiteContent[] = [
+  {
+    id: 1,
+    type: 'text',
+    title: '☀️ PM Surya Ghar Muft Bijli Yojana Active',
+    description: 'Get up to ₹78,000 Government Subsidy for 3kW Rooftop Solar Installation through SuccessIndia Referral Portal.',
+    badge: 'OFFICIAL NOTICE',
+    category: 'Government Subsidy',
+    is_active: true,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 2,
+    type: 'photo',
+    title: '50kW Commercial Rooftop Solar Field Installation',
+    description: 'High-efficiency Mono PERC solar panels installed with 25-year warranty.',
+    media_url: 'https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=1200&q=80',
+    badge: 'REAL PROJECT',
+    category: 'Solar Field',
+    is_active: true,
+    created_at: new Date().toISOString()
+  },
+  {
+    id: 3,
+    type: 'video',
+    title: 'SuccessIndia Solar Water Pump Live Demonstration',
+    description: '5HP Solar Water Pump running continuously in agricultural field.',
+    media_url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+    badge: 'DEMO VIDEO',
+    category: 'Solar Agriculture',
+    is_active: true,
+    created_at: new Date().toISOString()
+  }
+];
 
 // Check if MySQL is configured
 const isMySQLConfigured = (): boolean => {
@@ -85,7 +121,7 @@ async function ensureConnectedAndInitialized(): Promise<boolean> {
 
     if (!isInitialized) {
       console.log('Verifying or creating database tables...');
-      // Create table
+      // Create users table
       await conn.query(`
         CREATE TABLE IF NOT EXISTS users (
           id INT AUTO_INCREMENT PRIMARY KEY,
@@ -99,6 +135,21 @@ async function ensureConnectedAndInitialized(): Promise<boolean> {
           created_at VARCHAR(100) NOT NULL,
           additional_details LONGTEXT NULL,
           FOREIGN KEY (referrer_id) REFERENCES users(id) ON DELETE SET NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+      `);
+
+      // Create website_contents table for videos, photos, announcements
+      await conn.query(`
+        CREATE TABLE IF NOT EXISTS website_contents (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          type VARCHAR(50) NOT NULL,
+          title VARCHAR(255) NOT NULL,
+          description TEXT NULL,
+          media_url LONGTEXT NULL,
+          badge VARCHAR(100) NULL,
+          category VARCHAR(100) NULL,
+          is_active TINYINT(1) DEFAULT 1,
+          created_at VARCHAR(100) NOT NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
       `);
 
@@ -469,5 +520,127 @@ export const DB = {
     });
 
     return { flatList, tree };
+  },
+
+  // Website Content Management Methods (Photos, Videos, Text Announcements)
+  async getWebsiteContents(onlyActive = true): Promise<WebsiteContent[]> {
+    const status = await this.getStatus();
+    if (status.connected) {
+      try {
+        const pool = getMySQLPool()!;
+        const query = onlyActive 
+          ? 'SELECT * FROM website_contents WHERE is_active = 1 ORDER BY id DESC' 
+          : 'SELECT * FROM website_contents ORDER BY id DESC';
+        const [rows]: any = await pool.query(query);
+        if (rows && rows.length > 0) {
+          return rows.map((r: any) => ({
+            ...r,
+            is_active: Boolean(r.is_active),
+          }));
+        }
+      } catch (err) {
+        console.error('Error fetching website contents from DB, using fallback:', err);
+      }
+    }
+    // Fallback in-memory filter
+    if (onlyActive) {
+      return inMemoryWebsiteContents.filter((c) => c.is_active);
+    }
+    return inMemoryWebsiteContents;
+  },
+
+  async createWebsiteContent(data: Omit<WebsiteContent, 'id'>): Promise<WebsiteContent> {
+    const newId = inMemoryWebsiteContents.length > 0 ? Math.max(...inMemoryWebsiteContents.map(i => i.id)) + 1 : 1;
+    const newItem: WebsiteContent = {
+      id: newId,
+      type: data.type,
+      title: data.title,
+      description: data.description || '',
+      media_url: data.media_url || '',
+      badge: data.badge || '',
+      category: data.category || '',
+      is_active: data.is_active ?? true,
+      created_at: data.created_at || new Date().toISOString(),
+    };
+
+    inMemoryWebsiteContents.unshift(newItem);
+
+    const status = await this.getStatus();
+    if (status.connected) {
+      try {
+        const pool = getMySQLPool()!;
+        const [result]: any = await pool.query(
+          'INSERT INTO website_contents (type, title, description, media_url, badge, category, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          [
+            newItem.type,
+            newItem.title,
+            newItem.description,
+            newItem.media_url,
+            newItem.badge,
+            newItem.category,
+            newItem.is_active ? 1 : 0,
+            newItem.created_at,
+          ]
+        );
+        newItem.id = result.insertId;
+      } catch (err) {
+        console.error('Failed to insert website content to MySQL:', err);
+      }
+    }
+
+    return newItem;
+  },
+
+  async updateWebsiteContent(id: number, data: Partial<WebsiteContent>): Promise<WebsiteContent | null> {
+    const itemIndex = inMemoryWebsiteContents.findIndex(c => c.id === id);
+    if (itemIndex !== -1) {
+      inMemoryWebsiteContents[itemIndex] = {
+        ...inMemoryWebsiteContents[itemIndex],
+        ...data,
+      };
+    }
+
+    const status = await this.getStatus();
+    if (status.connected) {
+      try {
+        const pool = getMySQLPool()!;
+        const updates: string[] = [];
+        const values: any[] = [];
+
+        if (data.type !== undefined) { updates.push('type = ?'); values.push(data.type); }
+        if (data.title !== undefined) { updates.push('title = ?'); values.push(data.title); }
+        if (data.description !== undefined) { updates.push('description = ?'); values.push(data.description); }
+        if (data.media_url !== undefined) { updates.push('media_url = ?'); values.push(data.media_url); }
+        if (data.badge !== undefined) { updates.push('badge = ?'); values.push(data.badge); }
+        if (data.category !== undefined) { updates.push('category = ?'); values.push(data.category); }
+        if (data.is_active !== undefined) { updates.push('is_active = ?'); values.push(data.is_active ? 1 : 0); }
+
+        if (updates.length > 0) {
+          values.push(id);
+          await pool.query(`UPDATE website_contents SET ${updates.join(', ')} WHERE id = ?`, values);
+        }
+      } catch (err) {
+        console.error('Failed to update website content in MySQL:', err);
+      }
+    }
+
+    return itemIndex !== -1 ? inMemoryWebsiteContents[itemIndex] : null;
+  },
+
+  async deleteWebsiteContent(id: number): Promise<boolean> {
+    inMemoryWebsiteContents = inMemoryWebsiteContents.filter(c => c.id !== id);
+
+    const status = await this.getStatus();
+    if (status.connected) {
+      try {
+        const pool = getMySQLPool()!;
+        await pool.query('DELETE FROM website_contents WHERE id = ?', [id]);
+      } catch (err) {
+        console.error('Failed to delete website content in MySQL:', err);
+      }
+    }
+
+    return true;
   }
 };
+
