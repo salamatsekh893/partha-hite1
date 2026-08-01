@@ -352,73 +352,66 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
           </p>
         </div>
 
-        {/* 9 Grid Items with 3D Magic Hover & Motion Effects */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* 9 Grid Items with Flipkart-Style Compact High-Density Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
           {setupSolutions.map((item, index) => (
             <motion.div 
               key={item.id}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 15 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.08, duration: 0.5 }}
+              transition={{ delay: index * 0.05, duration: 0.3 }}
               whileHover={{ 
-                y: -8, 
-                rotateX: 2, 
-                rotateY: -2,
-                boxShadow: "0 25px 50px -12px rgba(245, 158, 11, 0.25)" 
+                y: -4, 
+                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" 
               }}
-              className="bg-white rounded-2xl border-2 border-slate-200/90 shadow-md hover:border-amber-400 transition-all overflow-hidden group flex flex-col justify-between transform-gpu"
+              className="bg-white rounded-xl border border-slate-200 hover:border-amber-400 shadow-xs hover:shadow-md transition-all overflow-hidden group flex flex-col justify-between p-2.5 sm:p-3"
             >
-              <div>
-                {/* Photo & Header Graphic */}
-                <div className="relative h-48 w-full bg-slate-100 overflow-hidden border-b border-slate-200">
+              <div className="space-y-2">
+                {/* Photo Frame (Flipkart style 1:1 or 4:3 compact ratio) */}
+                <div className="relative h-32 sm:h-36 w-full rounded-lg bg-slate-100 overflow-hidden border border-slate-100">
                   <SmartSolarImage 
                     src={item.image} 
                     alt={item.title} 
                     type={item.id}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
                   
                   {/* Floating Icon Box */}
-                  <motion.span 
-                    whileHover={{ scale: 1.25, rotate: 12 }}
-                    className="absolute bottom-3 left-3 text-2xl bg-white text-slate-950 p-2 rounded-xl shadow-lg border border-slate-200 cursor-pointer"
-                  >
+                  <span className="absolute bottom-1.5 left-1.5 text-sm bg-white/95 text-slate-950 px-1.5 py-0.5 rounded-md shadow-xs border border-slate-200">
                     {item.icon}
-                  </motion.span>
+                  </span>
                   
                   {/* Highlight Pill */}
-                  <span className="absolute top-3 right-3 text-[10px] font-black text-white bg-slate-950/80 backdrop-blur-md border border-white/20 px-2.5 py-1 rounded-lg shadow-md">
+                  <span className="absolute top-1.5 right-1.5 text-[9px] font-bold text-white bg-slate-950/80 backdrop-blur-xs px-2 py-0.5 rounded-md shadow-xs">
                     {item.highlight}
                   </span>
                 </div>
 
-                <div className="p-5 space-y-2">
-                  <h3 className="font-black text-base text-slate-900 group-hover:text-blue-700 transition-colors">
+                <div className="space-y-1">
+                  <h3 className="font-bold text-xs sm:text-sm text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
                     {item.title}
                   </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed font-semibold">
+                  <p className="text-[11px] text-slate-500 font-normal leading-snug line-clamp-2">
                     {item.desc}
                   </p>
                 </div>
               </div>
 
-              <div className="p-5 pt-0">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+              <div className="pt-2">
+                <button
                   type="button"
                   onClick={() => {
                     setInquirySetup(item.title);
                     const el = document.getElementById('inquiry-section');
                     el?.scrollIntoView({ behavior: 'smooth' });
                   }}
-                  className="w-full py-2.5 bg-amber-400 hover:bg-amber-500 text-slate-950 text-xs font-black rounded-xl shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-amber-300"
+                  className="w-full py-1.5 px-3 bg-amber-400 hover:bg-amber-500 text-slate-950 text-[11px] font-bold rounded-lg shadow-xs flex items-center justify-center gap-1 transition-all cursor-pointer border border-amber-300"
                 >
-                  <span>Request Setup Quote</span>
-                  <ChevronRight className="w-4 h-4 text-slate-950" />
-                </motion.button>
+                  <span>Request Quote</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-950" />
+                </button>
               </div>
             </motion.div>
           ))}
@@ -475,9 +468,9 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
             </div>
           </div>
 
-          {/* SINGLE PHOTO/MEDIA CAROUSEL SHOWCASE FRAME (একেবারে একটি ফটো ফ্রেমে পর পর স্ক্রোল হবে) */}
+          {/* SINGLE PHOTO/MEDIA CAROUSEL SHOWCASE FRAME (Sleek Compact Media Frame) */}
           {viewMode === 'slider' && (
-            <div className="bg-slate-950 border-4 border-amber-400/90 rounded-3xl shadow-2xl overflow-hidden relative text-white">
+            <div className="bg-slate-950 border-2 border-amber-400 rounded-2xl shadow-xl overflow-hidden relative text-white">
               {/* Active Item Container */}
               {(() => {
                 const safeIndex = activeSlideIndex >= websiteContents.length ? 0 : activeSlideIndex;
@@ -485,9 +478,9 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
                 if (!current) return null;
 
                 return (
-                  <div className="flex flex-col lg:flex-row items-stretch min-h-[420px] lg:min-h-[480px]">
+                  <div className="flex flex-col lg:flex-row items-stretch min-h-[280px] lg:min-h-[340px]">
                     {/* Left Media Stage */}
-                    <div className="lg:w-3/5 relative bg-black flex items-center justify-center overflow-hidden min-h-[300px] lg:min-h-full group">
+                    <div className="lg:w-3/5 relative bg-black flex items-center justify-center overflow-hidden min-h-[220px] lg:min-h-full group">
                       <AnimatePresence mode="wait">
                         <motion.div
                           key={current.id}
@@ -498,45 +491,45 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
                           className="w-full h-full flex items-center justify-center"
                         >
                           {current.type === 'photo' && current.media_url && (
-                            <div className="relative w-full h-full min-h-[320px] lg:min-h-[460px]">
+                            <div className="relative w-full h-full min-h-[220px] lg:min-h-[340px]">
                               <img
                                 src={current.media_url}
                                 alt={current.title}
-                                className="w-full h-full object-cover max-h-[500px]"
+                                className="w-full h-full object-cover max-h-[360px]"
                                 onError={(e) => {
                                   (e.target as HTMLElement).style.display = 'none';
                                 }}
                               />
                               <button
                                 onClick={() => setLightboxMedia(current)}
-                                className="absolute top-4 right-4 p-2.5 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white transition-all shadow-lg cursor-pointer flex items-center gap-1 text-xs font-extrabold"
+                                className="absolute top-3 right-3 p-2 rounded-full bg-slate-900/80 hover:bg-amber-400 hover:text-slate-950 text-white transition-all shadow-md cursor-pointer flex items-center gap-1 text-[11px] font-extrabold"
                               >
-                                <Maximize2 className="w-4 h-4" /> Full View
+                                <Maximize2 className="w-3.5 h-3.5" /> Full View
                               </button>
                             </div>
                           )}
 
                           {current.type === 'video' && (
-                            <div className="w-full h-full min-h-[320px] lg:min-h-[460px] bg-slate-950 flex items-center justify-center">
+                            <div className="w-full h-full min-h-[220px] lg:min-h-[340px] bg-slate-950 flex items-center justify-center">
                               {current.media_url?.includes('youtube.com') || current.media_url?.includes('youtu.be') ? (
                                 <iframe
                                   src={current.media_url.replace('watch?v=', 'embed/')}
                                   title={current.title}
-                                  className="w-full h-full min-h-[320px] lg:min-h-[460px] border-0"
+                                  className="w-full h-full min-h-[220px] lg:min-h-[340px] border-0"
                                   allowFullScreen
                                 />
                               ) : current.media_url?.startsWith('data:video') ? (
                                 <video src={current.media_url} controls className="w-full h-full object-contain" />
                               ) : (
-                                <div className="text-center p-6 space-y-3">
-                                  <div className="w-16 h-16 rounded-full bg-rose-600 text-white flex items-center justify-center mx-auto shadow-2xl animate-pulse">
-                                    <Play className="w-8 h-8 fill-white ml-1" />
+                                <div className="text-center p-4 space-y-2">
+                                  <div className="w-12 h-12 rounded-full bg-rose-600 text-white flex items-center justify-center mx-auto shadow-lg animate-pulse">
+                                    <Play className="w-6 h-6 fill-white ml-0.5" />
                                   </div>
                                   <a
                                     href={current.media_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="px-5 py-2.5 bg-rose-600 hover:bg-rose-500 rounded-full text-xs font-black text-white inline-block shadow-lg"
+                                    className="px-4 py-2 bg-rose-600 hover:bg-rose-500 rounded-full text-[11px] font-black text-white inline-block shadow-md"
                                   >
                                     Open Video Stream
                                   </a>
