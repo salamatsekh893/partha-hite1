@@ -197,70 +197,72 @@ export default function App() {
         )}
       </main>
 
-      {/* 3. Footer with Company Info & Address */}
-      <footer className="bg-slate-900 text-slate-300 border-t border-slate-800 py-10 text-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-7 h-7 rounded-lg bg-amber-400 text-slate-950 flex items-center justify-center font-black text-sm">
-                  ☀️
+      {/* 3. Footer with Company Info & Address (Only on Public Home Page) */}
+      {currentView === 'solar' && (
+        <footer className="bg-slate-900 text-slate-300 border-t border-slate-800 py-10 text-xs">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-7 h-7 rounded-lg bg-amber-400 text-slate-950 flex items-center justify-center font-black text-sm">
+                    ☀️
+                  </div>
+                  <span className="font-black text-white text-sm">SuccessIndia Solar</span>
                 </div>
-                <span className="font-black text-white text-sm">SuccessIndia Solar</span>
+                <p className="text-slate-400 leading-relaxed font-medium">
+                  Complete Solar Setup Solutions & Solar Products supply across India. Premium quality rooftop power, solar water pumps, fencing, street lighting & EV chargers.
+                </p>
               </div>
-              <p className="text-slate-400 leading-relaxed font-medium">
-                Complete Solar Setup Solutions & Solar Products supply across India. Premium quality rooftop power, solar water pumps, fencing, street lighting & EV chargers.
+
+              <div>
+                <strong className="block text-white font-extrabold mb-2 uppercase tracking-wider text-[11px] text-amber-400">
+                  Head Office & Showroom
+                </strong>
+                <p className="text-slate-300 leading-relaxed font-medium">
+                  Marathahalli Main Rd, near HAL, HAL Quarters, Sector 3, HAL, Bengaluru, Karnataka 560037
+                </p>
+              </div>
+
+              <div>
+                <strong className="block text-white font-extrabold mb-2 uppercase tracking-wider text-[11px] text-amber-400">
+                  Quick Member Access
+                </strong>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenAuthModal('login')}
+                    className="px-3 py-1.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold rounded-lg text-xs transition-all cursor-pointer"
+                  >
+                    Member Login
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenAuthModal('register')}
+                    className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-lg text-xs transition-all cursor-pointer"
+                  >
+                    Partner Sign Up
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
+              <p className="font-bold text-slate-400">
+                © {new Date().getFullYear()} SuccessIndia Solar & Setup Solutions. All rights reserved.
+              </p>
+              <div className="flex items-center gap-2 bg-gradient-to-r from-emerald-950 via-slate-900 to-amber-950 px-3.5 py-1.5 rounded-full border border-amber-500/30 shadow-md">
+                <span className="text-slate-400 font-medium">Developed with ❤️ by</span>
+                <span className="font-black text-amber-400 tracking-wider uppercase text-xs bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/30">
+                  SALAMAT SEKH
+                </span>
+              </div>
+              <p className="text-slate-400 font-bold">
+                SuccessIndia Solar Network
               </p>
             </div>
-
-            <div>
-              <strong className="block text-white font-extrabold mb-2 uppercase tracking-wider text-[11px] text-amber-400">
-                Head Office & Showroom
-              </strong>
-              <p className="text-slate-300 leading-relaxed font-medium">
-                Marathahalli Main Rd, near HAL, HAL Quarters, Sector 3, HAL, Bengaluru, Karnataka 560037
-              </p>
-            </div>
-
-            <div>
-              <strong className="block text-white font-extrabold mb-2 uppercase tracking-wider text-[11px] text-amber-400">
-                Quick Member Access
-              </strong>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleOpenAuthModal('login')}
-                  className="px-3 py-1.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold rounded-lg text-xs transition-all cursor-pointer"
-                >
-                  Member Login
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleOpenAuthModal('register')}
-                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-lg text-xs transition-all cursor-pointer"
-                >
-                  Partner Sign Up
-                </button>
-              </div>
-            </div>
           </div>
-
-          <div className="pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px]">
-            <p className="font-bold text-slate-400">
-              © {new Date().getFullYear()} SuccessIndia Solar & Setup Solutions. All rights reserved.
-            </p>
-            <div className="flex items-center gap-2 bg-gradient-to-r from-emerald-950 via-slate-900 to-amber-950 px-3.5 py-1.5 rounded-full border border-amber-500/30 shadow-md">
-              <span className="text-slate-400 font-medium">Developed with ❤️ by</span>
-              <span className="font-black text-amber-400 tracking-wider uppercase text-xs bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/30">
-                SALAMAT SEKH
-              </span>
-            </div>
-            <p className="text-slate-400 font-bold">
-              SuccessIndia Solar Network
-            </p>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 }

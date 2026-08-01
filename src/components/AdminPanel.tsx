@@ -49,6 +49,30 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
   // Edit website content modal
   const [editingContent, setEditingContent] = useState<WebsiteContent | null>(null);
 
+  // Sweet Alert modal confirmation state
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    type: 'danger' | 'warning' | 'info';
+    title: string;
+    subtitle?: string;
+    description: string;
+    confirmBtnText: string;
+    onConfirm: () => void;
+  } | null>(null);
+
+  // Sweet Toast message notification
+  const [sweetToast, setSweetToast] = useState<{
+    type: 'success' | 'error' | 'info';
+    message: string;
+  } | null>(null);
+
+  const showSweetToast = (type: 'success' | 'error' | 'info', message: string) => {
+    setSweetToast({ type, message });
+    setTimeout(() => {
+      setSweetToast(null);
+    }, 4000);
+  };
+
   // Edit specific user's full profile info
   const [editingUser, setEditingUser] = useState<User | null>(null);
 
@@ -203,6 +227,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
       }
 
       setSuccessMsg(data.message || 'Website content published successfully!');
+      showSweetToast('success', 'New website content published live! ✨');
       // Reset form
       setNewTitle('');
       setNewDescription('');
@@ -215,6 +240,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
       fetchWebsiteContents();
     } catch (err: any) {
       setError(err.message);
+      showSweetToast('error', err.message || 'Failed to create content.');
     } finally {
       setSubmittingContent(false);
     }
@@ -237,30 +263,44 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
         setWebsiteContents(prev =>
           prev.map(c => c.id === item.id ? { ...c, is_active: !item.is_active } : c)
         );
+        showSweetToast('info', item.is_active ? 'Content hidden from live website.' : 'Content is now live on website!');
       }
     } catch (err) {
       console.error('Failed to toggle content status:', err);
     }
   };
 
-  // Delete content
-  const handleDeleteContent = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this website content?')) return;
-
-    try {
-      const res = await fetch(`/api/admin/website/contents/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'X-User-Id': adminUser.id.toString(),
-        },
-      });
-      if (res.ok) {
-        setWebsiteContents(prev => prev.filter(c => c.id !== id));
-        setSuccessMsg('Content item deleted successfully.');
+  // Delete content with Sweet Alert Modal confirmation
+  const handleDeleteContent = (item: WebsiteContent) => {
+    setConfirmModal({
+      isOpen: true,
+      type: 'danger',
+      title: 'Delete Website Item?',
+      subtitle: 'মুছে ফেলার জন্য নিশ্চিত করুন (Sweet Alert)',
+      description: `Are you sure you want to delete "${item.title}"? This item will be permanently removed from the website.`,
+      confirmBtnText: 'Yes, Delete Item',
+      onConfirm: async () => {
+        setConfirmModal(null);
+        try {
+          const res = await fetch(`/api/admin/website/contents/${item.id}`, {
+            method: 'DELETE',
+            headers: {
+              'X-User-Id': adminUser.id.toString(),
+            },
+          });
+          if (res.ok) {
+            setWebsiteContents(prev => prev.filter(c => c.id !== item.id));
+            showSweetToast('success', `"${item.title}" item deleted successfully!`);
+          } else {
+            const data = await res.json();
+            showSweetToast('error', data.error || 'Failed to delete content.');
+          }
+        } catch (err) {
+          console.error('Failed to delete content:', err);
+          showSweetToast('error', 'Network error while deleting content.');
+        }
       }
-    } catch (err) {
-      console.error('Failed to delete content:', err);
-    }
+    });
   };
 
 
@@ -343,55 +383,50 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
     }
   };
 
-  // Custom sweet confirmation state
-  const [deleteConfirmUser, setDeleteConfirmUser] = useState<{ id: number, name: string } | null>(null);
-
-  // Trigger modal confirmation popup
+  // Trigger Sweet Alert modal for member account deletion
   const handleDelete = (userId: number, userName: string) => {
-    setDeleteConfirmUser({ id: userId, name: userName });
-  };
+    setConfirmModal({
+      isOpen: true,
+      type: 'danger',
+      title: 'Delete Member Account?',
+      subtitle: 'মেম্বার অ্যাকাউন্ট মুছে ফেলতে চান?',
+      description: `You are about to permanently delete member "${userName}" from the system. Their downline connection and registration history cannot be recovered.`,
+      confirmBtnText: 'Yes, Delete Member Account',
+      onConfirm: async () => {
+        setConfirmModal(null);
+        setActionLoading(userId);
+        setError(null);
+        setSuccessMsg(null);
+        try {
+          const res = await fetch('/api/admin/delete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-User-Id': adminUser.id.toString(),
+            },
+            body: JSON.stringify({ userId }),
+          });
+          const data = await res.json();
+          if (!res.ok) {
+            throw new Error(data.error || 'Failed to delete the user.');
+          }
+          showSweetToast('success', data.message || `${userName} deleted successfully.`);
+          
+          if (auditingUser?.id === userId) setAuditingUser(null);
+          if (inspectingUser?.id === userId) {
+            setInspectingUser(null);
+            setInspectedTree(null);
+          }
 
-  // Actual execution of Delete / Reject
-  const executeDelete = async () => {
-    if (!deleteConfirmUser) return;
-    const { id: userId, name: userName } = deleteConfirmUser;
-
-    setActionLoading(userId);
-    setError(null);
-    setSuccessMsg(null);
-    setDeleteConfirmUser(null); // Close modal
-    try {
-      const res = await fetch('/api/admin/delete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-User-Id': adminUser.id.toString(),
-        },
-        body: JSON.stringify({ userId }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to delete the user.');
+          setUsers(prev => prev.filter(u => u.id !== userId));
+          fetchAdminData();
+        } catch (err: any) {
+          showSweetToast('error', err.message || 'Failed to delete member.');
+        } finally {
+          setActionLoading(null);
+        }
       }
-      setSuccessMsg(data.message || `${userName} has been deleted successfully.`);
-      
-      // If currently auditing or inspecting this user, clear it
-      if (auditingUser?.id === userId) {
-        setAuditingUser(null);
-      }
-      if (inspectingUser?.id === userId) {
-        setInspectingUser(null);
-        setInspectedTree(null);
-      }
-
-      // Update local state by removing user completely
-      setUsers(prev => prev.filter(u => u.id !== userId));
-      fetchAdminData(); // Refetch to accurately update stats and recursive tree paths
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setActionLoading(null);
-    }
+    });
   };
 
   // Inspect any user's downline tree
@@ -1504,7 +1539,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
                       </button>
 
                       <button
-                        onClick={() => handleDeleteContent(item.id)}
+                        onClick={() => handleDeleteContent(item)}
                         className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs rounded-lg transition-all cursor-pointer flex items-center gap-1 border border-rose-200"
                         title="Delete this item"
                       >
@@ -1519,30 +1554,59 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
         </div>
       )}
 
-      {/* Sweet Alert / Custom Delete Confirmation Popup */}
-      {deleteConfirmUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden transform scale-100 transition-all duration-300 p-6 space-y-6">
+      {/* Sweet Toast Notification Popup */}
+      {sweetToast && (
+        <div className="fixed top-5 right-5 z-[100] animate-bounce duration-300">
+          <div className={`px-4 py-3 rounded-2xl shadow-2xl border flex items-center gap-3 max-w-md ${
+            sweetToast.type === 'success' ? 'bg-emerald-950 text-white border-emerald-600' :
+            sweetToast.type === 'error' ? 'bg-rose-950 text-white border-rose-600' :
+            'bg-slate-900 text-white border-slate-700'
+          }`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+              sweetToast.type === 'success' ? 'bg-emerald-500/20 text-emerald-400' :
+              sweetToast.type === 'error' ? 'bg-rose-500/20 text-rose-400' :
+              'bg-indigo-500/20 text-indigo-400'
+            }`}>
+              {sweetToast.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> :
+               sweetToast.type === 'error' ? <AlertCircle className="w-5 h-5" /> :
+               <Sparkles className="w-5 h-5" />}
+            </div>
+            <div>
+              <p className="font-extrabold text-xs text-amber-400">{sweetToast.type === 'success' ? 'Success! (সফল হয়েছে)' : 'Notification'}</p>
+              <p className="text-xs font-medium text-slate-100">{sweetToast.message}</p>
+            </div>
+            <button onClick={() => setSweetToast(null)} className="ml-2 text-slate-400 hover:text-white p-1 cursor-pointer">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Sweet Alert Custom Confirmation Modal */}
+      {confirmModal?.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden transform scale-100 transition-all duration-300 p-6 space-y-5">
             
-            {/* Warning Icon Container */}
-            <div className="flex flex-col items-center text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-rose-50 border-4 border-rose-100 flex items-center justify-center text-rose-500 animate-pulse">
-                <AlertCircle className="w-8 h-8" />
+            {/* Warning Icon Header */}
+            <div className="flex flex-col items-center text-center space-y-3">
+              <div className="w-16 h-16 rounded-2xl bg-rose-50 border-2 border-rose-200 flex items-center justify-center text-rose-600 animate-pulse">
+                <Trash2 className="w-8 h-8" />
               </div>
               
-              <div className="space-y-1.5">
-                <h3 className="text-lg font-black text-slate-800">Are you sure?</h3>
-                <p className="text-sm font-semibold text-rose-600">This action cannot be undone</p>
+              <div className="space-y-1">
+                <h3 className="text-lg font-black text-slate-900">{confirmModal.title}</h3>
+                {confirmModal.subtitle && (
+                  <p className="text-xs font-bold text-rose-600 bg-rose-50 px-3 py-1 rounded-full border border-rose-100 inline-block">
+                    {confirmModal.subtitle}
+                  </p>
+                )}
               </div>
             </div>
 
-            {/* Warning Description */}
-            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 text-center space-y-2">
-              <p className="text-xs text-slate-600 leading-relaxed">
-                You are about to permanently delete <span className="font-extrabold text-slate-900">"{deleteConfirmUser.name}"</span> from the system. If you delete this account, their downline connection and data cannot be recovered.
-              </p>
-              <p className="text-[11px] text-slate-400 italic">
-                All registration details, history, and referral associations for this member will be permanently erased.
+            {/* Warning Message Box */}
+            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-center">
+              <p className="text-xs text-slate-700 leading-relaxed font-semibold">
+                {confirmModal.description}
               </p>
             </div>
 
@@ -1550,17 +1614,18 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
             <div className="flex gap-3">
               <button
                 type="button"
-                onClick={() => setDeleteConfirmUser(null)}
-                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-xs transition-all cursor-pointer"
+                onClick={() => setConfirmModal(null)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-all cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                onClick={executeDelete}
-                className="flex-1 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-2xl text-xs transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-rose-600/20 hover:shadow-rose-600/30"
+                onClick={confirmModal.onConfirm}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-xl text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-rose-600/20"
               >
-                <Trash2 className="w-4 h-4" /> Yes, Delete
+                <Trash2 className="w-4 h-4" />
+                <span>{confirmModal.confirmBtnText}</span>
               </button>
             </div>
 
