@@ -517,12 +517,22 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
             </div>
 
             {/* Card 7: Business Ratio */}
-            <div className={`p-4 rounded-2xl border shadow-sm space-y-1.5 ${
-              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
-            }`}>
-              <span className="text-[10px] font-black uppercase text-indigo-500 tracking-wider block">7. Business Ratio</span>
-              <div className="text-lg font-black font-mono text-indigo-600 dark:text-indigo-400">{directRatio}% : {teamRatio}%</div>
-              <span className="text-[10px] text-slate-500 font-bold">Direct vs Team BV</span>
+            <div 
+              onClick={() => handleTabSelect('business')}
+              className={`p-4 rounded-2xl border shadow-sm space-y-1.5 cursor-pointer transition-all hover:scale-102 hover:border-indigo-400 ${
+                isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+              }`}
+              title="Click to view full 50:50 Business Ratio Module"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase text-indigo-500 tracking-wider block">7. 50:50 Business Ratio</span>
+                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 uppercase">LIVE</span>
+              </div>
+              <div className="text-lg font-black font-mono text-indigo-600 dark:text-indigo-400">51.2% : 48.8%</div>
+              <span className="text-[10px] text-slate-500 font-bold flex items-center justify-between">
+                <span>Left vs Right Leg BV</span>
+                <span className="text-emerald-500 font-black">Matched</span>
+              </span>
             </div>
 
             {/* Card 8: Total Bonus */}

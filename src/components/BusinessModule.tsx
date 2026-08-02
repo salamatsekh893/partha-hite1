@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { 
   TrendingUp, DollarSign, Calendar, Building2, Users, ShoppingBag, 
   Download, Printer, Percent, Sparkles, ArrowUpRight, BarChart2,
-  CheckCircle2, Clock, MapPin
+  CheckCircle2, Clock, MapPin, Scale
 } from 'lucide-react';
 import { 
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, 
@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { User, DownlineMember } from '../types.js';
 import { exportToCSV, printPDFReport } from '../utils/exportUtils.js';
+import BusinessRatioModule from './BusinessRatioModule.js';
 
 interface BusinessModuleProps {
   user: User;
@@ -18,7 +19,7 @@ interface BusinessModuleProps {
 }
 
 export default function BusinessModule({ user, downlines, isDarkMode = false }: BusinessModuleProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'monthly' | 'daily' | 'product' | 'branch' | 'distributor'>('overview');
+  const [activeTab, setActiveTab] = useState<'ratio' | 'overview' | 'monthly' | 'daily' | 'product' | 'branch'>('ratio');
 
   const directCount = downlines.filter(m => m.level === 1).length;
   const teamCount = Math.max(0, downlines.length - directCount);
@@ -204,6 +205,15 @@ export default function BusinessModule({ user, downlines, isDarkMode = false }: 
         isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
       }`}>
         <button
+          onClick={() => setActiveTab('ratio')}
+          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
+            activeTab === 'ratio' ? 'bg-amber-400 text-slate-950 shadow-md ring-2 ring-amber-300/50' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <Scale className="w-3.5 h-3.5 text-slate-950" />
+          50:50 Business Ratio
+        </button>
+        <button
           onClick={() => setActiveTab('overview')}
           className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
             activeTab === 'overview' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
@@ -246,6 +256,11 @@ export default function BusinessModule({ user, downlines, isDarkMode = false }: 
       </div>
 
       {/* 4. TAB VIEWS */}
+
+      {/* 50:50 Business Ratio View */}
+      {activeTab === 'ratio' && (
+        <BusinessRatioModule user={user} downlines={downlines} isDarkMode={isDarkMode} />
+      )}
 
       {/* Overview Chart */}
       {activeTab === 'overview' && (
