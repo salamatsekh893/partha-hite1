@@ -26,6 +26,82 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
   const [lastUpdated, setLastUpdated] = useState<string>(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
   const [autoRefresh, setAutoRefresh] = useState<boolean>(true);
 
+  // Multi-Leg 50:50 Ratio Simulator State (Preloaded with Prompt Example: Leg A=12000, Leg B=4000, Leg C=3000, Leg D=2000)
+  const [simLegs, setSimLegs] = useState<{ id: string; name: string; bv: number }[]>([
+    { id: '1', name: 'Leg A', bv: 12000 },
+    { id: '2', name: 'Leg B', bv: 4000 },
+    { id: '3', name: 'Leg C', bv: 3000 },
+    { id: '4', name: 'Leg D', bv: 2000 },
+  ]);
+
+  // Compute 50:50 Formula for Multi-Leg Simulator
+  const simResult = useMemo(() => {
+    if (!simLegs || simLegs.length === 0) {
+      return {
+        highestLegName: 'None',
+        highestBV: 0,
+        totalOtherBV: 0,
+        matchingBV: 0,
+        eligibleBV: 0,
+        totalBV: 0,
+        carryForward: 0
+      };
+    }
+
+    let maxBV = -1;
+    let maxIdx = 0;
+    let sumTotal = 0;
+
+    simLegs.forEach((leg, idx) => {
+      sumTotal += leg.bv;
+      if (leg.bv > maxBV) {
+        maxBV = leg.bv;
+        maxIdx = idx;
+      }
+    });
+
+    const highestLegName = simLegs[maxIdx]?.name || 'Leg A';
+    const highestBV = maxBV;
+    const totalOtherBV = sumTotal - highestBV;
+    const matchingBV = Math.min(highestBV, totalOtherBV);
+    const eligibleBV = 2 * matchingBV;
+    const carryForward = Math.abs(highestBV - totalOtherBV);
+
+    return {
+      highestLegName,
+      highestBV,
+      totalOtherBV,
+      matchingBV,
+      eligibleBV,
+      totalBV: sumTotal,
+      carryForward
+    };
+  }, [simLegs]);
+
+  const handleAddLeg = () => {
+    const nextChar = String.fromCharCode(65 + simLegs.length); // Leg E, Leg F, etc.
+    const newLeg = {
+      id: Date.now().toString(),
+      name: `Leg ${nextChar}`,
+      bv: 2500
+    };
+    setSimLegs([...simLegs, newLeg]);
+  };
+
+  const handleUpdateLeg = (id: string, field: 'name' | 'bv', value: any) => {
+    setSimLegs(simLegs.map(leg => {
+      if (leg.id === id) {
+        return { ...leg, [field]: field === 'bv' ? Math.max(0, Number(value) || 0) : value };
+      }
+      return leg;
+    }));
+  };
+
+  const handleRemoveLeg = (id: string) => {
+    if (simLegs.length <= 2) return; // Keep at least 2 legs
+    setSimLegs(simLegs.filter(leg => leg.id !== id));
+  };
+
   // Calculate Base Left & Right Leg BV from Downlines or Realistic Defaults
   const { leftMembers, rightMembers } = useMemo(() => {
     const lefts: DownlineMember[] = [];
@@ -533,10 +609,149 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
           <div className="space-y-2 p-3 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-indigo-100 dark:border-indigo-900/50 font-mono">
             <p className="font-sans font-bold text-slate-900 dark:text-white">📐 Mathematical Formula:</p>
             <div className="p-2 bg-indigo-600 text-white rounded-xl text-center font-bold">
-              Ratio = Min(Highest Leg Business, Total Other Legs Business)
+              Highest Business Leg = Max(All Leg Business)
+            </div>
+            <div className="p-2 bg-amber-500 text-slate-950 rounded-xl text-center font-bold">
+              Total Other Legs Business = Sum(All Remaining Legs)
             </div>
             <div className="p-2 bg-emerald-600 text-white rounded-xl text-center font-bold">
-              Eligible Business = 2 × Min(Highest Leg Business, Total Other Legs Business)
+              Matching Business = Min(Highest Business Leg, Total Other Legs)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* MULTI-LEG 50:50 RATIO INTERACTIVE SIMULATOR */}
+      <div className={`p-6 rounded-3xl border shadow-md space-y-5 ${
+        isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 dark:border-slate-800 pb-4">
+          <div>
+            <h3 className="text-sm font-black uppercase tracking-wider flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+              <Layers className="w-4 h-4 text-indigo-500" />
+              MULTI-LEG 50:50 RATIO CALCULATOR & SIMULATOR
+            </h3>
+            <p className="text-xs text-slate-500">
+              Test multi-leg business scenarios (Leg A, Leg B, Leg C, Leg D...) applying the 50:50 rule.
+            </p>
+          </div>
+          <button
+            onClick={handleAddLeg}
+            className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1 cursor-pointer self-start sm:self-auto"
+          >
+            + Add Leg
+          </button>
+        </div>
+
+        {/* Input Legs Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          {simLegs.map((leg) => {
+            const isHighest = leg.name === simResult.highestLegName;
+            return (
+              <div 
+                key={leg.id}
+                className={`p-3.5 rounded-2xl border transition-all ${
+                  isHighest 
+                    ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30 ring-2 ring-indigo-500/30' 
+                    : isDarkMode ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <input
+                    type="text"
+                    value={leg.name}
+                    onChange={(e) => handleUpdateLeg(leg.id, 'name', e.target.value)}
+                    className="font-black text-xs uppercase bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded px-1 text-slate-900 dark:text-white"
+                  />
+                  {isHighest ? (
+                    <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded bg-indigo-600 text-white">
+                      HIGHEST (50%)
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleRemoveLeg(leg.id)}
+                      className="text-slate-400 hover:text-rose-500 text-xs font-bold cursor-pointer"
+                      title="Remove Leg"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 block">Business Volume (BV):</label>
+                  <input
+                    type="number"
+                    value={leg.bv}
+                    onChange={(e) => handleUpdateLeg(leg.id, 'bv', e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono font-bold text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Calculation Summary Box */}
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-900 to-slate-900 text-white space-y-3 shadow-lg">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-700/50 pb-3">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-amber-400" />
+              <span className="font-black text-xs uppercase tracking-wider">
+                50:50 RULE CALCULATION BREAKDOWN
+              </span>
+            </div>
+            <div className="text-xs font-mono font-bold px-3 py-1 rounded-full bg-amber-400 text-slate-950">
+              Ratio: {simResult.highestBV.toLocaleString('en-IN')} : {simResult.totalOtherBV.toLocaleString('en-IN')} (50:50 Rule)
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div className="p-2.5 rounded-xl bg-white/10 space-y-1">
+              <span className="text-[10px] uppercase font-bold text-indigo-300 block">
+                Highest Business Leg
+              </span>
+              <div className="font-mono font-black text-base text-amber-300">
+                {simResult.highestBV.toLocaleString('en-IN')} BV
+              </div>
+              <span className="text-[10px] text-slate-300">
+                {simResult.highestLegName} (Highest)
+              </span>
+            </div>
+
+            <div className="p-2.5 rounded-xl bg-white/10 space-y-1">
+              <span className="text-[10px] uppercase font-bold text-indigo-300 block">
+                Total Other Legs
+              </span>
+              <div className="font-mono font-black text-base text-cyan-300">
+                {simResult.totalOtherBV.toLocaleString('en-IN')} BV
+              </div>
+              <span className="text-[10px] text-slate-300">
+                Sum of remaining legs
+              </span>
+            </div>
+
+            <div className="p-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 space-y-1">
+              <span className="text-[10px] uppercase font-bold text-emerald-400 block">
+                Matching 50:50 Business
+              </span>
+              <div className="font-mono font-black text-base text-emerald-300">
+                {simResult.matchingBV.toLocaleString('en-IN')} BV
+              </div>
+              <span className="text-[10px] text-emerald-200">
+                Min({simResult.highestBV.toLocaleString()}, {simResult.totalOtherBV.toLocaleString()})
+              </span>
+            </div>
+
+            <div className="p-2.5 rounded-xl bg-purple-950/60 border border-purple-500/40 space-y-1">
+              <span className="text-[10px] uppercase font-bold text-purple-300 block">
+                Eligible Business (2x)
+              </span>
+              <div className="font-mono font-black text-base text-purple-200">
+                {simResult.eligibleBV.toLocaleString('en-IN')} BV
+              </div>
+              <span className="text-[10px] text-purple-300">
+                2 × {simResult.matchingBV.toLocaleString()}
+              </span>
             </div>
           </div>
         </div>
