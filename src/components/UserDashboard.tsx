@@ -93,7 +93,7 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
 
   // WhatsApp share link
   const cleanMobileDigits = user.phone.replace(/\D/g, '');
-  const whatsappShareMessage = `Hello! Join Success India Solar Energy Network today. Register using my Sponsor Mobile Number: ${user.phone} (${user.name}). Join Link: ${refLink}`;
+  const whatsappShareMessage = `Hello! Join Success India Solar Energy Network today. Register using my Distributor ID (Mobile No): ${user.phone} (${user.name}). Join Link: ${refLink}`;
   const whatsappShareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappShareMessage)}`;
 
   // Filter Downline members
@@ -101,8 +101,7 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
     const matchesSearch = 
       member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.phone.includes(searchTerm) ||
-      member.id.toString().includes(searchTerm);
+      member.phone.includes(searchTerm);
 
     const matchesLevel = 
       selectedLevelFilter === 'all' || 
@@ -158,7 +157,7 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
                 </span>
                 
                 <span className="text-xs font-bold text-indigo-200/90 bg-white/10 px-3 py-1 rounded-full border border-white/10">
-                  {user.role === 'admin' ? 'System Administrator' : 'Network Member'}
+                  {user.role === 'admin' ? 'System Administrator' : 'Distributor'}
                 </span>
               </div>
 
@@ -193,20 +192,20 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
             </div>
           </div>
 
-          {/* Right: Prominent Sponsor ID (Mobile Number) Card */}
+          {/* Right: Prominent Distributor ID Card */}
           <div className="bg-gradient-to-b from-indigo-900/80 to-slate-900/90 border border-indigo-400/30 rounded-2xl p-4 sm:p-5 shrink-0 backdrop-blur-md flex flex-col justify-between gap-3 min-w-[280px] shadow-2xl">
             <div className="flex items-center justify-between gap-2 border-b border-indigo-800/60 pb-2.5">
               <span className="text-[11px] font-black text-amber-300 uppercase tracking-wider flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" /> My Sponsor ID (Mobile)
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" /> My Distributor ID
               </span>
               <span className="text-[10px] bg-indigo-800 text-indigo-200 px-2 py-0.5 rounded-full font-bold">
-                User ID #{user.id}
+                Distributor
               </span>
             </div>
 
             <div className="bg-slate-950/80 border border-indigo-500/30 rounded-xl p-3 flex items-center justify-between gap-3">
               <div>
-                <span className="text-[9px] text-indigo-300 font-bold uppercase tracking-wider block">Sponsor Mobile Number</span>
+                <span className="text-[9px] text-indigo-300 font-bold uppercase tracking-wider block">Distributor ID (Mobile)</span>
                 <span className="text-lg sm:text-xl font-black font-mono tracking-wide text-white block truncate select-all">
                   {sponsorCode}
                 </span>
@@ -218,14 +217,14 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
                     ? 'bg-emerald-600 text-white' 
                     : 'bg-indigo-600 hover:bg-indigo-500 text-white'
                 }`}
-                title="Copy Sponsor Mobile Number"
+                title="Copy Distributor ID"
               >
                 {copiedSponsorCode ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
 
             <p className="text-[10px] text-indigo-200/70 font-medium">
-              Give your mobile number (<strong className="text-white">{sponsorCode}</strong>) to new members to sign up under your team!
+              Give your Distributor ID (<strong className="text-white">{sponsorCode}</strong>) to new distributors to sign up under your team!
             </p>
           </div>
 
@@ -238,10 +237,10 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
           <div className="space-y-1">
             <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
               <Share2 className="w-5 h-5 text-indigo-600" />
-              Share Your Sponsor Referral Link
+              Share Your Distributor Referral Link
             </h2>
             <p className="text-xs text-slate-500 font-medium">
-              Send your personal referral link to invite team members. Your mobile number (<strong className="text-slate-800">{sponsorCode}</strong>) is automatically locked as their sponsor!
+              Send your personal referral link to invite new distributors. Your mobile number (<strong className="text-slate-800">{sponsorCode}</strong>) is automatically set as their Sponsor Distributor ID!
             </p>
           </div>
 
@@ -298,12 +297,10 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
               <UserIcon className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">My Direct Sponsor (Upline)</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">My Direct Sponsor Distributor (Upline)</span>
               <h3 className="text-sm font-black text-slate-900">{sponsor.name}</h3>
               <p className="text-xs text-slate-600 font-medium flex items-center gap-2 mt-0.5">
-                <span>Mobile: <strong className="text-slate-900 font-mono">{sponsor.phone}</strong></span>
-                <span>•</span>
-                <span>ID: #{sponsor.id}</span>
+                <span>Distributor Mobile: <strong className="text-slate-900 font-mono">{sponsor.phone}</strong></span>
               </p>
             </div>
           </div>
@@ -336,23 +333,23 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
             <Users className="w-5 h-5" />
           </div>
           <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Total Downline</span>
-          <span className="text-2xl font-black text-slate-900 mt-1 block">{totalRefs} members</span>
+          <span className="text-2xl font-black text-slate-900 mt-1 block">{totalRefs} Distributors</span>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm hover:border-emerald-300 transition-all">
           <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2.5">
             <Check className="w-5 h-5" />
           </div>
-          <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Active Members</span>
-          <span className="text-2xl font-black text-emerald-600 mt-1 block">{activeRefs} members</span>
+          <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Active Distributors</span>
+          <span className="text-2xl font-black text-emerald-600 mt-1 block">{activeRefs} Active</span>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm hover:border-amber-300 transition-all">
           <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-2.5">
             <UserIcon className="w-5 h-5" />
           </div>
-          <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Pending Approvals</span>
-          <span className="text-2xl font-black text-amber-600 mt-1 block">{inactiveRefs} members</span>
+          <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Pending Distributors</span>
+          <span className="text-2xl font-black text-amber-600 mt-1 block">{inactiveRefs} Pending</span>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm hover:border-blue-300 transition-all">
@@ -360,7 +357,7 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
             <UserPlus className="w-5 h-5" />
           </div>
           <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Direct (Level 1)</span>
-          <span className="text-2xl font-black text-blue-600 mt-1 block">{directRefs} members</span>
+          <span className="text-2xl font-black text-blue-600 mt-1 block">{directRefs} Direct</span>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm hover:border-violet-300 transition-all col-span-2 lg:col-span-1">
@@ -386,7 +383,7 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
               }`}
             >
               <Users className="w-4 h-4 text-indigo-600" />
-              Tiered Downline List
+              Tiered Distributor List
             </button>
             <button
               onClick={() => setActiveTab('tree')}
@@ -405,14 +402,14 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
             onClick={fetchData}
             className="text-xs text-indigo-600 hover:text-indigo-800 font-bold px-3.5 py-2 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer border border-indigo-200/60"
           >
-            Refresh Downline Data
+            Refresh Distributor Data
           </button>
         </div>
 
         {loading ? (
           <div className="p-12 text-center text-slate-500 text-xs font-medium space-y-2">
             <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p>Loading referral network members, please wait...</p>
+            <p>Loading downline distributors, please wait...</p>
           </div>
         ) : error ? (
           <div className="p-8 text-center text-rose-600 text-xs bg-rose-50/50 border-t border-rose-100 font-semibold">
@@ -431,7 +428,7 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search downline by name, mobile number, email, or ID..."
+                  placeholder="Search distributors by name, mobile number, or email..."
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium"
                 />
               </div>
@@ -475,11 +472,11 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
                       <tr className="bg-slate-100/80 text-slate-700 border-b border-slate-200 font-extrabold uppercase tracking-wider text-[11px]">
-                        <th className="p-4 w-16">ID</th>
-                        <th className="p-4">Member Details</th>
+                        <th className="p-4">Distributor ID (Mobile)</th>
+                        <th className="p-4">Distributor Details</th>
                         <th className="p-4">Network Tier</th>
-                        <th className="p-4">Sponsor Mobile & Name</th>
-                        <th className="p-4">Contact & Actions</th>
+                        <th className="p-4">Sponsor Distributor</th>
+                        <th className="p-4">Actions</th>
                         <th className="p-4">Joined Date</th>
                         <th className="p-4 w-28 text-center">Status</th>
                       </tr>
@@ -487,7 +484,7 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
                     <tbody className="divide-y divide-slate-100 bg-white font-medium">
                       {filteredDownlines.map((member) => (
                         <tr key={member.id} className="hover:bg-indigo-50/30 transition-colors">
-                          <td className="p-4 font-mono font-bold text-slate-500">#{member.id}</td>
+                          <td className="p-4 font-mono font-bold text-slate-900">{member.phone}</td>
                           <td className="p-4">
                             <div className="font-bold text-slate-900 text-sm">{member.name}</div>
                             <div className="text-[11px] text-slate-500 font-mono mt-0.5">{member.email}</div>
@@ -498,29 +495,30 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
                             </span>
                           </td>
                           <td className="p-4 text-slate-700">
-                            <div className="font-bold text-slate-900">{member.referrer_name || `ID #${member.referrer_id}`}</div>
+                            <div className="font-bold text-slate-900">{member.referrer_name || 'Admin Direct'}</div>
                             {member.referrer_phone && (
-                              <div className="text-[11px] font-mono text-indigo-600 font-semibold">{member.referrer_phone}</div>
+                              <div className="text-[11px] font-mono text-indigo-600 font-semibold">Mobile: {member.referrer_phone}</div>
                             )}
                           </td>
                           <td className="p-4">
                             <div className="flex items-center gap-2">
-                              <span className="font-mono font-bold text-slate-800">{member.phone}</span>
                               <a
                                 href={`https://api.whatsapp.com/send?phone=${member.phone.replace(/\D/g, '')}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="p-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer"
+                                className="p-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer flex items-center gap-1 font-bold text-[11px]"
                                 title="Chat on WhatsApp"
                               >
                                 <MessageCircle className="w-3.5 h-3.5" />
+                                <span>Chat</span>
                               </a>
                               <a
                                 href={`tel:${member.phone}`}
-                                className="p-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg transition-colors cursor-pointer"
-                                title="Call Member"
+                                className="p-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg transition-colors cursor-pointer flex items-center gap-1 font-bold text-[11px]"
+                                title="Call Distributor"
                               >
                                 <Phone className="w-3.5 h-3.5" />
+                                <span>Call</span>
                               </a>
                             </div>
                           </td>
@@ -550,8 +548,8 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
             ) : (
               <div className="bg-slate-50 border border-slate-200 rounded-2xl py-12 text-center text-slate-500 font-medium space-y-2">
                 <Users className="w-8 h-8 text-slate-300 mx-auto" />
-                <p className="text-xs font-bold text-slate-700">No downline members found matching your search.</p>
-                <p className="text-[11px] text-slate-400">Share your mobile number sponsor code to build your team!</p>
+                <p className="text-xs font-bold text-slate-700">No distributors found matching your search.</p>
+                <p className="text-[11px] text-slate-400">Share your Distributor ID (Mobile No) to build your team!</p>
               </div>
             )}
           </div>

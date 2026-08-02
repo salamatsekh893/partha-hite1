@@ -74,7 +74,7 @@ function TreeNode({ node, initiallyExpanded = true }: TreeNodeProps) {
               </div>
               
               <div className="text-[11px] text-slate-500 font-medium mt-0.5 font-mono select-all">
-                ID: {node.id}
+                Distributor ID: {node.phone}
               </div>
             </div>
           </div>
@@ -157,7 +157,7 @@ export default function VisualTree({ treeData }: VisualTreeProps) {
         <div>
           <h3 className="text-base font-bold text-slate-900">Visual Referral Tree</h3>
           <p className="text-xs text-slate-500 mt-0.5 font-medium">
-            Recursive network tree mapping of your downline (Total members: {totalDownline})
+            Recursive network tree mapping of your downline (Total distributors: {totalDownline})
           </p>
         </div>
 
@@ -190,7 +190,7 @@ export default function VisualTree({ treeData }: VisualTreeProps) {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search tree by name, email, or ID..."
+            placeholder="Search tree by name, email, or mobile number..."
             className="w-full pl-10 pr-4 py-2 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 focus:bg-white rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
           />
         </div>
@@ -210,7 +210,7 @@ export default function VisualTree({ treeData }: VisualTreeProps) {
                     <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${
                       m.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
                     }`}>
-                      ID: {m.id}
+                      Mobile: {m.phone}
                     </span>
                   </div>
                 ))}

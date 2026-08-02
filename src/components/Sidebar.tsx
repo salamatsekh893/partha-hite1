@@ -110,7 +110,7 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, currentView, 
                     <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
                       user.role === 'admin' ? 'bg-amber-100 text-amber-800 border border-amber-300/60' : 'bg-indigo-100 text-indigo-800 border border-indigo-200'
                     }`}>
-                      {user.role === 'admin' ? 'System Admin' : 'Member'}
+                      {user.role === 'admin' ? 'System Admin' : 'Distributor'}
                     </span>
                     <span className={`text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full ${
                       user.status === 'active' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300/60' : 'bg-rose-100 text-rose-800 border border-rose-300/60'
@@ -132,12 +132,10 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, currentView, 
                 <Phone className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
                 <span>{user.phone}</span>
               </div>
-              {user.referrer_id && (
-                <div className="flex items-center gap-2 text-amber-700 bg-amber-50/80 px-2 py-1 rounded-lg border border-amber-200/50">
-                  <Award className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                  <span className="font-semibold">Sponsor ID: #{user.referrer_id}</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2 text-indigo-700 bg-indigo-50/80 px-2 py-1 rounded-lg border border-indigo-200/50">
+                <Award className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                <span className="font-semibold">Distributor ID: {user.phone}</span>
+              </div>
             </div>
 
             {/* Edit Profile Button */}

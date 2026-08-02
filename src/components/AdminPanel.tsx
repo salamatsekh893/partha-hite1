@@ -569,7 +569,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
           }`}
         >
           <Users className="w-4 h-4 text-indigo-600" />
-          <span>Member Directory & Network</span>
+          <span>Distributor Directory & Network</span>
         </button>
 
         <button
@@ -599,15 +599,15 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
               <Users className="w-4 h-4" />
             </div>
             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Total Registered</span>
-            <span className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 block">{stats.totalUsers} <span className="text-xs font-semibold text-slate-500">members</span></span>
+            <span className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 block">{stats.totalUsers} <span className="text-xs font-semibold text-slate-500">distributors</span></span>
           </div>
 
           <div className="bg-white border border-slate-200/80 hover:border-emerald-300/80 rounded-2xl p-4 text-left shadow-sm hover:shadow-md transition-all">
             <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2.5">
               <ShieldCheck className="w-4 h-4" />
             </div>
-            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Active Members</span>
-            <span className="text-xl sm:text-2xl font-black text-emerald-600 mt-0.5 block">{stats.activeUsers} <span className="text-xs font-semibold text-emerald-600/70">members</span></span>
+            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Active Distributors</span>
+            <span className="text-xl sm:text-2xl font-black text-emerald-600 mt-0.5 block">{stats.activeUsers} <span className="text-xs font-semibold text-emerald-600/70">distributors</span></span>
           </div>
 
           <div className="bg-white border border-slate-200/80 hover:border-amber-300/80 rounded-2xl p-4 text-left shadow-sm hover:shadow-md transition-all">
@@ -615,7 +615,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
               <UserCheck className="w-4 h-4" />
             </div>
             <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Pending Approval</span>
-            <span className="text-xl sm:text-2xl font-black text-amber-600 mt-0.5 block">{stats.inactiveUsers} <span className="text-xs font-semibold text-amber-600/70">members</span></span>
+            <span className="text-xl sm:text-2xl font-black text-amber-600 mt-0.5 block">{stats.inactiveUsers} <span className="text-xs font-semibold text-amber-600/70">distributors</span></span>
           </div>
 
           <div className="bg-white border border-slate-200/80 hover:border-indigo-300/80 rounded-2xl p-4 text-left shadow-sm hover:shadow-md transition-all">
@@ -652,8 +652,8 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
         <div className="p-5 border-b border-slate-200 space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-bold text-slate-900">Member Directory ({filteredUsers.length})</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Manage registered accounts, pending activations, or membership status</p>
+              <h3 className="text-sm font-bold text-slate-900">Distributor Directory ({filteredUsers.length})</h3>
+              <p className="text-xs text-slate-500 mt-0.5">Manage registered accounts, pending activations, or distributor status</p>
             </div>
 
             {/* Status filters */}
@@ -664,7 +664,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
                   statusFilter === 'all' ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-600'
                 }`}
               >
-                All Members
+                All Distributors
               </button>
               <button
                 onClick={() => setStatusFilter('active')}
@@ -694,7 +694,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search members by name, ID, email, or phone..."
+              placeholder="Search distributors by name, mobile number, or email..."
               className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium"
             />
           </div>
@@ -707,10 +707,10 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50 text-slate-700 border-b border-slate-200 font-bold">
-                  <th className="p-4 w-16">ID</th>
+                  <th className="p-4">Distributor Mobile ID</th>
                   <th className="p-4">Name</th>
                   <th className="p-4">Contact Info</th>
-                  <th className="p-4">Sponsor</th>
+                  <th className="p-4">Sponsor Distributor</th>
                   <th className="p-4">Date Joined</th>
                   <th className="p-4 w-28 text-center">Status</th>
                   <th className="p-4 w-52 text-right">Actions</th>
@@ -732,7 +732,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
 
                   return (
                     <tr key={userItem.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="p-4 font-mono font-bold text-slate-600">#{userItem.id}</td>
+                      <td className="p-4 font-mono font-bold text-slate-800">{userItem.phone}</td>
                       <td className="p-4">
                         <div className="flex items-center gap-2.5">
                           {itemPhoto ? (
@@ -751,9 +751,9 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
                             <div className="font-bold text-slate-900">{userItem.name}</div>
                             <div className="mt-0.5">
                               <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase ${
-                                userItem.role === 'admin' ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-700'
+                                userItem.role === 'admin' ? 'bg-rose-100 text-rose-800' : 'bg-indigo-100 text-indigo-800'
                               }`}>
-                                {userItem.role === 'admin' ? 'Admin' : 'Member'}
+                                {userItem.role === 'admin' ? 'Admin' : 'Distributor'}
                               </span>
                             </div>
                           </div>
@@ -772,7 +772,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
                     <td className="p-4">
                       {userItem.referrer_id ? (
                         <span className="bg-indigo-50 border border-indigo-100/50 text-indigo-700 font-bold px-2 py-0.5 rounded-md text-[10px]">
-                          Member #{userItem.referrer_id}
+                          Sponsor Distributor
                         </span>
                       ) : (
                         <span className="text-slate-400 italic">None (System Root)</span>

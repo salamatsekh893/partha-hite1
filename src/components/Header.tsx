@@ -131,7 +131,7 @@ export default function Header({ user, onLogout, currentView, setView, onMenuCli
                 className="px-4 py-2.5 bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-400 hover:from-amber-500 hover:to-yellow-500 text-slate-950 font-black text-xs rounded-xl shadow-md shadow-amber-500/25 active:scale-95 transition-all cursor-pointer flex items-center gap-1.5 border border-amber-300"
               >
                 <UserIcon className="w-4 h-4 text-slate-950" />
-                <span>Member Login / Register</span>
+                <span>Distributor Login / Register</span>
               </button>
             </div>
           )}
