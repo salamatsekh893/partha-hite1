@@ -2,31 +2,92 @@ import { useState, useEffect } from 'react';
 import { 
   User as UserIcon, Share2, Copy, Check, Users, ShieldCheck, 
   ChevronRight, Calendar, Network, Search, Filter, Phone, Mail, 
-  MessageCircle, ExternalLink, Award, Sparkles, UserPlus, Zap, Edit3, ArrowUpRight
+  MessageCircle, ExternalLink, Award, Sparkles, UserPlus, Zap, Edit3,
+  Download, DollarSign, TrendingUp, ShoppingBag, ShoppingCart, Percent, Gift, 
+  Package, Clock, Truck, FileText, CheckCircle2, Send, AlertCircle, Moon, Sun,
+  BarChart2, Layers, ArrowUpRight, Activity
 } from 'lucide-react';
-import { User, DownlineMember, ReferralTreeNode } from '../types.js';
-import VisualTree from './VisualTree.js';
+import { 
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, 
+  BarChart, Bar, PieChart, Pie, Cell 
+} from 'recharts';
+import { User, DownlineMember, SolarProduct, ProductOrder, OfferItem } from '../types.js';
 import ProfileEditModal from './ProfileEditModal.js';
+import ReportsModule from './ReportsModule.js';
+import BusinessModule from './BusinessModule.js';
+import DownlineModule from './DownlineModule.js';
+import ProductModule from './ProductModule.js';
+import OfferModule from './OfferModule.js';
+import BonusModule from './BonusModule.js';
+import { INITIAL_PRODUCTS, INITIAL_OFFERS } from '../data/products.js';
 
 interface UserDashboardProps {
   user: User;
   onUserUpdated?: (updatedUser: User) => void;
+  activeMainTab?: 'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports';
+  onTabChange?: (tab: 'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports') => void;
 }
 
-export default function UserDashboard({ user, onUserUpdated }: UserDashboardProps) {
+export default function UserDashboard({ user, onUserUpdated, activeMainTab: controlledTab, onTabChange }: UserDashboardProps) {
+  // Main Navigation Tabs (7 Comprehensive MLM Modules)
+  const [internalTab, setInternalTab] = useState<
+    'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports'
+  >('dashboard');
+
+  const activeMainTab = controlledTab !== undefined ? controlledTab : internalTab;
+
+  const handleTabSelect = (tab: 'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports') => {
+    setInternalTab(tab);
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+  };
+
+  // Dark Mode Toggle
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+
+  // Network State
   const [downlines, setDownlines] = useState<DownlineMember[]>([]);
-  const [tree, setTree] = useState<ReferralTreeNode | null>(null);
   const [sponsor, setSponsor] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedLevelFilter, setSelectedLevelFilter] = useState<number | 'all'>('all');
-  const [activeTab, setActiveTab] = useState<'list' | 'tree'>('list');
+
+  // Orders State
+  const [orders, setOrders] = useState<ProductOrder[]>([
+    {
+      id: "ORD-84201",
+      userId: user.id,
+      productId: 1,
+      productName: "535W Mono PERC High-Efficiency Solar Panel (2 Units)",
+      qty: 2,
+      totalAmount: 28400,
+      totalBV: 20000,
+      totalPV: 200,
+      orderDate: "2026-07-28",
+      status: "Approved",
+      shippingAddress: "Plot 42, Green Energy Park, New Delhi"
+    },
+    {
+      id: "ORD-84188",
+      userId: user.id,
+      productId: 2,
+      productName: "3kW On-Grid Solar Inverter Pro",
+      qty: 1,
+      totalAmount: 29500,
+      totalBV: 22000,
+      totalPV: 220,
+      orderDate: "2026-07-20",
+      status: "Delivered",
+      shippingAddress: "Sector 14, Solar Enclave, Jaipur"
+    }
+  ]);
+
+  // UI state
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedSponsorCode, setCopiedSponsorCode] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
-  // Parse additional_details for profile image display
+  // Parse additional_details for photo
   let details: any = null;
   try {
     if (user.additional_details) {
@@ -38,7 +99,7 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
     console.error("Error parsing user details", e);
   }
 
-  // Fetch downline & upline sponsor data
+  // Fetch downline & upline sponsor data from DB API
   const fetchData = async () => {
     setLoading(true);
     setError(null);
@@ -52,7 +113,6 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
         throw new Error(dataDownline.error || 'Failed to load downline network data.');
       }
       setDownlines(dataDownline.flatList || []);
-      setTree(dataDownline.tree || null);
 
       // 2. Upline Sponsor
       const resUpline = await fetch('/api/user/upline', {
@@ -76,7 +136,7 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
   // Primary Sponsor Code is the User's Mobile Number!
   const sponsorCode = user.phone;
 
-  // Referral Link uses mobile number (or user.id fallback)
+  // Referral Link uses mobile number
   const refLink = `${window.location.origin}?ref=${encodeURIComponent(user.phone || user.id)}`;
 
   const copyReferralLink = () => {
@@ -91,77 +151,105 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
     setTimeout(() => setCopiedSponsorCode(false), 2000);
   };
 
-  // WhatsApp share link
-  const cleanMobileDigits = user.phone.replace(/\D/g, '');
   const whatsappShareMessage = `Hello! Join Success India Solar Energy Network today. Register using my Distributor ID (Mobile No): ${user.phone} (${user.name}). Join Link: ${refLink}`;
   const whatsappShareUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappShareMessage)}`;
 
-  // Filter Downline members
-  const filteredDownlines = downlines.filter((member) => {
-    const matchesSearch = 
-      member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.phone.includes(searchTerm);
+  // Handle New Order Placed
+  const handleOrderPlaced = (newOrder: ProductOrder) => {
+    setOrders(prev => [newOrder, ...prev]);
+  };
 
-    const matchesLevel = 
-      selectedLevelFilter === 'all' || 
-      member.level === selectedLevelFilter;
+  // --- STATS CALCULATIONS FOR ALL 12 SUMMARY CARDS ---
+  const totalDistributorsCount = downlines.length;
+  const activeDistributorsCount = downlines.filter(m => m.status === 'active').length;
+  const pendingDistributorsCount = downlines.filter(m => m.status === 'inactive').length;
+  const directDistributorsCount = downlines.filter(m => m.level === 1).length;
+  const totalDownlineCount = downlines.length;
 
-    return matchesSearch && matchesLevel;
-  });
+  // Business Values
+  const orderBV = orders.reduce((sum, o) => sum + o.totalBV, 0);
+  const directBV = directDistributorsCount * 25000 + orderBV;
+  const teamBV = (activeDistributorsCount - directDistributorsCount) * 18000;
+  const totalBusinessBV = directBV + teamBV;
+  const totalBusinessINR = Math.round(totalBusinessBV * 1.25);
 
-  // Unique levels for filter options
-  const availableLevels = Array.from(new Set(downlines.map((m) => m.level))).sort((a: number, b: number) => a - b);
+  const productBusinessINR = Math.round(orderBV * 1.25 + 45000);
+  const totalEarningsINR = Math.round(directBV * 0.12 + teamBV * 0.06 + 15000);
+  const totalBonusINR = Math.round(directBV * 0.08 + 8500);
 
-  // User network stats
-  const totalRefs = downlines.length;
-  const activeRefs = downlines.filter(m => m.status === 'active').length;
-  const inactiveRefs = downlines.filter(m => m.status === 'inactive').length;
-  const directRefs = downlines.filter(m => m.level === 1).length;
-  const maxLevel = downlines.length > 0 ? Math.max(...downlines.map(m => m.level)) : 0;
+  const directRatio = totalBusinessBV > 0 ? Math.round((directBV / totalBusinessBV) * 100) : 50;
+  const teamRatio = 100 - directRatio;
+  const totalOrdersCount = orders.length;
+
+  // Recharts Data for Dashboard
+  const businessGraphData = [
+    { month: 'Jan', directBV: 15000, teamBV: 12000 },
+    { month: 'Feb', directBV: 22000, teamBV: 18000 },
+    { month: 'Mar', directBV: 30000, teamBV: 25000 },
+    { month: 'Apr', directBV: 42000, teamBV: 35000 },
+    { month: 'May', directBV: 50000, teamBV: 48000 },
+    { month: 'Jun', directBV: 65000, teamBV: 62000 },
+    { month: 'Jul', directBV: directBV, teamBV: teamBV }
+  ];
+
+  const earningsGraphData = [
+    { month: 'Apr', income: 7300 },
+    { month: 'May', income: 12400 },
+    { month: 'Jun', income: 20800 },
+    { month: 'Jul', income: totalEarningsINR }
+  ];
+
+  const productSalesPieData = [
+    { name: 'Solar Panels', value: 45, color: '#6366f1' },
+    { name: 'Inverters', value: 30, color: '#f59e0b' },
+    { name: 'Batteries', value: 15, color: '#10b981' },
+    { name: 'Solar Pumps', value: 10, color: '#8b5cf6' }
+  ];
 
   return (
-    <div id="user-dashboard-root" className="space-y-6 animate-fade-in">
+    <div className={`min-h-screen space-y-6 transition-colors duration-300 ${
+      isDarkMode ? 'bg-slate-950 text-slate-100 p-2 sm:p-4 rounded-3xl' : 'text-slate-900'
+    }`}>
       
-      {/* 1. Ultra-Modern Welcome Hero Card */}
-      <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-indigo-500/20 relative overflow-hidden">
-        {/* Subtle decorative solar rays glow */}
-        <div className="absolute right-0 top-0 w-96 h-96 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none"></div>
-        <div className="absolute left-1/4 bottom-0 w-64 h-64 rounded-full bg-amber-500/10 blur-2xl pointer-events-none"></div>
-
+      {/* 1. Header Banner & Profile Strip with Dark Mode Switch */}
+      <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl relative overflow-hidden transition-all ${
+        isDarkMode 
+          ? 'bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border-indigo-500/20 text-white' 
+          : 'bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border-indigo-900/30'
+      }`}>
         <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           
-          {/* Left: Member Profile Overview */}
+          {/* Left: Member Profile Info */}
           <div className="flex items-start sm:items-center gap-4 sm:gap-5">
             {details?.photo ? (
               <div className="shrink-0 w-20 h-24 bg-white/10 border-2 border-amber-400/50 rounded-2xl p-1 shadow-xl overflow-hidden relative group">
                 <img src={details.photo} alt={user.name} className="w-full h-full object-cover rounded-xl" referrerPolicy="no-referrer" />
-                <div className="absolute inset-0 bg-indigo-900/30 opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </div>
             ) : (
               <div className="shrink-0 w-20 h-24 bg-gradient-to-b from-indigo-800 to-slate-900 border-2 border-indigo-400/30 rounded-2xl p-2 flex flex-col items-center justify-center text-indigo-200 shadow-xl">
-                <UserIcon className="w-8 h-8 opacity-90 mb-1 text-amber-400" />
-                <span className="text-[9px] font-black uppercase tracking-wider text-indigo-300 text-center">Passport</span>
+                <UserIcon className="w-8 h-8 text-amber-400 mb-1" />
+                <span className="text-[9px] font-black uppercase text-indigo-300">Passport</span>
               </div>
             )}
 
             <div className="space-y-1.5 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black tracking-wide border shadow-sm ${
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black tracking-wide border shadow-xs ${
                   user.status === 'active' 
                     ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
                     : 'bg-amber-500/20 text-amber-300 border-amber-400/40'
                 }`}>
                   <span className={`w-2 h-2 rounded-full ${user.status === 'active' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}></span>
-                  {user.status === 'active' ? 'Account Active & Verified' : 'Pending Admin Review'}
+                  {user.status === 'active' ? 'Active & Verified Distributor' : 'Pending Admin Approval'}
                 </span>
-                
-                <span className="text-xs font-bold text-indigo-200/90 bg-white/10 px-3 py-1 rounded-full border border-white/10">
-                  {user.role === 'admin' ? 'System Administrator' : 'Distributor'}
+
+                {/* Role Based Access Badge */}
+                <span className="text-xs font-extrabold text-amber-300 bg-amber-400/10 border border-amber-400/30 px-3 py-1 rounded-full">
+                  {user.role === 'admin' ? '🛡️ System Admin View' : '☀️ Distributor ID: ' + sponsorCode}
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
                 {user.name}
               </h1>
 
@@ -174,403 +262,412 @@ export default function UserDashboard({ user, onUserUpdated }: UserDashboardProp
                   <Mail className="w-3.5 h-3.5 text-indigo-400" />
                   {user.email}
                 </span>
-                <span className="flex items-center gap-1 text-indigo-300">
-                  <Calendar className="w-3.5 h-3.5 text-indigo-400" />
-                  Joined: {new Date(user.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
-                </span>
               </div>
 
-              <div className="pt-2">
+              <div className="pt-2 flex items-center gap-2">
                 <button
                   onClick={() => setIsEditProfileOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm hover:scale-105"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm"
                 >
                   <Edit3 className="w-3.5 h-3.5 text-amber-400" />
-                  Edit My Full Profile
+                  Edit Profile
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Right: Prominent Distributor ID Card */}
-          <div className="bg-gradient-to-b from-indigo-900/80 to-slate-900/90 border border-indigo-400/30 rounded-2xl p-4 sm:p-5 shrink-0 backdrop-blur-md flex flex-col justify-between gap-3 min-w-[280px] shadow-2xl">
-            <div className="flex items-center justify-between gap-2 border-b border-indigo-800/60 pb-2.5">
-              <span className="text-[11px] font-black text-amber-300 uppercase tracking-wider flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" /> My Distributor ID
-              </span>
-              <span className="text-[10px] bg-indigo-800 text-indigo-200 px-2 py-0.5 rounded-full font-bold">
-                Distributor
-              </span>
-            </div>
+          {/* Right: Controls & Dark Mode Switch */}
+          <div className="flex flex-col sm:flex-row lg:flex-col items-end justify-between gap-3 shrink-0">
+            
+            {/* Dark Mode Toggle Switch */}
+            <button
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className={`px-4 py-2 rounded-2xl font-black text-xs transition-all flex items-center gap-2 cursor-pointer shadow-lg border ${
+                isDarkMode 
+                  ? 'bg-amber-400 text-slate-950 border-amber-300 hover:bg-amber-300' 
+                  : 'bg-slate-800 text-amber-300 border-slate-700 hover:bg-slate-700'
+              }`}
+            >
+              {isDarkMode ? <Sun className="w-4 h-4 text-slate-950" /> : <Moon className="w-4 h-4 text-amber-400" />}
+              <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+            </button>
 
-            <div className="bg-slate-950/80 border border-indigo-500/30 rounded-xl p-3 flex items-center justify-between gap-3">
+            {/* Quick Distributor ID Box */}
+            <div className="bg-slate-950/80 border border-indigo-500/30 rounded-2xl p-3 flex items-center gap-3 w-full sm:w-auto">
               <div>
-                <span className="text-[9px] text-indigo-300 font-bold uppercase tracking-wider block">Distributor ID (Mobile)</span>
-                <span className="text-lg sm:text-xl font-black font-mono tracking-wide text-white block truncate select-all">
-                  {sponsorCode}
-                </span>
+                <span className="text-[9px] text-indigo-300 font-bold uppercase block">My Sponsor ID (Mobile)</span>
+                <span className="text-base font-black font-mono text-white block">{sponsorCode}</span>
               </div>
               <button
                 onClick={copySponsorCode}
-                className={`p-2.5 rounded-xl font-bold transition-all shadow-md shrink-0 cursor-pointer ${
-                  copiedSponsorCode 
-                    ? 'bg-emerald-600 text-white' 
-                    : 'bg-indigo-600 hover:bg-indigo-500 text-white'
-                }`}
-                title="Copy Distributor ID"
+                className="p-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl cursor-pointer"
+                title="Copy Sponsor ID"
               >
                 {copiedSponsorCode ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </button>
             </div>
 
-            <p className="text-[10px] text-indigo-200/70 font-medium">
-              Give your Distributor ID (<strong className="text-white">{sponsorCode}</strong>) to new distributors to sign up under your team!
-            </p>
           </div>
 
         </div>
       </div>
 
-      {/* 2. Referral Sharing & Viral Growth Hub */}
-      <div className="bg-white border border-indigo-100 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
-              <Share2 className="w-5 h-5 text-indigo-600" />
-              Share Your Distributor Referral Link
-            </h2>
-            <p className="text-xs text-slate-500 font-medium">
-              Send your personal referral link to invite new distributors. Your mobile number (<strong className="text-slate-800">{sponsorCode}</strong>) is automatically set as their Sponsor Distributor ID!
-            </p>
-          </div>
+      {/* Profile Edit Modal */}
+      <ProfileEditModal 
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+        user={user}
+        onProfileUpdated={(updated) => {
+          if (onUserUpdated) onUserUpdated(updated);
+        }}
+      />
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <a
-              href={whatsappShareUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm hover:shadow-emerald-600/20 cursor-pointer"
-            >
-              <MessageCircle className="w-4 h-4" />
-              Share on WhatsApp
-            </a>
-          </div>
+      {/* 2. Global Referral Share Bar */}
+      <div className={`p-5 rounded-3xl border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+        isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+      }`}>
+        <div className="space-y-1">
+          <h3 className="text-sm font-black flex items-center gap-2">
+            <Share2 className="w-4 h-4 text-indigo-500" />
+            Share Partner Sponsor Link
+          </h3>
+          <p className="text-xs text-slate-500 font-medium">
+            Invite new distributors under Sponsor ID: <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{sponsorCode}</strong>
+          </p>
         </div>
 
-        {/* Link Input Bar */}
-        <div className="flex flex-col sm:flex-row items-center bg-slate-50 border border-slate-200 rounded-2xl p-1.5 gap-2 hover:border-indigo-300 transition-all">
-          <div className="px-3 py-1 flex items-center gap-2 text-slate-400 w-full sm:w-auto truncate flex-1">
-            <Zap className="w-4 h-4 text-amber-500 shrink-0" />
-            <span className="text-xs font-mono font-semibold text-slate-800 truncate select-all">
-              {refLink}
-            </span>
-          </div>
+        <div className="flex items-center gap-2">
+          <a
+            href={whatsappShareUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+          >
+            <MessageCircle className="w-4 h-4" />
+            WhatsApp
+          </a>
 
           <button
             onClick={copyReferralLink}
-            className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-xs transition-all shadow-sm cursor-pointer shrink-0 ${
-              copiedLink 
-                ? 'bg-emerald-600 text-white' 
-                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+            className={`px-4 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+              copiedLink ? 'bg-emerald-600 text-white' : 'bg-indigo-600 hover:bg-indigo-500 text-white'
             }`}
           >
-            {copiedLink ? (
-              <>
-                <Check className="w-4 h-4" />
-                Referral Link Copied!
-              </>
-            ) : (
-              <>
-                <Copy className="w-4 h-4" />
-                Copy Referral Link
-              </>
-            )}
+            {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            {copiedLink ? 'Copied!' : 'Copy Link'}
           </button>
         </div>
       </div>
 
-      {/* 3. My Upline / Direct Sponsor Card (If exists) */}
-      {sponsor && (
-        <div className="bg-gradient-to-r from-indigo-50/80 via-white to-indigo-50/80 border border-indigo-200/80 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-md">
-              <UserIcon className="w-6 h-6" />
-            </div>
-            <div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 block">My Direct Sponsor Distributor (Upline)</span>
-              <h3 className="text-sm font-black text-slate-900">{sponsor.name}</h3>
-              <p className="text-xs text-slate-600 font-medium flex items-center gap-2 mt-0.5">
-                <span>Distributor Mobile: <strong className="text-slate-900 font-mono">{sponsor.phone}</strong></span>
-              </p>
-            </div>
-          </div>
+      {/* 3. Main Navigation Bar (7 Dedicated Modules) */}
+      <div className={`p-2 rounded-2xl border shadow-sm flex items-center gap-1.5 overflow-x-auto scrollbar-none ${
+        isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+      }`}>
+        <button
+          onClick={() => handleTabSelect('dashboard')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+            activeMainTab === 'dashboard'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <Activity className="w-4 h-4" />
+          Dashboard & 12 Cards
+        </button>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <a
-              href={`tel:${sponsor.phone}`}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
-            >
-              <Phone className="w-3.5 h-3.5" />
-              Call Sponsor
-            </a>
-            <a
-              href={`https://api.whatsapp.com/send?phone=${sponsor.phone.replace(/\D/g, '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer"
-            >
-              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-              WhatsApp
-            </a>
-          </div>
-        </div>
-      )}
+        <button
+          onClick={() => handleTabSelect('downline')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+            activeMainTab === 'downline'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <Network className="w-4 h-4" />
+          Downline Module ({totalDistributorsCount})
+        </button>
 
-      {/* 4. Global Network Analytics Stats Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm hover:border-indigo-300 transition-all">
-          <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2.5">
-            <Users className="w-5 h-5" />
-          </div>
-          <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Total Downline</span>
-          <span className="text-2xl font-black text-slate-900 mt-1 block">{totalRefs} Distributors</span>
-        </div>
+        <button
+          onClick={() => handleTabSelect('business')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+            activeMainTab === 'business'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <TrendingUp className="w-4 h-4" />
+          Business Module
+        </button>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm hover:border-emerald-300 transition-all">
-          <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2.5">
-            <Check className="w-5 h-5" />
-          </div>
-          <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Active Distributors</span>
-          <span className="text-2xl font-black text-emerald-600 mt-1 block">{activeRefs} Active</span>
-        </div>
+        <button
+          onClick={() => handleTabSelect('products')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+            activeMainTab === 'products'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <ShoppingBag className="w-4 h-4" />
+          Product Module
+        </button>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm hover:border-amber-300 transition-all">
-          <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-2.5">
-            <UserIcon className="w-5 h-5" />
-          </div>
-          <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Pending Distributors</span>
-          <span className="text-2xl font-black text-amber-600 mt-1 block">{inactiveRefs} Pending</span>
-        </div>
+        <button
+          onClick={() => handleTabSelect('offers')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+            activeMainTab === 'offers'
+              ? 'bg-amber-500 text-slate-950 shadow-md'
+              : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <Gift className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+          Offer Module
+        </button>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm hover:border-blue-300 transition-all">
-          <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-2.5">
-            <UserPlus className="w-5 h-5" />
-          </div>
-          <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Direct (Level 1)</span>
-          <span className="text-2xl font-black text-blue-600 mt-1 block">{directRefs} Direct</span>
-        </div>
+        <button
+          onClick={() => handleTabSelect('bonuses')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+            activeMainTab === 'bonuses'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <DollarSign className="w-4 h-4" />
+          Bonus Module
+        </button>
 
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 text-left shadow-sm hover:border-violet-300 transition-all col-span-2 lg:col-span-1">
-          <div className="w-9 h-9 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center mb-2.5">
-            <Network className="w-5 h-5" />
-          </div>
-          <span className="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Network Depth</span>
-          <span className="text-2xl font-black text-violet-600 mt-1 block">{maxLevel} Levels</span>
-        </div>
+        <button
+          onClick={() => handleTabSelect('reports')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+            activeMainTab === 'reports'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <FileText className="w-4 h-4" />
+          Reports Module
+        </button>
       </div>
 
-      {/* 5. Network Downline Explorer (Tabs + Controls + Tables) */}
-      <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
-        <div className="bg-slate-50 border-b border-slate-200 p-3 sm:px-6 flex justify-between items-center flex-wrap gap-3">
-          {/* Tabs */}
-          <div className="flex bg-slate-200/80 p-1 rounded-2xl gap-1">
-            <button
-              onClick={() => setActiveTab('list')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                activeTab === 'list' 
-                  ? 'bg-white text-slate-950 shadow-sm' 
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Users className="w-4 h-4 text-indigo-600" />
-              Tiered Distributor List
-            </button>
-            <button
-              onClick={() => setActiveTab('tree')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                activeTab === 'tree' 
-                  ? 'bg-white text-slate-950 shadow-sm' 
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Network className="w-4 h-4 text-violet-600" />
-              Interactive Visual Tree
-            </button>
+      {/* 4. MODULE CONTROLLER */}
+
+      {/* A. MAIN DASHBOARD OVERVIEW WITH ALL 12 SUMMARY CARDS & CHARTS */}
+      {activeMainTab === 'dashboard' && (
+        <div className="space-y-6 animate-fade-in">
+          
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-black tracking-tight">System Summary Overview</h2>
+            <span className="text-xs text-slate-400 font-bold">12 Executive Metric Cards</span>
           </div>
 
-          <button
-            onClick={fetchData}
-            className="text-xs text-indigo-600 hover:text-indigo-800 font-bold px-3.5 py-2 hover:bg-indigo-50 rounded-xl transition-all cursor-pointer border border-indigo-200/60"
-          >
-            Refresh Distributor Data
-          </button>
-        </div>
+          {/* ALL 12 SUMMARY CARDS GRID */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            
+            {/* Card 1: Total Business */}
+            <div className={`p-4 rounded-2xl border shadow-sm space-y-1.5 ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+            }`}>
+              <span className="text-[10px] font-black uppercase text-indigo-500 tracking-wider block">1. Total Business</span>
+              <div className="text-xl font-black font-mono text-indigo-600 dark:text-indigo-400">₹{totalBusinessINR.toLocaleString('en-IN')}</div>
+              <span className="text-[10px] text-slate-500 font-bold font-mono">{totalBusinessBV.toLocaleString('en-IN')} Total BV</span>
+            </div>
 
-        {loading ? (
-          <div className="p-12 text-center text-slate-500 text-xs font-medium space-y-2">
-            <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p>Loading downline distributors, please wait...</p>
+            {/* Card 2: Total Earnings */}
+            <div className={`p-4 rounded-2xl border shadow-sm space-y-1.5 ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+            }`}>
+              <span className="text-[10px] font-black uppercase text-emerald-500 tracking-wider block">2. Total Earnings</span>
+              <div className="text-xl font-black font-mono text-emerald-600 dark:text-emerald-400">₹{totalEarningsINR.toLocaleString('en-IN')}</div>
+              <span className="text-[10px] text-slate-500 font-bold">Direct & Team Payouts</span>
+            </div>
+
+            {/* Card 3: Total Distributors */}
+            <div className={`p-4 rounded-2xl border shadow-sm space-y-1.5 ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+            }`}>
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">3. Total Distributors</span>
+              <div className="text-xl font-black font-mono">{totalDistributorsCount}</div>
+              <span className="text-[10px] text-slate-500 font-bold">Registered Members</span>
+            </div>
+
+            {/* Card 4: Active Distributors */}
+            <div className={`p-4 rounded-2xl border shadow-sm space-y-1.5 ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+            }`}>
+              <span className="text-[10px] font-black uppercase text-emerald-500 tracking-wider block">4. Active Distributors</span>
+              <div className="text-xl font-black font-mono text-emerald-500">{activeDistributorsCount}</div>
+              <span className="text-[10px] text-slate-500 font-bold">Verified Network</span>
+            </div>
+
+            {/* Card 5: Pending Distributors */}
+            <div className={`p-4 rounded-2xl border shadow-sm space-y-1.5 ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+            }`}>
+              <span className="text-[10px] font-black uppercase text-amber-500 tracking-wider block">5. Pending Distributors</span>
+              <div className="text-xl font-black font-mono text-amber-500">{pendingDistributorsCount}</div>
+              <span className="text-[10px] text-slate-500 font-bold">Awaiting Approval</span>
+            </div>
+
+            {/* Card 6: Total Downline */}
+            <div className={`p-4 rounded-2xl border shadow-sm space-y-1.5 ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+            }`}>
+              <span className="text-[10px] font-black uppercase text-violet-500 tracking-wider block">6. Total Downline</span>
+              <div className="text-xl font-black font-mono text-violet-500">{totalDownlineCount}</div>
+              <span className="text-[10px] text-slate-500 font-bold">All Network Tiers</span>
+            </div>
+
+            {/* Card 7: Business Ratio */}
+            <div className={`p-4 rounded-2xl border shadow-sm space-y-1.5 ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+            }`}>
+              <span className="text-[10px] font-black uppercase text-indigo-500 tracking-wider block">7. Business Ratio</span>
+              <div className="text-lg font-black font-mono text-indigo-600 dark:text-indigo-400">{directRatio}% : {teamRatio}%</div>
+              <span className="text-[10px] text-slate-500 font-bold">Direct vs Team BV</span>
+            </div>
+
+            {/* Card 8: Total Bonus */}
+            <div className={`p-4 rounded-2xl border shadow-sm space-y-1.5 ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+            }`}>
+              <span className="text-[10px] font-black uppercase text-blue-500 tracking-wider block">8. Total Bonus</span>
+              <div className="text-xl font-black font-mono text-blue-600 dark:text-blue-400">₹{totalBonusINR.toLocaleString('en-IN')}</div>
+              <span className="text-[10px] text-slate-500 font-bold">Matching & Milestones</span>
+            </div>
+
+            {/* Card 9: Product Business */}
+            <div className={`p-4 rounded-2xl border shadow-sm space-y-1.5 ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+            }`}>
+              <span className="text-[10px] font-black uppercase text-emerald-500 tracking-wider block">9. Product Business</span>
+              <div className="text-xl font-black font-mono text-emerald-600 dark:text-emerald-400">₹{productBusinessINR.toLocaleString('en-IN')}</div>
+              <span className="text-[10px] text-slate-500 font-bold">Solar Product Orders</span>
+            </div>
+
+            {/* Card 10: Direct Business */}
+            <div className={`p-4 rounded-2xl border shadow-sm space-y-1.5 ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+            }`}>
+              <span className="text-[10px] font-black uppercase text-indigo-500 tracking-wider block">10. Direct Business</span>
+              <div className="text-xl font-black font-mono text-indigo-600 dark:text-indigo-400">{directBV.toLocaleString('en-IN')} BV</div>
+              <span className="text-[10px] text-slate-500 font-bold">Level 1 Sales Volume</span>
+            </div>
+
+            {/* Card 11: Team Business */}
+            <div className={`p-4 rounded-2xl border shadow-sm space-y-1.5 ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+            }`}>
+              <span className="text-[10px] font-black uppercase text-amber-500 tracking-wider block">11. Team Business</span>
+              <div className="text-xl font-black font-mono text-amber-500">{teamBV.toLocaleString('en-IN')} BV</div>
+              <span className="text-[10px] text-slate-500 font-bold">Team Network Volume</span>
+            </div>
+
+            {/* Card 12: Total Orders */}
+            <div className={`p-4 rounded-2xl border shadow-sm space-y-1.5 ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+            }`}>
+              <span className="text-[10px] font-black uppercase text-purple-500 tracking-wider block">12. Total Orders</span>
+              <div className="text-xl font-black font-mono text-purple-500">{totalOrdersCount} Orders</div>
+              <span className="text-[10px] text-slate-500 font-bold">Confirmed Orders</span>
+            </div>
+
           </div>
-        ) : error ? (
-          <div className="p-8 text-center text-rose-600 text-xs bg-rose-50/50 border-t border-rose-100 font-semibold">
-            {error}
-          </div>
-        ) : activeTab === 'list' ? (
-          <div className="p-5 sm:p-6 space-y-5">
-            {/* Filter and Search Bar */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-              {/* Search input */}
-              <div className="relative flex-1 max-w-md">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Search className="w-4 h-4 text-slate-400" />
+
+          {/* DASHBOARD GRAPH CHARTS SECTION */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* Chart 1: Business Graph */}
+            <div className={`p-6 rounded-3xl border shadow-sm space-y-4 lg:col-span-2 ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-black">Business Volume Trend (Direct BV vs Team BV)</h3>
+                  <p className="text-xs text-slate-500">Monthly BV volume growth chart</p>
                 </div>
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search distributors by name, mobile number, or email..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium"
-                />
+                <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full">
+                  Upward Trend
+                </span>
               </div>
 
-              {/* Level Filter Buttons */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
-                <span className="text-xs text-slate-500 font-bold flex items-center gap-1 shrink-0">
-                  <Filter className="w-3.5 h-3.5" />
-                  Filter Level:
-                </span>
-                <button
-                  onClick={() => setSelectedLevelFilter('all')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-extrabold shrink-0 transition-all cursor-pointer ${
-                    selectedLevelFilter === 'all'
-                      ? 'bg-slate-900 text-white shadow-sm'
-                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                  }`}
-                >
-                  All Tiers
-                </button>
-                {availableLevels.map((lvl) => (
-                  <button
-                    key={lvl}
-                    onClick={() => setSelectedLevelFilter(lvl)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold shrink-0 transition-all cursor-pointer ${
-                      selectedLevelFilter === lvl
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                    }`}
-                  >
-                    Level {lvl}
-                  </button>
+              <div className="h-64 w-full pt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={businessGraphData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <XAxis dataKey="month" stroke={isDarkMode ? "#94a3b8" : "#64748b"} fontSize={11} />
+                    <YAxis stroke={isDarkMode ? "#94a3b8" : "#64748b"} fontSize={11} />
+                    <Tooltip contentStyle={{ backgroundColor: isDarkMode ? "#0f172a" : "#ffffff", borderRadius: "12px", fontSize: "12px" }} />
+                    <Bar dataKey="directBV" name="Direct BV" fill="#6366f1" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="teamBV" name="Team BV" fill="#f59e0b" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Chart 2: Product Category Share */}
+            <div className={`p-6 rounded-3xl border shadow-sm space-y-4 ${
+              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+            }`}>
+              <div>
+                <h3 className="text-sm font-black">Product Sales Category Share</h3>
+                <p className="text-xs text-slate-500">Distribution by product category</p>
+              </div>
+
+              <div className="h-52 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={productSalesPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label>
+                      {productSalesPieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-[11px] font-bold">
+                {productSalesPieData.map((item) => (
+                  <div key={item.name} className="flex items-center gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }}></span>
+                    <span className="text-slate-500">{item.name}: {item.value}%</span>
+                  </div>
                 ))}
               </div>
             </div>
 
-            {/* Downline List Table */}
-            {filteredDownlines.length > 0 ? (
-              <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse text-xs">
-                    <thead>
-                      <tr className="bg-slate-100/80 text-slate-700 border-b border-slate-200 font-extrabold uppercase tracking-wider text-[11px]">
-                        <th className="p-4">Distributor ID (Mobile)</th>
-                        <th className="p-4">Distributor Details</th>
-                        <th className="p-4">Network Tier</th>
-                        <th className="p-4">Sponsor Distributor</th>
-                        <th className="p-4">Actions</th>
-                        <th className="p-4">Joined Date</th>
-                        <th className="p-4 w-28 text-center">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white font-medium">
-                      {filteredDownlines.map((member) => (
-                        <tr key={member.id} className="hover:bg-indigo-50/30 transition-colors">
-                          <td className="p-4 font-mono font-bold text-slate-900">{member.phone}</td>
-                          <td className="p-4">
-                            <div className="font-bold text-slate-900 text-sm">{member.name}</div>
-                            <div className="text-[11px] text-slate-500 font-mono mt-0.5">{member.email}</div>
-                          </td>
-                          <td className="p-4">
-                            <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 border border-indigo-200/60 px-3 py-1 rounded-full font-black text-[11px]">
-                              Level {member.level}
-                            </span>
-                          </td>
-                          <td className="p-4 text-slate-700">
-                            <div className="font-bold text-slate-900">{member.referrer_name || 'Admin Direct'}</div>
-                            {member.referrer_phone && (
-                              <div className="text-[11px] font-mono text-indigo-600 font-semibold">Mobile: {member.referrer_phone}</div>
-                            )}
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              <a
-                                href={`https://api.whatsapp.com/send?phone=${member.phone.replace(/\D/g, '')}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg transition-colors cursor-pointer flex items-center gap-1 font-bold text-[11px]"
-                                title="Chat on WhatsApp"
-                              >
-                                <MessageCircle className="w-3.5 h-3.5" />
-                                <span>Chat</span>
-                              </a>
-                              <a
-                                href={`tel:${member.phone}`}
-                                className="p-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg transition-colors cursor-pointer flex items-center gap-1 font-bold text-[11px]"
-                                title="Call Distributor"
-                              >
-                                <Phone className="w-3.5 h-3.5" />
-                                <span>Call</span>
-                              </a>
-                            </div>
-                          </td>
-                          <td className="p-4 text-slate-500 font-semibold">
-                            <div className="flex items-center gap-1.5">
-                              <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                              <span>{new Date(member.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                            </div>
-                          </td>
-                          <td className="p-4 text-center">
-                            {member.status === 'active' ? (
-                              <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-xl font-black text-[11px]">
-                                Active
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-xl font-black text-[11px]">
-                                Pending
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl py-12 text-center text-slate-500 font-medium space-y-2">
-                <Users className="w-8 h-8 text-slate-300 mx-auto" />
-                <p className="text-xs font-bold text-slate-700">No distributors found matching your search.</p>
-                <p className="text-[11px] text-slate-400">Share your Distributor ID (Mobile No) to build your team!</p>
-              </div>
-            )}
           </div>
-        ) : (
-          <div className="p-5 sm:p-6">
-            <VisualTree treeData={tree} />
-          </div>
-        )}
-      </div>
 
-      {/* Edit Profile Modal */}
-      <ProfileEditModal
-        isOpen={isEditProfileOpen}
-        onClose={() => setIsEditProfileOpen(false)}
-        user={user}
-        onProfileUpdated={(updatedUser) => {
-          if (onUserUpdated) onUserUpdated(updatedUser);
-        }}
-        isAdminMode={false}
-        loggedInUserId={user.id}
-      />
+        </div>
+      )}
+
+      {/* B. DOWNLINE MODULE */}
+      {activeMainTab === 'downline' && (
+        <DownlineModule user={user} downlines={downlines} isDarkMode={isDarkMode} />
+      )}
+
+      {/* C. BUSINESS MODULE */}
+      {activeMainTab === 'business' && (
+        <BusinessModule user={user} downlines={downlines} isDarkMode={isDarkMode} />
+      )}
+
+      {/* D. PRODUCT MODULE */}
+      {activeMainTab === 'products' && (
+        <ProductModule user={user} orders={orders} onOrderPlaced={handleOrderPlaced} isDarkMode={isDarkMode} />
+      )}
+
+      {/* E. OFFER MODULE */}
+      {activeMainTab === 'offers' && (
+        <OfferModule user={user} isDarkMode={isDarkMode} />
+      )}
+
+      {/* F. BONUS MODULE */}
+      {activeMainTab === 'bonuses' && (
+        <BonusModule user={user} isDarkMode={isDarkMode} />
+      )}
+
+      {/* G. REPORTS MODULE */}
+      {activeMainTab === 'reports' && (
+        <ReportsModule user={user} downlines={downlines} orders={orders} isDarkMode={isDarkMode} />
+      )}
 
     </div>
   );

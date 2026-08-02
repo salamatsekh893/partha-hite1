@@ -60,3 +60,41 @@ export interface WebsiteContent {
   is_active: boolean | number;
   created_at: string;
 }
+
+export interface SolarProduct {
+  id: number;
+  name: string;
+  category: string;
+  mrp: number; // Maximum Retail Price ₹
+  distributorPrice: number; // DP ₹
+  businessValue: number; // BV
+  pointValue: number; // PV
+  image: string;
+  isUpcoming: boolean;
+  description: string;
+}
+
+export interface ProductOrder {
+  id: string;
+  userId?: number;
+  productId: number;
+  productName: string;
+  qty: number;
+  totalAmount: number;
+  totalBV: number;
+  totalPV: number;
+  orderDate: string;
+  status: 'Pending' | 'Approved' | 'Shipped' | 'Delivered';
+  shippingAddress: string;
+}
+
+export interface OfferItem {
+  id: string;
+  title: string;
+  reward: string;
+  criteria: string;
+  validTill: string;
+  badge: string;
+  progressPercent: number;
+  category: string;
+}

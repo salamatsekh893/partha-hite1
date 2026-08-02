@@ -20,10 +20,19 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  const handleSetView = (view: 'dashboard' | 'admin' | 'solar' | 'auth', tab?: 'members' | 'website') => {
+  const [userTab, setUserTab] = useState<'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports'>('dashboard');
+
+  const handleSetView = (
+    view: 'dashboard' | 'admin' | 'solar' | 'auth', 
+    uTab?: 'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports',
+    aTab?: 'members' | 'website'
+  ) => {
     setView(view);
-    if (tab) {
-      setAdminTab(tab);
+    if (uTab) {
+      setUserTab(uTab);
+    }
+    if (aTab) {
+      setAdminTab(aTab);
     }
   };
 
@@ -119,8 +128,9 @@ export default function App() {
         user={user}
         onLogout={handleLogout}
         currentView={user ? (currentView === 'admin' ? 'admin' : 'dashboard') : 'auth'}
-        setView={(v, tab) => {
-          handleSetView(v, tab);
+        currentTab={userTab}
+        setView={(v, uTab, aTab) => {
+          handleSetView(v, uTab, aTab);
           setIsSidebarOpen(false);
         }}
         onEditProfileClick={() => setIsProfileModalOpen(true)}
@@ -146,6 +156,8 @@ export default function App() {
           ) : (
             <UserDashboard 
               user={user} 
+              activeMainTab={userTab}
+              onTabChange={setUserTab}
               onUserUpdated={(updatedUser) => {
                 setUser(updatedUser);
                 localStorage.setItem('mlm_user_session', JSON.stringify(updatedUser));
