@@ -285,7 +285,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
       isOpen: true,
       type: 'danger',
       title: 'Delete Website Item?',
-      subtitle: 'মুছে ফেলার জন্য নিশ্চিত করুন (Sweet Alert)',
+      subtitle: 'Confirm permanent deletion',
       description: `Are you sure you want to delete "${item.title}"? This item will be permanently removed from the website.`,
       confirmBtnText: 'Yes, Delete Item',
       onConfirm: async () => {
@@ -399,7 +399,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
       isOpen: true,
       type: 'danger',
       title: 'Delete Member Account?',
-      subtitle: 'মেম্বার অ্যাকাউন্ট মুছে ফেলতে চান?',
+      subtitle: 'Confirm member account deletion',
       description: `You are about to permanently delete member "${userName}" from the system. Their downline connection and registration history cannot be recovered.`,
       confirmBtnText: 'Yes, Delete Member Account',
       onConfirm: async () => {
@@ -581,7 +581,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
           }`}
         >
           <Globe className="w-4 h-4 text-amber-300" />
-          <span>Manage Website (ওয়েবসাইট ম্যানেজ)</span>
+          <span>Manage Website</span>
           <span className="text-[10px] bg-amber-400 text-slate-950 px-2 py-0.5 rounded-md font-black uppercase hidden sm:inline-block">
             Upload Media
           </span>
@@ -1192,7 +1192,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
       )}
         </>
       ) : (
-        /* WEBSITE MANAGEMENT TAB (ওয়েবসাইট কন্টেন্ট ম্যানেজমেন্ট - COMPACT ELEGANT UI) */
+        /* WEBSITE MANAGEMENT TAB (COMPACT ELEGANT UI) */
         <div className="space-y-5 animate-fade-in">
           {/* Compact Header Bar */}
           <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -1203,7 +1203,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-base sm:text-lg font-black text-slate-900">
-                    Manage Website Content (ওয়েবসাইট কন্টেন্ট)
+                    Manage Website Content
                   </h3>
                   <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 hidden sm:inline-block">
                     Live Portal
@@ -1237,7 +1237,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <h4 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-amber-500" />
-                  <span>Publish New Content Item (নতুন বিষয় যুক্ত করুন)</span>
+                  <span>Publish New Content Item</span>
                 </h4>
                 <button
                   type="button"
@@ -1324,7 +1324,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
 
                   {/* Description */}
                   <div className="md:col-span-2">
-                    <label className="block text-[11px] font-extrabold uppercase text-slate-700 mb-1">Description (বিবরণ)</label>
+                    <label className="block text-[11px] font-extrabold uppercase text-slate-700 mb-1">Description</label>
                     <textarea
                       rows={2}
                       value={newDescription}
@@ -1645,7 +1645,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
                <Sparkles className="w-5 h-5" />}
             </div>
             <div>
-              <p className="font-extrabold text-xs text-amber-400">{sweetToast.type === 'success' ? 'Success! (সফল হয়েছে)' : 'Notification'}</p>
+              <p className="font-extrabold text-xs text-amber-400">{sweetToast.type === 'success' ? 'Success!' : 'Notification'}</p>
               <p className="text-xs font-medium text-slate-100">{sweetToast.message}</p>
             </div>
             <button onClick={() => setSweetToast(null)} className="ml-2 text-slate-400 hover:text-white p-1 cursor-pointer">

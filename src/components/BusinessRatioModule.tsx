@@ -26,13 +26,33 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
   const [lastUpdated, setLastUpdated] = useState<string>(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
   const [autoRefresh, setAutoRefresh] = useState<boolean>(true);
 
-  // Multi-Leg 50:50 Ratio Simulator State (Preloaded with Prompt Example: Leg A=12000, Leg B=4000, Leg C=3000, Leg D=2000)
-  const [simLegs, setSimLegs] = useState<{ id: string; name: string; bv: number }[]>([
-    { id: '1', name: 'Leg A', bv: 12000 },
-    { id: '2', name: 'Leg B', bv: 4000 },
-    { id: '3', name: 'Leg C', bv: 3000 },
-    { id: '4', name: 'Leg D', bv: 2000 },
-  ]);
+  // Multi-Leg 50:50 Ratio Simulator State (Loaded from localStorage or preloaded defaults)
+  const [simLegs, setSimLegs] = useState<{ id: string; name: string; bv: number }[]>(() => {
+    try {
+      const saved = localStorage.getItem(`successindia_ratio_legs_${user.id}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length >= 2) return parsed;
+      }
+    } catch (e) {
+      console.error('Failed to load ratio legs:', e);
+    }
+    return [
+      { id: '1', name: 'Leg A', bv: 12000 },
+      { id: '2', name: 'Leg B', bv: 4000 },
+      { id: '3', name: 'Leg C', bv: 3000 },
+      { id: '4', name: 'Leg D', bv: 2000 },
+    ];
+  });
+
+  // Persist simLegs to localStorage whenever modified
+  useEffect(() => {
+    try {
+      localStorage.setItem(`successindia_ratio_legs_${user.id}`, JSON.stringify(simLegs));
+    } catch (e) {
+      console.error('Failed to save ratio legs:', e);
+    }
+  }, [simLegs, user.id]);
 
   // Compute 50:50 Formula for Multi-Leg Simulator
   const simResult = useMemo(() => {
@@ -526,7 +546,7 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
             {ratioData.highestLegBusiness.toLocaleString('en-IN')} BV
           </div>
           <p className="text-[11px] text-slate-500 font-medium">
-            সর্বোচ্চ বিজনেস প্রাপ্ত লেগ (50% রেফারেন্স)
+            Highest Volume Leg (50% Standard Cap)
           </p>
         </div>
 
@@ -546,7 +566,7 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
             {ratioData.totalOtherLegsBusiness.toLocaleString('en-IN')} BV
           </div>
           <p className="text-[11px] text-slate-500 font-medium">
-            বাকি সব লেগের মোট বিজনেসের যোগফল
+            Sum of All Other Remaining Legs Combined
           </p>
         </div>
 
@@ -594,16 +614,16 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
       }`}>
         <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-black text-xs uppercase tracking-wider">
           <Sparkles className="w-4 h-4" />
-          <span>50:50 BUSINESS RATIO FORMULA & CALCULATION RULES (নীতিমালা)</span>
+          <span>50:50 BUSINESS RATIO FORMULA & CALCULATION POLICY</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs leading-relaxed">
           <div className="space-y-1.5 p-3 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-indigo-100 dark:border-indigo-900/50">
             <p className="font-bold text-slate-900 dark:text-white">📌 50:50 Ratio Rules Policy:</p>
             <ul className="list-disc list-inside space-y-1 text-slate-600 dark:text-slate-300">
-              <li>যে leg-এ সবচেয়ে বেশি business রয়েছে, সেটিকে 50% হিসেবে ধরা হবে।</li>
-              <li>বাকি সব leg-এর মোট business একসাথে যোগ করে অন্য 50% হিসেবে ধরা হবে।</li>
-              <li>Ratio calculation সর্বদা Highest Business Leg : Sum of All Other Legs = 50 : 50 নীতিতে করা হয়।</li>
-              <li>যদি কোনো একটি side-এর business বেশি হয়, তাহলে অন্য side-এর মোট business-এর ভিত্তিতে matching ratio নির্ধারণ হবে।</li>
+              <li>The leg with the highest business volume is capped as the 50% leg reference.</li>
+              <li>The business volume of all remaining legs is summed together to form the second 50% leg.</li>
+              <li>The ratio calculation strictly operates on Highest Leg : Sum of All Other Legs = 50 : 50 rule.</li>
+              <li>Payable matching volume is calculated as Min(Highest Leg, Sum of All Other Legs).</li>
             </ul>
           </div>
           <div className="space-y-2 p-3 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-indigo-100 dark:border-indigo-900/50 font-mono">
