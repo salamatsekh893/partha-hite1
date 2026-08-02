@@ -69,15 +69,19 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
   const [galleryFilter, setGalleryFilter] = useState<'all' | 'photo' | 'video' | 'text'>('all');
   const [lightboxMedia, setLightboxMedia] = useState<WebsiteContent | null>(null);
 
-  const loadWebsiteContents = () => {
-    fetch('/api/website/contents')
-      .then(res => res.json())
-      .then(data => {
-        if (data.contents) {
-          setWebsiteContents(data.contents);
-        }
-      })
-      .catch(err => console.error('Failed to load website contents:', err));
+  const loadWebsiteContents = async () => {
+    try {
+      const res = await fetch('/api/website/contents');
+      if (!res.ok) return;
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) return;
+      const data = await res.json();
+      if (data && Array.isArray(data.contents)) {
+        setWebsiteContents(data.contents);
+      }
+    } catch (err) {
+      console.error('Failed to load website contents:', err);
+    }
   };
 
   useEffect(() => {

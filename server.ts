@@ -287,29 +287,37 @@ app.post('/api/auth/register', async (req, res) => {
 
     let referrerIdVal: number | null = null;
     
-    // Validate Sponsor ID
+    // Validate Sponsor ID (Supports both Mobile Number e.g. +919876543210 / 9876543210 and Numeric User ID e.g. 7)
     if (sponsorId) {
-      const parsedSponsorId = parseInt(sponsorId, 10);
-      if (isNaN(parsedSponsorId)) {
-        return res.status(400).json({ error: 'Sponsor ID must be a numeric ID.' });
+      const sponsorStr = sponsorId.toString().trim();
+      let sponsor: any = null;
+
+      // 1. First search by Email/Phone/Mobile Number
+      sponsor = await DB.getUserByEmailOrPhone(sponsorStr);
+
+      // 2. If not found, try numeric User ID
+      if (!sponsor) {
+        const parsedSponsorId = parseInt(sponsorStr.replace(/[^0-9]/g, ''), 10);
+        if (!isNaN(parsedSponsorId) && parsedSponsorId > 0) {
+          sponsor = await DB.getUserById(parsedSponsorId);
+        }
       }
       
-      const sponsor = await DB.getUserById(parsedSponsorId);
       if (!sponsor) {
-        return res.status(400).json({ error: 'The provided Sponsor ID was not found.' });
+        return res.status(400).json({ error: 'The provided Sponsor Mobile Number or Sponsor ID was not found.' });
       }
 
       if (sponsor.status !== 'active') {
-        return res.status(400).json({ error: 'The provided Sponsor ID is Inactive. You can only register under active sponsors.' });
+        return res.status(400).json({ error: 'The provided Sponsor is Inactive. You can only register under active sponsors.' });
       }
       
-      referrerIdVal = parsedSponsorId;
+      referrerIdVal = sponsor.id;
     } else {
       // If there are already users, then sponsor is mandatory to maintain level plan integrity
       const allUsers = await DB.getUsers();
       // If only admin exists (length 1), they can join directly under admin (ID 1)
       if (allUsers.length > 1) {
-        return res.status(400).json({ error: 'A valid Referrer/Sponsor ID is required to register.' });
+        return res.status(400).json({ error: 'A valid Sponsor Mobile Number or Sponsor ID is required to register.' });
       } else {
         // Default to joining under Admin (ID 1) if no sponsor provided and database is empty
         const admin = allUsers.find(u => u.role === 'admin');
@@ -484,6 +492,26 @@ app.get('/api/user/downline', authenticateUser, async (req, res) => {
   } catch (err) {
     console.error('Fetch downline error:', err);
     res.status(500).json({ error: 'Failed to load downline referral data.' });
+  }
+});
+
+// 5.5. Get Upline / Direct Sponsor Data
+app.get('/api/user/upline', authenticateUser, async (req, res) => {
+  const currentUser = (req as any).user as User;
+  if (!currentUser.referrer_id) {
+    return res.json({ sponsor: null });
+  }
+
+  try {
+    const sponsor = await DB.getUserById(currentUser.referrer_id);
+    if (!sponsor) {
+      return res.json({ sponsor: null });
+    }
+    const { password, ...sanitizedSponsor } = sponsor;
+    res.json({ sponsor: sanitizedSponsor });
+  } catch (err) {
+    console.error('Fetch upline error:', err);
+    res.status(500).json({ error: 'Failed to load sponsor information.' });
   }
 });
 
@@ -757,6 +785,15 @@ app.delete('/api/admin/website/contents/:id', authenticateUser, requireAdmin, as
 // Catch-all for undefined /api routes so they return JSON instead of falling through to HTML
 app.use('/api/*', (req, res) => {
   res.status(404).json({ error: `API endpoint '${req.originalUrl}' not found.` });
+});
+
+// Global API error handler
+app.use('/api', (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('Unhandled API Error:', err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(500).json({ error: err.message || 'Internal Server Error' });
 });
 
 async function bootstrap() {

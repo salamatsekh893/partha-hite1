@@ -144,7 +144,13 @@ export default function App() {
           currentView === 'admin' && user.role === 'admin' ? (
             <AdminPanel adminUser={user} initialTab={adminTab} />
           ) : (
-            <UserDashboard user={user} />
+            <UserDashboard 
+              user={user} 
+              onUserUpdated={(updatedUser) => {
+                setUser(updatedUser);
+                localStorage.setItem('mlm_user_session', JSON.stringify(updatedUser));
+              }} 
+            />
           )
         ) : (
           /* PUBLIC VIEWS: Standalone Auth Page or Solar Landing Page */

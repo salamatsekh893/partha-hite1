@@ -21,6 +21,7 @@ export interface DownlineMember {
   level: number; // level relative to the logged-in user
   created_at: string;
   referrer_name?: string;
+  referrer_phone?: string;
 }
 
 export interface ReferralTreeNode {

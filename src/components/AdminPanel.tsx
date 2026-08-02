@@ -96,6 +96,10 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
           'X-User-Id': adminUser.id.toString(),
         },
       });
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Server returned invalid non-JSON response.');
+      }
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || 'Failed to load admin dashboard data.');
@@ -118,10 +122,12 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
           'X-User-Id': adminUser.id.toString(),
         },
       });
-      const data = await res.json();
-      if (res.ok) {
-        setWebsiteContents(data.contents || []);
+      const contentType = res.headers.get('content-type');
+      if (!res.ok || !contentType || !contentType.includes('application/json')) {
+        return;
       }
+      const data = await res.json();
+      setWebsiteContents(data.contents || []);
     } catch (err) {
       console.error('Failed to load website contents:', err);
     } finally {

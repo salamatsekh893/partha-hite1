@@ -482,6 +482,7 @@ export const DB = {
             level: currentLevel,
             created_at: u.created_at,
             referrer_name: referrerUser ? referrerUser.name : undefined,
+            referrer_phone: referrerUser ? referrerUser.phone : undefined,
           });
 
           const subChildren = traverse(u.id, currentLevel + 1);
