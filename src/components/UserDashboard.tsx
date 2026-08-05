@@ -26,9 +26,10 @@ interface UserDashboardProps {
   onUserUpdated?: (updatedUser: User) => void;
   activeMainTab?: 'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports';
   onTabChange?: (tab: 'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports') => void;
+  onImpersonateUser?: (targetUser: User) => void;
 }
 
-export default function UserDashboard({ user, onUserUpdated, activeMainTab: controlledTab, onTabChange }: UserDashboardProps) {
+export default function UserDashboard({ user, onUserUpdated, activeMainTab: controlledTab, onTabChange, onImpersonateUser }: UserDashboardProps) {
   // Main Navigation Tabs (7 Comprehensive MLM Modules)
   const [internalTab, setInternalTab] = useState<
     'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports'
@@ -651,7 +652,7 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
 
       {/* B. DOWNLINE MODULE */}
       {activeMainTab === 'downline' && (
-        <DownlineModule user={user} downlines={downlines} isDarkMode={isDarkMode} />
+        <DownlineModule user={user} downlines={downlines} isDarkMode={isDarkMode} onImpersonateUser={onImpersonateUser} />
       )}
 
       {/* C. BUSINESS MODULE */}

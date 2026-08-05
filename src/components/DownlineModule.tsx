@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { 
   Network, Search, Users, ChevronRight, ChevronDown, Download, Printer, 
   Layers, UserCheck, Clock, Award, ShieldCheck, Phone, Mail, Sparkles,
-  BarChart3, FileText, ArrowDownRight
+  BarChart3, FileText, ArrowDownRight, LogIn, Eye, X, ExternalLink, Shield, ArrowLeft,
+  DollarSign, TrendingUp, CheckCircle2
 } from 'lucide-react';
 import { User, DownlineMember } from '../types.js';
 import { exportToCSV, printPDFReport } from '../utils/exportUtils.js';
@@ -11,19 +12,29 @@ interface DownlineModuleProps {
   user: User;
   downlines: DownlineMember[];
   isDarkMode?: boolean;
+  onImpersonateUser?: (targetUser: User) => void;
 }
 
-export default function DownlineModule({ user, downlines, isDarkMode = false }: DownlineModuleProps) {
+export default function DownlineModule({ user, downlines, isDarkMode = false, onImpersonateUser }: DownlineModuleProps) {
   const [activeSubTab, setActiveSubTab] = useState<'tree' | 'level' | 'depth' | 'depth_business' | 'level_business'>('tree');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<number | 'all'>('all');
 
+  // Member profile details modal state
+  const [selectedMemberProfile, setSelectedMemberProfile] = useState<DownlineMember | null>(null);
+
+  // Sub-tree root focus member state
+  const [focusedRootMember, setFocusedRootMember] = useState<DownlineMember | null>(null);
+
   // Expanded nodes state for interactive tree view
-  const [expandedNodes, setExpandedNodes] = useState<Record<number, boolean>>({ [user.id]: true });
+  const [expandedNodes, setExpandedNodes] = useState<Record<number, boolean>>({});
 
   const toggleNode = (nodeId: number) => {
     setExpandedNodes(prev => ({ ...prev, [nodeId]: !prev[nodeId] }));
   };
+
+  // Active root node ID for visual tree
+  const activeRootId = focusedRootMember ? focusedRootMember.id : user.id;
 
   // Filtered downline list
   const filteredDownlines = downlines.filter(m => {
@@ -44,7 +55,7 @@ export default function DownlineModule({ user, downlines, isDarkMode = false }: 
     const current = levelStatsMap.get(lvl) || { count: 0, active: 0, bv: 0 };
     current.count += 1;
     if (m.status === 'active') current.active += 1;
-    current.bv += (lvl === 1 ? 25000 : 18000); // realistic BV calculation per level member
+    current.bv += (lvl === 1 ? 25000 : 18000);
     levelStatsMap.set(lvl, current);
   });
 
@@ -90,48 +101,64 @@ export default function DownlineModule({ user, downlines, isDarkMode = false }: 
   // Helper recursive component for visual Tree view
   const renderTreeNode = (memberId: number, level: number = 1) => {
     const children = downlines.filter(m => m.referrer_id === memberId);
-    const isExpanded = expandedNodes[memberId];
 
     return (
-      <div key={memberId} className="space-y-2 ml-4 sm:ml-6 border-l-2 border-indigo-200 dark:border-indigo-900/50 pl-3 sm:pl-4 my-2">
+      <div key={memberId} className="space-y-2 ml-3 sm:ml-6 border-l-2 border-indigo-200 dark:border-indigo-900/50 pl-2 sm:pl-4 my-2">
         {children.map(child => {
           const childHasChildren = downlines.some(m => m.referrer_id === child.id);
-          const childIsExpanded = expandedNodes[child.id];
+          const isCollapsed = expandedNodes[child.id] === false;
+          const childIsExpanded = !isCollapsed;
 
           return (
             <div key={child.id} className="space-y-2">
-              <div className={`p-3 rounded-2xl border flex items-center justify-between gap-3 shadow-xs transition-all ${
-                child.status === 'active'
-                  ? isDarkMode ? 'bg-slate-900/90 border-emerald-500/30 text-white' : 'bg-white border-emerald-200 text-slate-900'
-                  : isDarkMode ? 'bg-slate-900/50 border-amber-500/30 text-slate-300' : 'bg-amber-50/50 border-amber-200 text-slate-800'
-              }`}>
+              <div 
+                className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs transition-all hover:scale-[1.01] ${
+                  child.status === 'active'
+                    ? isDarkMode ? 'bg-slate-900/90 border-emerald-500/40 text-white hover:border-emerald-400' : 'bg-white border-emerald-300 text-slate-900 hover:border-emerald-500 shadow-sm'
+                    : isDarkMode ? 'bg-slate-900/50 border-amber-500/30 text-slate-300' : 'bg-amber-50/50 border-amber-200 text-slate-800'
+                }`}
+              >
                 
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 flex-1 min-w-0">
                   {childHasChildren ? (
                     <button
-                      onClick={() => toggleNode(child.id)}
-                      className="p-1 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleNode(child.id);
+                      }}
+                      className="p-1 rounded-lg bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 cursor-pointer shrink-0 hover:bg-indigo-200"
+                      title={childIsExpanded ? "Collapse Branch" : "Expand Branch"}
                     >
                       {childIsExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                     </button>
                   ) : (
-                    <div className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400">
+                    <div className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400 shrink-0">
                       •
                     </div>
                   )}
 
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white font-black text-xs flex items-center justify-center shadow-xs">
+                  <div 
+                    onClick={() => setSelectedMemberProfile(child)}
+                    className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 text-white font-black text-xs flex items-center justify-center shadow-xs shrink-0 cursor-pointer ring-2 ring-indigo-400/30 hover:ring-indigo-400"
+                    title={`Click to view ${child.name}'s Profile`}
+                  >
                     {child.name.charAt(0).toUpperCase()}
                   </div>
 
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-extrabold text-xs">{child.name}</span>
-                      <span className="text-[10px] bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-extrabold px-2 py-0.5 rounded-full">
-                        L{child.level}
+                  <div 
+                    onClick={() => setSelectedMemberProfile(child)}
+                    className="cursor-pointer space-y-0.5 flex-1 min-w-0"
+                    title={`Click to view ${child.name}'s Profile`}
+                  >
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-extrabold text-xs text-indigo-950 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                        {child.name}
+                      </span>
+                      <span className="text-[10px] bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-extrabold px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-800">
+                        Level {child.level}
                       </span>
                     </div>
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono font-medium flex items-center gap-2">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono font-medium flex items-center gap-2 flex-wrap">
                       <span>ID: {child.phone}</span>
                       <span>•</span>
                       <span>Sponsor: {child.referrer_name || user.name}</span>
@@ -139,7 +166,7 @@ export default function DownlineModule({ user, downlines, isDarkMode = false }: 
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
                   <span className={`text-[10px] font-black px-2.5 py-1 rounded-xl ${
                     child.status === 'active' 
                       ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' 
@@ -147,6 +174,39 @@ export default function DownlineModule({ user, downlines, isDarkMode = false }: 
                   }`}>
                     {child.status.toUpperCase()}
                   </span>
+
+                  {/* Direct Profile Access Button */}
+                  <button
+                    onClick={() => setSelectedMemberProfile(child)}
+                    className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-600 hover:text-white text-indigo-700 dark:text-indigo-300 font-bold text-[11px] rounded-xl transition-all border border-indigo-200 dark:border-indigo-800 flex items-center gap-1 cursor-pointer shadow-2xs"
+                    title={`View ${child.name}'s Profile & Enter Account`}
+                  >
+                    <Eye className="w-3 h-3" />
+                    <span>Profile</span>
+                  </button>
+
+                  {onImpersonateUser && (
+                    <button
+                      onClick={() => {
+                        const targetUser: User = {
+                          id: child.id,
+                          name: child.name,
+                          phone: child.phone,
+                          email: child.email,
+                          referrer_id: child.referrer_id,
+                          status: child.status,
+                          role: 'user',
+                          created_at: child.created_at
+                        };
+                        onImpersonateUser(targetUser);
+                      }}
+                      className="px-2.5 py-1 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-[11px] rounded-xl transition-all shadow-xs flex items-center gap-1 cursor-pointer"
+                      title={`Log in as ${child.name}`}
+                    >
+                      <LogIn className="w-3 h-3" />
+                      <span>Enter</span>
+                    </button>
+                  )}
                 </div>
 
               </div>
@@ -176,7 +236,7 @@ export default function DownlineModule({ user, downlines, isDarkMode = false }: 
           </div>
           <h2 className="text-lg sm:text-xl font-bold tracking-tight">Downline Network & Level Analytics</h2>
           <p className="text-[11px] text-indigo-200/80 font-medium">
-            Interactive Tree view, Level-wise & Depth-wise business tracking with Excel & PDF exports.
+            Click any member card (e.g., Dipankar) to view their full profile, inspect team tree, or log in to their profile!
           </p>
         </div>
 
@@ -288,14 +348,27 @@ export default function DownlineModule({ user, downlines, isDarkMode = false }: 
         <div className={`p-6 rounded-3xl border shadow-sm space-y-4 ${
           isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
         }`}>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <h3 className="text-base font-black">Visual Downline Tree Hierarchy</h3>
-              <p className="text-xs text-slate-500">Click arrow icons to expand or collapse team branches.</p>
+              <p className="text-xs text-slate-500">
+                Click member names to open profile details or enter their account directly.
+              </p>
             </div>
-            <span className="text-xs font-mono font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-950 px-3 py-1 rounded-full">
-              Root Node: {user.name} ({user.phone})
-            </span>
+            
+            {focusedRootMember ? (
+              <button
+                onClick={() => setFocusedRootMember(null)}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-3 py-1.5 rounded-xl cursor-pointer transition-all self-start sm:self-auto"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Reset Tree to Main Root ({user.name})</span>
+              </button>
+            ) : (
+              <span className="text-xs font-mono font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-950 px-3 py-1 rounded-full border border-indigo-200 dark:border-indigo-800">
+                Root Node: {user.name} ({user.phone})
+              </span>
+            )}
           </div>
 
           {/* Root Card */}
@@ -305,21 +378,25 @@ export default function DownlineModule({ user, downlines, isDarkMode = false }: 
                 👑
               </div>
               <div>
-                <div className="font-extrabold text-sm">{user.name} (YOU)</div>
-                <div className="text-xs text-indigo-200 font-mono">Mobile Distributor ID: {user.phone}</div>
+                <div className="font-extrabold text-sm">
+                  {focusedRootMember ? focusedRootMember.name : `${user.name} (YOU)`}
+                </div>
+                <div className="text-xs text-indigo-200 font-mono">
+                  Mobile Distributor ID: {focusedRootMember ? focusedRootMember.phone : user.phone}
+                </div>
               </div>
             </div>
             <span className="bg-emerald-500 text-slate-950 font-black px-3 py-1 rounded-full text-xs">
-              TOP SPONSOR
+              {focusedRootMember ? `FOCUSED NODE` : `TOP SPONSOR`}
             </span>
           </div>
 
           {/* Tree Root Children */}
-          {downlines.some(m => m.referrer_id === user.id) ? (
-            renderTreeNode(user.id)
+          {downlines.some(m => m.referrer_id === activeRootId) ? (
+            renderTreeNode(activeRootId)
           ) : (
             <div className="p-8 text-center text-xs text-slate-400 font-medium">
-              No downline members found under your root node yet. Share your Sponsor Link to build your network!
+              No downline members found under this root node yet. Share Sponsor Link to grow team network!
             </div>
           )}
         </div>
@@ -340,7 +417,7 @@ export default function DownlineModule({ user, downlines, isDarkMode = false }: 
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search downline by name, mobile ID, or email..."
+                placeholder="Search downline by name (e.g., Dipankar), mobile ID, or email..."
                 className={`w-full px-3 py-2 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${
                   isDarkMode ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
                 }`}
@@ -377,16 +454,25 @@ export default function DownlineModule({ user, downlines, isDarkMode = false }: 
                   <th className="p-4">Sponsor Name & Phone</th>
                   <th className="p-4 text-center">Status</th>
                   <th className="p-4">Joined Date</th>
+                  <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200/50 font-medium">
                 {filteredDownlines.length > 0 ? (
                   filteredDownlines.map((m) => (
-                    <tr key={m.id} className={isDarkMode ? 'hover:bg-slate-800/50' : 'hover:bg-indigo-50/40'}>
-                      <td className="p-4"><span className="bg-indigo-100 text-indigo-800 font-black px-2.5 py-0.5 rounded-full text-[10px]">Level {m.level}</span></td>
-                      <td className="p-4 font-mono font-bold text-indigo-400">{m.phone}</td>
+                    <tr 
+                      key={m.id} 
+                      onClick={() => setSelectedMemberProfile(m)}
+                      className={`cursor-pointer transition-all ${
+                        isDarkMode ? 'hover:bg-slate-800/60' : 'hover:bg-indigo-50/60'
+                      }`}
+                    >
+                      <td className="p-4"><span className="bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-black px-2.5 py-0.5 rounded-full text-[10px]">Level {m.level}</span></td>
+                      <td className="p-4 font-mono font-bold text-indigo-500">{m.phone}</td>
                       <td className="p-4">
-                        <div className="font-bold">{m.name}</div>
+                        <div className="font-bold hover:text-indigo-600 transition-colors flex items-center gap-1.5">
+                          <span>{m.name}</span>
+                        </div>
                         <div className="text-[11px] text-slate-400">{m.email}</div>
                       </td>
                       <td className="p-4">
@@ -401,11 +487,41 @@ export default function DownlineModule({ user, downlines, isDarkMode = false }: 
                         </span>
                       </td>
                       <td className="p-4 text-slate-400">{new Date(m.created_at).toLocaleDateString()}</td>
+                      <td className="p-4 text-right space-x-1.5 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => setSelectedMemberProfile(m)}
+                          className="px-2.5 py-1.5 bg-indigo-50 dark:bg-indigo-950 hover:bg-indigo-600 hover:text-white text-indigo-700 dark:text-indigo-300 font-bold text-xs rounded-xl transition-all border border-indigo-200 dark:border-indigo-800 inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View Profile</span>
+                        </button>
+                        {onImpersonateUser && (
+                          <button
+                            onClick={() => {
+                              const targetUser: User = {
+                                id: m.id,
+                                name: m.name,
+                                phone: m.phone,
+                                email: m.email,
+                                referrer_id: m.referrer_id,
+                                status: m.status,
+                                role: 'user',
+                                created_at: m.created_at
+                              };
+                              onImpersonateUser(targetUser);
+                            }}
+                            className="px-2.5 py-1.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs rounded-xl transition-all shadow-xs inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            <LogIn className="w-3.5 h-3.5" />
+                            <span>Enter Account</span>
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-slate-400 font-medium">
+                    <td colSpan={7} className="p-8 text-center text-slate-400 font-medium">
                       No downline records match your search filter.
                     </td>
                   </tr>
@@ -444,6 +560,162 @@ export default function DownlineModule({ user, downlines, isDarkMode = false }: 
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* 5. INTERACTIVE MEMBER PROFILE MODAL */}
+      {selectedMemberProfile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-fade-in">
+          <div className={`w-full max-w-lg rounded-3xl border shadow-2xl overflow-hidden flex flex-col ${
+            isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
+          }`}>
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-950 p-6 text-white relative">
+              <button
+                onClick={() => setSelectedMemberProfile(null)}
+                className="absolute top-4 right-4 p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-300 text-slate-950 font-black text-2xl flex items-center justify-center shadow-lg ring-2 ring-amber-400 shrink-0">
+                  {selectedMemberProfile.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="space-y-1 flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-black uppercase bg-indigo-500/30 border border-indigo-400/40 text-indigo-300 px-2.5 py-0.5 rounded-full">
+                      Level {selectedMemberProfile.level} Member
+                    </span>
+                    <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
+                      selectedMemberProfile.status === 'active'
+                        ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-400/40'
+                        : 'bg-amber-500/30 text-amber-300 border border-amber-400/40'
+                    }`}>
+                      {selectedMemberProfile.status.toUpperCase()}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-black text-white tracking-tight truncate">{selectedMemberProfile.name}</h3>
+                  <p className="text-xs text-indigo-200/90 font-mono font-semibold">
+                    Distributor ID: {selectedMemberProfile.phone}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-5 overflow-y-auto max-h-[70vh]">
+              {/* Info Grid */}
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className={`p-3 rounded-2xl border space-y-1 ${isDarkMode ? 'bg-slate-800/60 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                    <Mail className="w-3 h-3 text-indigo-500" /> Email Address
+                  </span>
+                  <div className="font-semibold text-slate-800 dark:text-slate-200 truncate">{selectedMemberProfile.email || 'N/A'}</div>
+                </div>
+
+                <div className={`p-3 rounded-2xl border space-y-1 ${isDarkMode ? 'bg-slate-800/60 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                    <UserCheck className="w-3 h-3 text-emerald-500" /> Sponsor Name
+                  </span>
+                  <div className="font-semibold text-slate-800 dark:text-slate-200">{selectedMemberProfile.referrer_name || user.name}</div>
+                </div>
+
+                <div className={`p-3 rounded-2xl border space-y-1 ${isDarkMode ? 'bg-slate-800/60 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                    <Phone className="w-3 h-3 text-amber-500" /> Sponsor Phone
+                  </span>
+                  <div className="font-mono font-semibold text-slate-800 dark:text-slate-200">{selectedMemberProfile.referrer_phone || user.phone}</div>
+                </div>
+
+                <div className={`p-3 rounded-2xl border space-y-1 ${isDarkMode ? 'bg-slate-800/60 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-blue-500" /> Joined Date
+                  </span>
+                  <div className="font-semibold text-slate-800 dark:text-slate-200">
+                    {new Date(selectedMemberProfile.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Network & Business Stats for Member */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-black uppercase text-indigo-500 tracking-wider">Distributor Network Stats</h4>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className={`p-3 rounded-2xl border ${isDarkMode ? 'bg-slate-800/80 border-slate-700' : 'bg-indigo-50/50 border-indigo-100'}`}>
+                    <div className="text-lg font-black font-mono text-indigo-600 dark:text-indigo-400">
+                      {downlines.filter(m => m.referrer_id === selectedMemberProfile.id).length}
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-bold">Direct Referrals</div>
+                  </div>
+
+                  <div className={`p-3 rounded-2xl border ${isDarkMode ? 'bg-slate-800/80 border-slate-700' : 'bg-amber-50/50 border-amber-100'}`}>
+                    <div className="text-lg font-black font-mono text-amber-500">
+                      {selectedMemberProfile.level === 1 ? '25,000' : '18,000'} BV
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-bold">Team BV</div>
+                  </div>
+
+                  <div className={`p-3 rounded-2xl border ${isDarkMode ? 'bg-slate-800/80 border-slate-700' : 'bg-emerald-50/50 border-emerald-100'}`}>
+                    <div className="text-lg font-black font-mono text-emerald-500">
+                      ₹{selectedMemberProfile.level === 1 ? '12,500' : '8,400'}
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-bold">Total Earnings</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Action Buttons */}
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                {onImpersonateUser && (
+                  <button
+                    onClick={() => {
+                      const targetUser: User = {
+                        id: selectedMemberProfile.id,
+                        name: selectedMemberProfile.name,
+                        phone: selectedMemberProfile.phone,
+                        email: selectedMemberProfile.email,
+                        referrer_id: selectedMemberProfile.referrer_id,
+                        status: selectedMemberProfile.status,
+                        role: 'user',
+                        created_at: selectedMemberProfile.created_at
+                      };
+                      setSelectedMemberProfile(null);
+                      onImpersonateUser(targetUser);
+                    }}
+                    className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <LogIn className="w-4 h-4 text-slate-950" />
+                    <span>🔑 Enter Profile & Log In as {selectedMemberProfile.name}</span>
+                  </button>
+                )}
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      setFocusedRootMember(selectedMemberProfile);
+                      setActiveSubTab('tree');
+                      setSelectedMemberProfile(null);
+                    }}
+                    className="py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Network className="w-3.5 h-3.5" />
+                    <span>Focus Team Tree</span>
+                  </button>
+
+                  <a
+                    href={`https://wa.me/${selectedMemberProfile.phone.replace(/[^0-9]/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    <span>WhatsApp / Call</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

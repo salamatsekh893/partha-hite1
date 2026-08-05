@@ -213,6 +213,7 @@ export default function App() {
               user={user} 
               activeMainTab={userTab}
               onTabChange={setUserTab}
+              onImpersonateUser={handleImpersonateUser}
               onUserUpdated={(updatedUser) => {
                 setUser(updatedUser);
                 localStorage.setItem('mlm_user_session', JSON.stringify(updatedUser));
