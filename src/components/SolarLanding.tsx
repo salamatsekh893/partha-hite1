@@ -71,22 +71,22 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
 
   const loadWebsiteContents = async () => {
     try {
-      const res = await fetch('/api/website/contents');
-      if (!res.ok) return;
+      const res = await fetch('/api/website/contents').catch(() => null);
+      if (!res || !res.ok) return;
       const contentType = res.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) return;
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if (data && Array.isArray(data.contents)) {
         setWebsiteContents(data.contents);
       }
-    } catch (err) {
-      console.error('Failed to load website contents:', err);
+    } catch {
+      // Gracefully ignore transient network drops
     }
   };
 
   useEffect(() => {
     loadWebsiteContents();
-    const timer = setInterval(loadWebsiteContents, 4000);
+    const timer = setInterval(loadWebsiteContents, 15000);
     window.addEventListener('website-contents-updated', loadWebsiteContents);
     window.addEventListener('focus', loadWebsiteContents);
 

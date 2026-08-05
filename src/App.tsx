@@ -22,6 +22,38 @@ export default function App() {
 
   const [userTab, setUserTab] = useState<'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports'>('dashboard');
 
+  // Admin Impersonation state (allows admin to log into any member's account)
+  const [adminImpersonator, setAdminImpersonator] = useState<User | null>(() => {
+    try {
+      const saved = localStorage.getItem('mlm_admin_impersonator');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const handleImpersonateUser = (targetUser: User) => {
+    const activeAdmin = user?.role === 'admin' ? user : adminImpersonator;
+    if (activeAdmin) {
+      setAdminImpersonator(activeAdmin);
+      localStorage.setItem('mlm_admin_impersonator', JSON.stringify(activeAdmin));
+    }
+    setUser(targetUser);
+    localStorage.setItem('mlm_user_session', JSON.stringify(targetUser));
+    setView('dashboard');
+    setUserTab('dashboard');
+  };
+
+  const handleExitImpersonation = () => {
+    if (adminImpersonator) {
+      setUser(adminImpersonator);
+      localStorage.setItem('mlm_user_session', JSON.stringify(adminImpersonator));
+      setAdminImpersonator(null);
+      localStorage.removeItem('mlm_admin_impersonator');
+      setView('admin');
+    }
+  };
+
   const handleSetView = (
     view: 'dashboard' | 'admin' | 'solar' | 'auth', 
     uTab?: 'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports',
@@ -89,7 +121,9 @@ export default function App() {
 
   const handleLogout = () => {
     setUser(null);
+    setAdminImpersonator(null);
     localStorage.removeItem('mlm_user_session');
+    localStorage.removeItem('mlm_admin_impersonator');
     setView('solar');
     setAuthView('login');
     setIsAuthModalOpen(false);
@@ -111,6 +145,27 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans antialiased">
+      {/* Admin Impersonation Sticky Banner */}
+      {adminImpersonator && user && (
+        <div className="bg-gradient-to-r from-amber-500 via-indigo-600 to-slate-900 text-white px-4 py-2.5 text-xs font-bold flex flex-wrap items-center justify-between gap-2 shadow-md z-50 sticky top-0 border-b border-amber-400/40">
+          <div className="flex items-center gap-2">
+            <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shadow-xs">
+              👑 Admin Access
+            </span>
+            <span>
+              Viewing Account: <strong className="text-amber-200">{user.name}</strong> ({user.phone || user.email}) — Member ID #{user.id}
+            </span>
+          </div>
+          <button
+            onClick={handleExitImpersonation}
+            className="bg-white text-slate-900 hover:bg-slate-100 font-extrabold px-3 py-1 rounded-xl text-xs shadow-sm transition-all cursor-pointer flex items-center gap-1.5 border border-slate-200"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Return to Admin Panel</span>
+          </button>
+        </div>
+      )}
+
       {/* 1. Global Navigation & Header */}
       <Header 
         user={user} 
@@ -152,7 +207,7 @@ export default function App() {
         {user ? (
           /* LOGGED IN VIEWS */
           currentView === 'admin' && user.role === 'admin' ? (
-            <AdminPanel adminUser={user} initialTab={adminTab} />
+            <AdminPanel adminUser={user} initialTab={adminTab} onImpersonateUser={handleImpersonateUser} />
           ) : (
             <UserDashboard 
               user={user} 

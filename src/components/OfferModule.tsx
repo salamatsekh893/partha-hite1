@@ -56,21 +56,21 @@ export default function OfferModule({ user, isDarkMode = false }: OfferModulePro
   ];
 
   return (
-    <div className={`space-y-6 animate-fade-in ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`}>
+    <div className={`space-y-4 animate-fade-in ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`}>
       
       {/* 1. Header Banner */}
-      <div className={`p-6 rounded-3xl border shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+      <div className={`p-4 sm:p-5 rounded-2xl border shadow-md flex flex-col md:flex-row md:items-center justify-between gap-3 ${
         isDarkMode 
           ? 'bg-gradient-to-r from-slate-900 via-amber-950 to-slate-900 border-amber-500/20 text-white' 
           : 'bg-gradient-to-r from-amber-900 via-slate-900 to-amber-950 text-white border-amber-800'
       }`}>
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-400/20 text-amber-300 border border-amber-400/30 rounded-full text-xs font-black">
-            <Trophy className="w-3.5 h-3.5 text-amber-400" />
+        <div className="space-y-0.5">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-400/20 text-amber-300 border border-amber-400/30 rounded-full text-[11px] font-bold">
+            <Trophy className="w-3 h-3 text-amber-400" />
             <span>Exclusive Partner Promotions & Rewards</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black">Active Offers & Achiever Incentives</h2>
-          <p className="text-xs text-amber-100/80 font-medium">
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight">Active Offers & Achiever Incentives</h2>
+          <p className="text-[11px] text-amber-100/80 font-medium">
             Qualify for cash bonuses, leadership retreats, professional solar toolkits, and international tours!
           </p>
         </div>

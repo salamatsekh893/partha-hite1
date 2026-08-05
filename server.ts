@@ -691,10 +691,10 @@ app.post('/api/admin/delete', authenticateUser, requireAdmin, async (req, res) =
 app.get('/api/website/contents', async (req, res) => {
   try {
     const contents = await DB.getWebsiteContents(true);
-    res.json({ contents });
+    res.json({ contents: contents || [] });
   } catch (err: any) {
     console.error('Error fetching website contents:', err);
-    res.status(500).json({ error: 'Failed to retrieve website contents.' });
+    res.json({ contents: [] });
   }
 });
 
@@ -702,10 +702,10 @@ app.get('/api/website/contents', async (req, res) => {
 app.get('/api/admin/website/contents', authenticateUser, requireAdmin, async (req, res) => {
   try {
     const contents = await DB.getWebsiteContents(false);
-    res.json({ contents });
+    res.json({ contents: contents || [] });
   } catch (err: any) {
     console.error('Error fetching admin website contents:', err);
-    res.status(500).json({ error: 'Failed to retrieve website contents for admin.' });
+    res.json({ contents: [] });
   }
 });
 

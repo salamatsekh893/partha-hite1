@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, CheckCircle2, XCircle, Search, RefreshCw, 
   Calendar, Shield, ShieldCheck, UserCheck, AlertCircle, Phone, Mail, Network, FileText, Trash2, Edit,
-  Globe, Video, Image as ImageIcon, Plus, Eye, EyeOff, Sparkles, Upload, Play, Check, ExternalLink, Layers, X
+  Globe, Video, Image as ImageIcon, Plus, Eye, EyeOff, Sparkles, Upload, Play, Check, ExternalLink, Layers, X, LogIn
 } from 'lucide-react';
 import { User, SystemStats, ReferralTreeNode, WebsiteContent } from '../types.js';
 import { getEmbedVideoUrl, getDirectImageUrl } from '../utils/mediaUtils.js';
@@ -12,10 +12,12 @@ import ProfileEditModal from './ProfileEditModal.js';
 interface AdminPanelProps {
   adminUser: User;
   initialTab?: 'members' | 'website';
+  onImpersonateUser?: (user: User) => void;
 }
 
-export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminPanelProps) {
+export default function AdminPanel({ adminUser, initialTab = 'members', onImpersonateUser }: AdminPanelProps) {
   const [activeTab, setActiveTab] = useState<'members' | 'website'>(initialTab);
+  const [directLoginId, setDirectLoginId] = useState('');
 
   useEffect(() => {
     if (initialTab) {
@@ -121,15 +123,16 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
         headers: {
           'X-User-Id': adminUser.id.toString(),
         },
-      });
+      }).catch(() => null);
+      if (!res || !res.ok) return;
       const contentType = res.headers.get('content-type');
-      if (!res.ok || !contentType || !contentType.includes('application/json')) {
-        return;
+      if (!contentType || !contentType.includes('application/json')) return;
+      const data = await res.json().catch(() => null);
+      if (data && Array.isArray(data.contents)) {
+        setWebsiteContents(data.contents);
       }
-      const data = await res.json();
-      setWebsiteContents(data.contents || []);
-    } catch (err) {
-      console.error('Failed to load website contents:', err);
+    } catch {
+      // Gracefully ignore network drops
     } finally {
       setWebsiteLoading(false);
     }
@@ -650,6 +653,58 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
       {/* 3. Member Directory Grid */}
       <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm">
         <div className="p-5 border-b border-slate-200 space-y-4">
+          {/* Quick Direct Member ID Login Tool */}
+          <div className="p-4 bg-slate-900 rounded-2xl text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border border-indigo-900/60 shadow-md">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shrink-0">
+                <LogIn className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-black uppercase tracking-wider text-amber-400">
+                  ADMIN DIRECT MEMBER ACCESS TOOL
+                </h4>
+                <p className="text-[11px] text-slate-300 font-medium">
+                  Log into any registered member's account directly
+                </p>
+              </div>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!directLoginId.trim()) return;
+                const searchKey = directLoginId.trim().toLowerCase();
+                const target = users.find(u =>
+                  u.phone === directLoginId.trim() ||
+                  u.phone.endsWith(directLoginId.trim()) ||
+                  u.email.toLowerCase() === searchKey ||
+                  u.id.toString() === searchKey
+                );
+                if (target && onImpersonateUser) {
+                  onImpersonateUser(target as User);
+                } else {
+                  alert(`No distributor found matching Mobile / Email / ID: "${directLoginId}"`);
+                }
+              }}
+              className="flex items-center gap-2 w-full md:w-auto"
+            >
+              <input
+                type="text"
+                value={directLoginId}
+                onChange={(e) => setDirectLoginId(e.target.value)}
+                placeholder="Enter Mobile / Email / User ID..."
+                className="px-3.5 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-white text-xs focus:outline-none focus:ring-2 focus:ring-amber-400 w-full md:w-60 font-mono font-bold"
+              />
+              <button
+                type="submit"
+                className="px-4 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs transition-all shadow-sm flex items-center gap-1.5 cursor-pointer shrink-0"
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span>Log In to ID</span>
+              </button>
+            </form>
+          </div>
+
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div>
               <h3 className="text-sm font-bold text-slate-900">Distributor Directory ({filteredUsers.length})</h3>
@@ -796,6 +851,18 @@ export default function AdminPanel({ adminUser, initialTab = 'members' }: AdminP
                       )}
                      </td>
                      <td className="p-4 text-right space-x-1.5 whitespace-nowrap">
+                       {/* Log into Member Account */}
+                       {onImpersonateUser && (
+                         <button
+                           onClick={() => onImpersonateUser(userItem as User)}
+                           title={`Log in to ${userItem.name}'s Account (ID: ${userItem.phone})`}
+                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 font-extrabold transition-all cursor-pointer shadow-xs text-xs"
+                         >
+                           <LogIn className="w-3.5 h-3.5" />
+                           <span>Log In</span>
+                         </button>
+                       )}
+
                        {/* View completed Success India Applicant Form */}
                        <button
                          onClick={() => {

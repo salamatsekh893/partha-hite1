@@ -49,38 +49,38 @@ export default function BonusModule({ user, isDarkMode = false }: BonusModulePro
   };
 
   return (
-    <div className={`space-y-6 animate-fade-in ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`}>
+    <div className={`space-y-4 animate-fade-in ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`}>
       
       {/* 1. Header Banner */}
-      <div className={`p-6 rounded-3xl border shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+      <div className={`p-4 sm:p-5 rounded-2xl border shadow-md flex flex-col md:flex-row md:items-center justify-between gap-3 ${
         isDarkMode 
           ? 'bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border-indigo-500/20 text-white' 
           : 'bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-950 text-white border-indigo-800'
       }`}>
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 rounded-full text-xs font-black">
-            <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+        <div className="space-y-0.5">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 rounded-full text-[11px] font-bold">
+            <DollarSign className="w-3 h-3 text-emerald-400" />
             <span>Commission & Royalty Distribution Module</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black">Bonus & Commission Management</h2>
-          <p className="text-xs text-indigo-200/80 font-medium">
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight">Bonus & Commission Management</h2>
+          <p className="text-[11px] text-indigo-200/80 font-medium">
             Track Direct, Pair Matching, Level, Milestone, and Monthly Performance Bonus earnings.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={handleExportCSV}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all shadow-md cursor-pointer hover:scale-105"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition-all shadow-xs cursor-pointer"
           >
-            <Download className="w-4 h-4" />
+            <Download className="w-3.5 h-3.5" />
             <span>Export CSV</span>
           </button>
           <button
             onClick={handlePrintPDF}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl transition-all shadow-md cursor-pointer hover:scale-105"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-lg transition-all shadow-xs cursor-pointer"
           >
-            <Printer className="w-4 h-4" />
+            <Printer className="w-3.5 h-3.5" />
             <span>Print Bonus PDF</span>
           </button>
         </div>

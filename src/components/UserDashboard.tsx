@@ -207,69 +207,69 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
   ];
 
   return (
-    <div className={`min-h-screen space-y-6 transition-colors duration-300 ${
-      isDarkMode ? 'bg-slate-950 text-slate-100 p-2 sm:p-4 rounded-3xl' : 'text-slate-900'
+    <div className={`min-h-screen space-y-4 transition-colors duration-300 ${
+      isDarkMode ? 'bg-slate-950 text-slate-100 p-2 sm:p-3 rounded-2xl' : 'text-slate-900'
     }`}>
       
       {/* 1. Header Banner & Profile Strip with Dark Mode Switch */}
-      <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl relative overflow-hidden transition-all ${
+      <div className={`p-4 sm:p-5 rounded-2xl border shadow-md relative overflow-hidden transition-all ${
         isDarkMode 
           ? 'bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border-indigo-500/20 text-white' 
           : 'bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border-indigo-900/30'
       }`}>
-        <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           
           {/* Left: Member Profile Info */}
-          <div className="flex items-start sm:items-center gap-4 sm:gap-5">
+          <div className="flex items-center gap-3.5">
             {details?.photo ? (
-              <div className="shrink-0 w-20 h-24 bg-white/10 border-2 border-amber-400/50 rounded-2xl p-1 shadow-xl overflow-hidden relative group">
-                <img src={details.photo} alt={user.name} className="w-full h-full object-cover rounded-xl" referrerPolicy="no-referrer" />
+              <div className="shrink-0 w-14 h-16 bg-white/10 border border-amber-400/50 rounded-xl p-0.5 shadow-md overflow-hidden relative group">
+                <img src={details.photo} alt={user.name} className="w-full h-full object-cover rounded-lg" referrerPolicy="no-referrer" />
               </div>
             ) : (
-              <div className="shrink-0 w-20 h-24 bg-gradient-to-b from-indigo-800 to-slate-900 border-2 border-indigo-400/30 rounded-2xl p-2 flex flex-col items-center justify-center text-indigo-200 shadow-xl">
-                <UserIcon className="w-8 h-8 text-amber-400 mb-1" />
-                <span className="text-[9px] font-black uppercase text-indigo-300">Passport</span>
+              <div className="shrink-0 w-14 h-16 bg-gradient-to-b from-indigo-800 to-slate-900 border border-indigo-400/30 rounded-xl p-1.5 flex flex-col items-center justify-center text-indigo-200 shadow-md">
+                <UserIcon className="w-6 h-6 text-amber-400 mb-0.5" />
+                <span className="text-[8px] font-bold uppercase text-indigo-300">Passport</span>
               </div>
             )}
 
-            <div className="space-y-1.5 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black tracking-wide border shadow-xs ${
+            <div className="space-y-1 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide border shadow-xs ${
                   user.status === 'active' 
                     ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
                     : 'bg-amber-500/20 text-amber-300 border-amber-400/40'
                 }`}>
-                  <span className={`w-2 h-2 rounded-full ${user.status === 'active' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}></span>
+                  <span className={`w-1.5 h-1.5 rounded-full ${user.status === 'active' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`}></span>
                   {user.status === 'active' ? 'Active & Verified Distributor' : 'Pending Admin Approval'}
                 </span>
 
                 {/* Role Based Access Badge */}
-                <span className="text-xs font-extrabold text-amber-300 bg-amber-400/10 border border-amber-400/30 px-3 py-1 rounded-full">
+                <span className="text-[11px] font-bold text-amber-300 bg-amber-400/10 border border-amber-400/30 px-2.5 py-0.5 rounded-full">
                   {user.role === 'admin' ? '🛡️ System Admin View' : '☀️ Distributor ID: ' + sponsorCode}
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white">
                 {user.name}
               </h1>
 
-              <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-indigo-200/80 font-medium pt-0.5">
+              <div className="flex flex-wrap items-center gap-y-0.5 gap-x-3 text-[11px] text-indigo-200/80 font-medium">
                 <span className="flex items-center gap-1">
-                  <Phone className="w-3.5 h-3.5 text-amber-400" />
+                  <Phone className="w-3 h-3 text-amber-400" />
                   {user.phone}
                 </span>
                 <span className="flex items-center gap-1">
-                  <Mail className="w-3.5 h-3.5 text-indigo-400" />
+                  <Mail className="w-3 h-3 text-indigo-400" />
                   {user.email}
                 </span>
               </div>
 
-              <div className="pt-2 flex items-center gap-2">
+              <div className="pt-1 flex items-center gap-2">
                 <button
                   onClick={() => setIsEditProfileOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-lg text-[11px] font-bold transition-all cursor-pointer shadow-xs"
                 >
-                  <Edit3 className="w-3.5 h-3.5 text-amber-400" />
+                  <Edit3 className="w-3 h-3 text-amber-400" />
                   Edit Profile
                 </button>
               </div>
@@ -277,33 +277,33 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
           </div>
 
           {/* Right: Controls & Dark Mode Switch */}
-          <div className="flex flex-col sm:flex-row lg:flex-col items-end justify-between gap-3 shrink-0">
+          <div className="flex flex-col sm:flex-row lg:flex-col items-end justify-between gap-2.5 shrink-0">
             
             {/* Dark Mode Toggle Switch */}
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className={`px-4 py-2 rounded-2xl font-black text-xs transition-all flex items-center gap-2 cursor-pointer shadow-lg border ${
+              className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-sm border ${
                 isDarkMode 
                   ? 'bg-amber-400 text-slate-950 border-amber-300 hover:bg-amber-300' 
                   : 'bg-slate-800 text-amber-300 border-slate-700 hover:bg-slate-700'
               }`}
             >
-              {isDarkMode ? <Sun className="w-4 h-4 text-slate-950" /> : <Moon className="w-4 h-4 text-amber-400" />}
+              {isDarkMode ? <Sun className="w-3.5 h-3.5 text-slate-950" /> : <Moon className="w-3.5 h-3.5 text-amber-400" />}
               <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
             </button>
 
             {/* Quick Distributor ID Box */}
-            <div className="bg-slate-950/80 border border-indigo-500/30 rounded-2xl p-3 flex items-center gap-3 w-full sm:w-auto">
+            <div className="bg-slate-950/80 border border-indigo-500/30 rounded-xl px-3 py-2 flex items-center gap-2.5 w-full sm:w-auto">
               <div>
-                <span className="text-[9px] text-indigo-300 font-bold uppercase block">My Sponsor ID (Mobile)</span>
-                <span className="text-base font-black font-mono text-white block">{sponsorCode}</span>
+                <span className="text-[8px] text-indigo-300 font-bold uppercase block">My Sponsor ID (Mobile)</span>
+                <span className="text-sm font-bold font-mono text-white block">{sponsorCode}</span>
               </div>
               <button
                 onClick={copySponsorCode}
-                className="p-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl cursor-pointer"
+                className="p-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg cursor-pointer"
                 title="Copy Sponsor ID"
               >
-                {copiedSponsorCode ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copiedSponsorCode ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
               </button>
             </div>
 
@@ -323,15 +323,15 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
       />
 
       {/* 2. Global Referral Share Bar */}
-      <div className={`p-5 rounded-3xl border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+      <div className={`p-3.5 sm:p-4 rounded-xl border shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 ${
         isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
       }`}>
-        <div className="space-y-1">
-          <h3 className="text-sm font-black flex items-center gap-2">
-            <Share2 className="w-4 h-4 text-indigo-500" />
+        <div className="space-y-0.5">
+          <h3 className="text-xs font-bold flex items-center gap-1.5">
+            <Share2 className="w-3.5 h-3.5 text-indigo-500" />
             Share Partner Sponsor Link
           </h3>
-          <p className="text-xs text-slate-500 font-medium">
+          <p className="text-[11px] text-slate-500 font-medium">
             Invite new distributors under Sponsor ID: <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{sponsorCode}</strong>
           </p>
         </div>
@@ -341,109 +341,109 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
             href={whatsappShareUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
           >
-            <MessageCircle className="w-4 h-4" />
+            <MessageCircle className="w-3.5 h-3.5" />
             WhatsApp
           </a>
 
           <button
             onClick={copyReferralLink}
-            className={`px-4 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
               copiedLink ? 'bg-emerald-600 text-white' : 'bg-indigo-600 hover:bg-indigo-500 text-white'
             }`}
           >
-            {copiedLink ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             {copiedLink ? 'Copied!' : 'Copy Link'}
           </button>
         </div>
       </div>
 
       {/* 3. Main Navigation Bar (7 Dedicated Modules) */}
-      <div className={`p-2 rounded-2xl border shadow-sm flex items-center gap-1.5 overflow-x-auto scrollbar-none ${
+      <div className={`p-1.5 rounded-xl border shadow-xs flex items-center gap-1 overflow-x-auto scrollbar-none ${
         isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
       }`}>
         <button
           onClick={() => handleTabSelect('dashboard')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 ${
             activeMainTab === 'dashboard'
-              ? 'bg-indigo-600 text-white shadow-md'
+              ? 'bg-indigo-600 text-white shadow-xs'
               : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <Activity className="w-4 h-4" />
+          <Activity className="w-3.5 h-3.5" />
           Dashboard & 12 Cards
         </button>
 
         <button
           onClick={() => handleTabSelect('downline')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 ${
             activeMainTab === 'downline'
-              ? 'bg-indigo-600 text-white shadow-md'
+              ? 'bg-indigo-600 text-white shadow-xs'
               : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <Network className="w-4 h-4" />
+          <Network className="w-3.5 h-3.5" />
           Downline Module ({totalDistributorsCount})
         </button>
 
         <button
           onClick={() => handleTabSelect('business')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 ${
             activeMainTab === 'business'
-              ? 'bg-indigo-600 text-white shadow-md'
+              ? 'bg-indigo-600 text-white shadow-xs'
               : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <TrendingUp className="w-4 h-4" />
+          <TrendingUp className="w-3.5 h-3.5" />
           Business Module
         </button>
 
         <button
           onClick={() => handleTabSelect('products')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 ${
             activeMainTab === 'products'
-              ? 'bg-indigo-600 text-white shadow-md'
+              ? 'bg-indigo-600 text-white shadow-xs'
               : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <ShoppingBag className="w-4 h-4" />
+          <ShoppingBag className="w-3.5 h-3.5" />
           Product Module
         </button>
 
         <button
           onClick={() => handleTabSelect('offers')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 ${
             activeMainTab === 'offers'
-              ? 'bg-amber-500 text-slate-950 shadow-md'
+              ? 'bg-amber-500 text-slate-950 shadow-xs'
               : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <Gift className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+          <Gift className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
           Offer Module
         </button>
 
         <button
           onClick={() => handleTabSelect('bonuses')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 ${
             activeMainTab === 'bonuses'
-              ? 'bg-indigo-600 text-white shadow-md'
+              ? 'bg-indigo-600 text-white shadow-xs'
               : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <DollarSign className="w-4 h-4" />
+          <DollarSign className="w-3.5 h-3.5" />
           Bonus Module
         </button>
 
         <button
           onClick={() => handleTabSelect('reports')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 ${
             activeMainTab === 'reports'
-              ? 'bg-indigo-600 text-white shadow-md'
+              ? 'bg-indigo-600 text-white shadow-xs'
               : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <FileText className="w-4 h-4" />
+          <FileText className="w-3.5 h-3.5" />
           Reports Module
         </button>
       </div>
