@@ -120,6 +120,14 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    if (adminImpersonator) {
+      setUser(adminImpersonator);
+      localStorage.setItem('mlm_user_session', JSON.stringify(adminImpersonator));
+      setAdminImpersonator(null);
+      localStorage.removeItem('mlm_admin_impersonator');
+      setView('admin');
+      return;
+    }
     setUser(null);
     setAdminImpersonator(null);
     localStorage.removeItem('mlm_user_session');
@@ -170,6 +178,7 @@ export default function App() {
       <Header 
         user={user} 
         onLogout={handleLogout} 
+        isImpersonating={!!adminImpersonator}
         currentView={user ? (currentView === 'admin' ? 'admin' : 'dashboard') : 'auth'} 
         setView={(v) => setView(v)} 
         onMenuClick={() => setIsSidebarOpen(true)}
@@ -182,6 +191,7 @@ export default function App() {
         onClose={() => setIsSidebarOpen(false)}
         user={user}
         onLogout={handleLogout}
+        isImpersonating={!!adminImpersonator}
         currentView={user ? (currentView === 'admin' ? 'admin' : 'dashboard') : 'auth'}
         currentTab={userTab}
         setView={(v, uTab, aTab) => {

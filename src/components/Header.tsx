@@ -4,6 +4,7 @@ import { User } from '../types.js';
 interface HeaderProps {
   user: User | null;
   onLogout: () => void;
+  isImpersonating?: boolean;
   currentView: 'dashboard' | 'admin' | 'auth';
   setView: (view: 'dashboard' | 'admin') => void;
   onMenuClick: () => void;
@@ -11,7 +12,7 @@ interface HeaderProps {
   onEditProfileClick?: () => void;
 }
 
-export default function Header({ user, onLogout, currentView, setView, onMenuClick, onOpenAuthModal, onEditProfileClick }: HeaderProps) {
+export default function Header({ user, onLogout, isImpersonating, currentView, setView, onMenuClick, onOpenAuthModal, onEditProfileClick }: HeaderProps) {
   // Parse user additional_details for profile photo
   let headerPhoto: string | null = null;
   try {
@@ -117,10 +118,15 @@ export default function Header({ user, onLogout, currentView, setView, onMenuCli
               {/* Quick Logout */}
               <button
                 onClick={onLogout}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 border border-slate-200 hover:border-slate-300 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all shadow-sm cursor-pointer"
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 border rounded-xl text-xs font-extrabold transition-all shadow-sm cursor-pointer ${
+                  isImpersonating 
+                    ? 'bg-amber-400 border-amber-300 text-slate-950 hover:bg-amber-300' 
+                    : 'border-slate-200 hover:border-slate-300 text-slate-700 bg-slate-100 hover:bg-slate-200'
+                }`}
+                title={isImpersonating ? "Return to Admin ID & Admin Panel" : "Log out"}
               >
-                <LogOut className="w-3.5 h-3.5 text-slate-600" />
-                <span className="hidden sm:inline">Logout</span>
+                <LogOut className={`w-3.5 h-3.5 ${isImpersonating ? 'text-slate-950' : 'text-slate-600'}`} />
+                <span>{isImpersonating ? 'Return to Admin ID' : 'Logout'}</span>
               </button>
             </div>
           ) : (
