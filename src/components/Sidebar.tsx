@@ -11,13 +11,14 @@ interface SidebarProps {
   onClose: () => void;
   user: User | null;
   onLogout: () => void;
+  isImpersonating?: boolean;
   currentView: 'dashboard' | 'admin' | 'auth';
   currentTab?: 'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports';
   setView: (view: 'dashboard' | 'admin', userTab?: 'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports', adminTab?: 'members' | 'website') => void;
   onEditProfileClick: () => void;
 }
 
-export default function Sidebar({ isOpen, onClose, user, onLogout, currentView, currentTab = 'dashboard', setView, onEditProfileClick }: SidebarProps) {
+export default function Sidebar({ isOpen, onClose, user, onLogout, isImpersonating, currentView, currentTab = 'dashboard', setView, onEditProfileClick }: SidebarProps) {
   const [copiedLink, setCopiedLink] = useState(false);
 
   if (!user) return null;
@@ -292,10 +293,14 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, currentView, 
               onClose();
               onLogout();
             }}
-            className="w-full py-2.5 border border-rose-200 hover:border-rose-300 rounded-xl text-xs font-black uppercase tracking-wider text-rose-700 bg-rose-50/80 hover:bg-rose-100/80 transition-all shadow-xs cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+            className={`w-full py-2.5 border rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-xs cursor-pointer flex items-center justify-center gap-2 active:scale-98 ${
+              isImpersonating 
+                ? 'border-amber-400 text-slate-950 bg-amber-400 hover:bg-amber-300' 
+                : 'border-rose-200 hover:border-rose-300 text-rose-700 bg-rose-50/80 hover:bg-rose-100/80'
+            }`}
           >
-            <LogOut className="w-4 h-4 text-rose-600" />
-            LOGOUT ACCOUNT
+            <LogOut className={`w-4 h-4 ${isImpersonating ? 'text-slate-950' : 'text-rose-600'}`} />
+            {isImpersonating ? 'RETURN TO ADMIN ID' : 'LOGOUT ACCOUNT'}
           </button>
           
           <div className="text-center text-[10px] text-slate-500 font-black uppercase tracking-wider">
