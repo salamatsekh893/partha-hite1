@@ -3,7 +3,7 @@ import {
   Network, Search, Users, ChevronRight, ChevronDown, Download, Printer, 
   Layers, UserCheck, Clock, Award, ShieldCheck, Phone, Mail, Sparkles,
   BarChart3, FileText, ArrowDownRight, LogIn, Eye, X, ExternalLink, Shield, ArrowLeft,
-  DollarSign, TrendingUp, CheckCircle2
+  DollarSign, TrendingUp, CheckCircle2, UserPlus
 } from 'lucide-react';
 import { User, DownlineMember } from '../types.js';
 import { exportToCSV, printPDFReport } from '../utils/exportUtils.js';
@@ -13,9 +13,10 @@ interface DownlineModuleProps {
   downlines: DownlineMember[];
   isDarkMode?: boolean;
   onImpersonateUser?: (targetUser: User) => void;
+  onOpenNewDistributorModal?: () => void;
 }
 
-export default function DownlineModule({ user, downlines, isDarkMode = false, onImpersonateUser }: DownlineModuleProps) {
+export default function DownlineModule({ user, downlines, isDarkMode = false, onImpersonateUser, onOpenNewDistributorModal }: DownlineModuleProps) {
   const [activeSubTab, setActiveSubTab] = useState<'tree' | 'level' | 'depth' | 'depth_business' | 'level_business'>('tree');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<number | 'all'>('all');
@@ -296,49 +297,61 @@ export default function DownlineModule({ user, downlines, isDarkMode = false, on
       </div>
 
       {/* 3. Module Sub-tabs Switcher */}
-      <div className={`p-1.5 rounded-2xl border shadow-sm flex items-center gap-1 overflow-x-auto ${
+      <div className={`p-1.5 rounded-2xl border shadow-sm flex flex-wrap items-center justify-between gap-2 ${
         isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
       }`}>
-        <button
-          onClick={() => setActiveSubTab('tree')}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
-            activeSubTab === 'tree' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          Tree View Downline
-        </button>
-        <button
-          onClick={() => setActiveSubTab('level')}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
-            activeSubTab === 'level' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          Level Wise List
-        </button>
-        <button
-          onClick={() => setActiveSubTab('depth')}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
-            activeSubTab === 'depth' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          Depth Wise Analysis
-        </button>
-        <button
-          onClick={() => setActiveSubTab('depth_business')}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
-            activeSubTab === 'depth_business' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          Depth Wise Business
-        </button>
-        <button
-          onClick={() => setActiveSubTab('level_business')}
-          className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
-            activeSubTab === 'level_business' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-          }`}
-        >
-          Level Wise Business
-        </button>
+        <div className="flex items-center gap-1 overflow-x-auto">
+          <button
+            onClick={() => setActiveSubTab('tree')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+              activeSubTab === 'tree' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Tree View Downline
+          </button>
+          <button
+            onClick={() => setActiveSubTab('level')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+              activeSubTab === 'level' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Level Wise List
+          </button>
+          <button
+            onClick={() => setActiveSubTab('depth')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+              activeSubTab === 'depth' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Depth Wise Analysis
+          </button>
+          <button
+            onClick={() => setActiveSubTab('depth_business')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+              activeSubTab === 'depth_business' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Depth Wise Business
+          </button>
+          <button
+            onClick={() => setActiveSubTab('level_business')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shrink-0 ${
+              activeSubTab === 'level_business' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            Level Wise Business
+          </button>
+        </div>
+
+        {onOpenNewDistributorModal && (
+          <button
+            onClick={onOpenNewDistributorModal}
+            className="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer shrink-0 border border-amber-300 active:scale-95"
+          >
+            <UserPlus className="w-4 h-4 text-slate-950" />
+            <span>+ New Distributor</span>
+          </button>
+        )}
       </div>
 
       {/* 4. SUB-TAB VIEWS */}

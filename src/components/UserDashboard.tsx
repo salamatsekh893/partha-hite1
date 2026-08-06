@@ -5,7 +5,7 @@ import {
   MessageCircle, ExternalLink, Award, Sparkles, UserPlus, Zap, Edit3,
   Download, DollarSign, TrendingUp, ShoppingBag, ShoppingCart, Percent, Gift, 
   Package, Clock, Truck, FileText, CheckCircle2, Send, AlertCircle, Moon, Sun,
-  BarChart2, Layers, ArrowUpRight, Activity
+  BarChart2, Layers, ArrowUpRight, Activity, X
 } from 'lucide-react';
 import { 
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, 
@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 import { User, DownlineMember, SolarProduct, ProductOrder, OfferItem } from '../types.js';
 import ProfileEditModal from './ProfileEditModal.js';
+import RegisterForm from './RegisterForm.js';
 import ReportsModule from './ReportsModule.js';
 import BusinessModule from './BusinessModule.js';
 import DownlineModule from './DownlineModule.js';
@@ -87,6 +88,8 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedSponsorCode, setCopiedSponsorCode] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isNewDistributorModalOpen, setIsNewDistributorModalOpen] = useState(false);
+  const [newDistributorSuccessMsg, setNewDistributorSuccessMsg] = useState<string | null>(null);
 
   // Parse additional_details for photo
   let details: any = null;
@@ -265,13 +268,21 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
                 </span>
               </div>
 
-              <div className="pt-1 flex items-center gap-2">
+              <div className="pt-1 flex items-center gap-2 flex-wrap">
                 <button
                   onClick={() => setIsEditProfileOpen(true)}
                   className="inline-flex items-center gap-1 px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-lg text-[11px] font-bold transition-all cursor-pointer shadow-xs"
                 >
                   <Edit3 className="w-3 h-3 text-amber-400" />
                   Edit Profile
+                </button>
+
+                <button
+                  onClick={() => setIsNewDistributorModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black rounded-lg text-[11px] transition-all cursor-pointer shadow-sm border border-amber-300 active:scale-95"
+                >
+                  <UserPlus className="w-3.5 h-3.5 text-slate-950" />
+                  + New Distributor
                 </button>
               </div>
             </div>
@@ -323,6 +334,79 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
         }}
       />
 
+      {/* Success Notification Banner for New Registration */}
+      {newDistributorSuccessMsg && (
+        <div className="bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 px-4 py-3 rounded-2xl text-xs font-bold flex items-center justify-between gap-2 shadow-sm animate-fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+            <span>{newDistributorSuccessMsg}</span>
+          </div>
+          <button 
+            onClick={() => setNewDistributorSuccessMsg(null)}
+            className="p-1 hover:bg-emerald-500/20 rounded-lg text-emerald-700 dark:text-emerald-300 cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* New Distributor Direct Registration Modal */}
+      {isNewDistributorModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-4 sm:p-5 flex items-center justify-between border-b border-indigo-900/40 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black text-lg shadow-sm">
+                  <UserPlus className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">
+                      Direct Recruitment Mode
+                    </span>
+                    <span className="text-xs text-indigo-200 font-bold">
+                      Sponsor ID: <strong className="text-amber-300 font-mono">{sponsorCode}</strong>
+                    </span>
+                  </div>
+                  <h2 className="text-base sm:text-lg font-black tracking-tight text-white mt-0.5">
+                    Register New Distributor under {user.name}
+                  </h2>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsNewDistributorModalOpen(false)}
+                className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Sub-Banner Notice */}
+            <div className="bg-amber-500/10 border-b border-amber-500/20 px-5 py-2.5 text-xs text-amber-800 dark:text-amber-200 font-bold flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+              <span>
+                New distributor registered here will automatically be sponsored under <strong>{user.name}</strong> (Distributor ID: {sponsorCode}) and placed as a Level 1 direct team member!
+              </span>
+            </div>
+
+            {/* Modal Body with RegisterForm */}
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1">
+              <RegisterForm
+                initialSponsorId={user.phone || user.id.toString()}
+                onRegisterSuccess={() => {
+                  setIsNewDistributorModalOpen(false);
+                  setNewDistributorSuccessMsg(`✓ New Distributor successfully registered under Sponsor ID: ${sponsorCode}! Added to Level 1 Downline.`);
+                  fetchData();
+                }}
+                onToggleLogin={() => setIsNewDistributorModalOpen(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 2. Global Referral Share Bar */}
       <div className={`p-3.5 sm:p-4 rounded-xl border shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 ${
         isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
@@ -333,11 +417,19 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
             Share Partner Sponsor Link
           </h3>
           <p className="text-[11px] text-slate-500 font-medium">
-            Invite new distributors under Sponsor ID: <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{sponsorCode}</strong>
+            Invite or directly register new distributors under Sponsor ID: <strong className={isDarkMode ? 'text-white' : 'text-slate-900'}>{sponsorCode}</strong>
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setIsNewDistributorModalOpen(true)}
+            className="px-3.5 py-1.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-xs rounded-lg transition-all shadow-sm flex items-center gap-1.5 cursor-pointer border border-amber-300 active:scale-95"
+          >
+            <UserPlus className="w-3.5 h-3.5 text-slate-950" />
+            <span>+ New Distributor</span>
+          </button>
+
           <a
             href={whatsappShareUrl}
             target="_blank"
@@ -652,7 +744,13 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
 
       {/* B. DOWNLINE MODULE */}
       {activeMainTab === 'downline' && (
-        <DownlineModule user={user} downlines={downlines} isDarkMode={isDarkMode} onImpersonateUser={onImpersonateUser} />
+        <DownlineModule 
+          user={user} 
+          downlines={downlines} 
+          isDarkMode={isDarkMode} 
+          onImpersonateUser={onImpersonateUser} 
+          onOpenNewDistributorModal={() => setIsNewDistributorModalOpen(true)}
+        />
       )}
 
       {/* C. BUSINESS MODULE */}

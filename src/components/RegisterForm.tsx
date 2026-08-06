@@ -8,6 +8,7 @@ import {
 interface RegisterFormProps {
   onRegisterSuccess: () => void;
   onToggleLogin: () => void;
+  initialSponsorId?: string;
 }
 
 // Country codes list with flags
@@ -28,7 +29,7 @@ const COUNTRY_CODES = [
   { code: '+965', country: 'Kuwait', flag: '🇰🇼' },
 ];
 
-export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: RegisterFormProps) {
+export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initialSponsorId }: RegisterFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   
   // Step 1: Account Info
@@ -315,15 +316,20 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin }: Regis
     }
   };
 
-  // Auto-detect referral code from URL query parameters (e.g., ?ref=2)
+  // Auto-detect referral code from prop or URL query parameters (e.g., ?ref=2)
   useEffect(() => {
+    if (initialSponsorId) {
+      setSponsorId(initialSponsorId);
+      setSponsorLocked(true);
+      return;
+    }
     const params = new URLSearchParams(window.location.search);
     const ref = params.get('ref') || params.get('sponsor');
     if (ref) {
       setSponsorId(ref);
       setSponsorLocked(true);
     }
-  }, []);
+  }, [initialSponsorId]);
 
   const validateStep = (step: number) => {
     setError(null);
