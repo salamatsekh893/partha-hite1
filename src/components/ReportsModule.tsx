@@ -45,49 +45,55 @@ export default function ReportsModule({ user, downlines, orders, isDarkMode = fa
   // Generate Report Data Arrays based on Active Tab
   
   // 1. Direct Business Report Data
-  const directBusinessData = directDistributors.map(m => ({
-    distributorId: m.phone,
-    name: m.name,
-    email: m.email,
-    level: `Level 1 (Direct)`,
-    bv: 25000,
-    pv: 250,
-    businessInr: 31250,
-    commissionEarned: 3750,
-    status: m.status.toUpperCase(),
-    joinedDate: new Date(m.created_at).toLocaleDateString()
-  }));
+  const directBusinessData = directDistributors.map(m => {
+    const isActive = m.status === 'active';
+    const bv = isActive ? 25000 : 0;
+    const businessInr = Math.round(bv * 1.25);
+    const commissionEarned = Math.round(bv * 0.12);
+    return {
+      distributorId: m.phone,
+      name: m.name,
+      email: m.email,
+      level: `Level 1 (Direct)`,
+      bv,
+      pv: Math.round(bv / 100),
+      businessInr,
+      commissionEarned,
+      status: m.status.toUpperCase(),
+      joinedDate: new Date(m.created_at).toLocaleDateString()
+    };
+  });
 
   // 2. Team Business Report Data
-  const teamBusinessData = teamDistributors.map(m => ({
-    distributorId: m.phone,
-    name: m.name,
-    sponsorName: m.referrer_name || 'Team Leader',
-    sponsorMobile: m.referrer_phone || '-',
-    level: `Level ${m.level}`,
-    bv: 18000,
-    pv: 180,
-    businessInr: 22500,
-    overrideCommission: 1080,
-    status: m.status.toUpperCase(),
-    joinedDate: new Date(m.created_at).toLocaleDateString()
-  }));
+  const teamBusinessData = teamDistributors.map(m => {
+    const isActive = m.status === 'active';
+    const bv = isActive ? 18000 : 0;
+    const businessInr = Math.round(bv * 1.25);
+    const overrideCommission = Math.round(bv * 0.06);
+    return {
+      distributorId: m.phone,
+      name: m.name,
+      sponsorName: m.referrer_name || 'Team Leader',
+      sponsorMobile: m.referrer_phone || '-',
+      level: `Level ${m.level}`,
+      bv,
+      pv: Math.round(bv / 100),
+      businessInr,
+      overrideCommission,
+      status: m.status.toUpperCase(),
+      joinedDate: new Date(m.created_at).toLocaleDateString()
+    };
+  });
 
   // 3. Product Wise Business Report Data
-  const productWiseData = [
-    { code: "PRD-535W", name: "535W Mono PERC Solar Panel", category: "Solar Panels", unitsSold: 42, totalBV: 420000, totalPV: 4200, salesAmount: 596400, stockRemaining: 180 },
-    { code: "PRD-3KW", name: "3kW On-Grid Solar Inverter Pro", category: "Inverters", unitsSold: 28, totalBV: 616000, totalPV: 6160, salesAmount: 826000, stockRemaining: 95 },
-    { code: "PRD-5KW", name: "5kW Hybrid Solar Inverter (Grid & Battery)", category: "Inverters", unitsSold: 19, totalBV: 760000, totalPV: 7600, salesAmount: 988000, stockRemaining: 45 },
-    { code: "PRD-5HP", name: "5HP Submersible Solar Water Pump System", category: "Solar Pumps", unitsSold: 12, totalBV: 1020000, totalPV: 10200, salesAmount: 1380000, stockRemaining: 24 },
-    { code: "PRD-150AH", name: "150Ah 48V Lithium-ion Solar Battery", category: "Batteries", unitsSold: 35, totalBV: 630000, totalPV: 6300, salesAmount: 868000, stockRemaining: 110 },
-    { code: "PRD-60W", name: "60W All-in-One Solar Street Light", category: "Street Lights", unitsSold: 85, totalBV: 382500, totalPV: 3825, salesAmount: 527000, stockRemaining: 320 }
-  ];
+  const productWiseData: any[] = [];
 
   // 4. Distributor Wise Business Report Data
   const distributorWiseData = downlines.map(m => {
     const isDirect = m.level === 1;
-    const personalBV = isDirect ? 25000 : 18000;
-    const teamBV = isDirect ? 45000 : 12000;
+    const isActive = m.status === 'active';
+    const personalBV = isActive ? (isDirect ? 25000 : 18000) : 0;
+    const teamBV = 0;
     const totalBV = personalBV + teamBV;
     return {
       distributorId: m.phone,
@@ -97,27 +103,16 @@ export default function ReportsModule({ user, downlines, orders, isDarkMode = fa
       teamBV,
       totalBV,
       totalPV: Math.round(totalBV / 100),
-      rank: totalBV >= 50000 ? 'Executive Partner' : 'Star Distributor',
+      rank: totalBV >= 50000 ? 'Executive Partner' : (isActive ? 'Star Distributor' : 'Inactive'),
       status: m.status.toUpperCase()
     };
   });
 
   // 5. Bonus Report Data
-  const bonusReportData = [
-    { refNo: "BON-2026-001", date: "2026-07-31", type: "Direct Bonus (12%)", basisBV: 50000, amount: 6000, taxDeducted: 300, netPaid: 5700, status: "Paid" },
-    { refNo: "BON-2026-002", date: "2026-07-31", type: "Team Level Bonus (6%)", basisBV: 72000, amount: 4320, taxDeducted: 216, netPaid: 4104, status: "Paid" },
-    { refNo: "BON-2026-003", date: "2026-07-25", type: "Pair Matching Bonus", basisBV: 30000, amount: 3000, taxDeducted: 150, netPaid: 2850, status: "Paid" },
-    { refNo: "BON-2026-004", date: "2026-07-15", type: "Solar Executive Milestone Reward", basisBV: 100000, amount: 8500, taxDeducted: 425, netPaid: 8075, status: "Paid" },
-    { refNo: "BON-2026-005", date: "2026-06-30", type: "Monthly Performance Royalty Pool", basisBV: 150000, amount: 12000, taxDeducted: 600, netPaid: 11400, status: "Paid" }
-  ];
+  const bonusReportData: any[] = [];
 
   // 6. Earnings Report Data
-  const earningsReportData = [
-    { period: "July 2026", directIncome: 6000, teamIncome: 4320, rewardBonus: 8500, totalGross: 18820, tdsDeduction: 941, netPayout: 17879, status: "Disbursed to Bank" },
-    { period: "June 2026", directIncome: 5000, teamIncome: 3800, rewardBonus: 12000, totalGross: 20800, tdsDeduction: 1040, netPayout: 19760, status: "Disbursed to Bank" },
-    { period: "May 2026", directIncome: 4500, teamIncome: 2900, rewardBonus: 5000, totalGross: 12400, tdsDeduction: 620, netPayout: 11780, status: "Disbursed to Bank" },
-    { period: "April 2026", directIncome: 3000, teamIncome: 1800, rewardBonus: 2500, totalGross: 7300, tdsDeduction: 365, netPayout: 6935, status: "Disbursed to Bank" }
-  ];
+  const earningsReportData: any[] = [];
 
   // 7. Order Report Data
   const orderReportData = orders.map(o => ({
@@ -132,13 +127,17 @@ export default function ReportsModule({ user, downlines, orders, isDarkMode = fa
     status: o.status
   }));
 
-  // 8. Transaction Report Data
-  const transactionReportData = [
-    { txId: "TXN-99401", date: "2026-07-31", type: "CREDIT", category: "Bonus Payout", description: "Monthly Direct & Team Commission Payout", bv: 122000, amount: "₹18,820", status: "Success" },
-    { txId: "TXN-99388", date: "2026-07-28", type: "DEBIT", category: "Product Purchase", description: "Order #ORD-84201 - 535W Panels", bv: 20000, amount: "₹28,400", status: "Completed" },
-    { txId: "TXN-99342", date: "2026-07-20", type: "CREDIT", category: "Direct Sponsor BV", description: "Direct Referral Signup BV Credit", bv: 25000, amount: "250 PV", status: "Credited" },
-    { txId: "TXN-99290", date: "2026-07-15", type: "CREDIT", category: "Reward Bonus", description: "Executive Milestone Cash Reward", bv: 0, amount: "₹8,500", status: "Completed" }
-  ];
+  // 8. Transaction Report Data derived from real orders
+  const transactionReportData = orders.map((o, idx) => ({
+    txId: `TXN-${1000 + idx}`,
+    date: o.orderDate,
+    type: "DEBIT",
+    category: "Product Order",
+    description: `Order #${o.id} - ${o.productName}`,
+    bv: o.totalBV,
+    amount: `₹${o.totalAmount.toLocaleString('en-IN')}`,
+    status: o.status
+  }));
 
   // 9. Referral Link Clicks & Conversion Tracking Data
   const referralClickLogsData = [

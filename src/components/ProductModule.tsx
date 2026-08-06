@@ -223,13 +223,18 @@ export default function ProductModule({ user, orders, onOrderPlaced, isDarkMode 
   };
 
 
-  // Transaction History Mock Log
-  const transactionHistory = [
-    { txId: "TXN-98401", date: "2026-08-01", type: "CREDIT", category: "BV Credit", ref: "ORD-109282", bv: 10000, pv: 100, status: "Credited" },
-    { txId: "TXN-98399", date: "2026-07-28", type: "DEBIT", category: "Wallet Payment", ref: "ORD-840192", bv: 0, pv: 0, amount: "₹29,500", status: "Completed" },
-    { txId: "TXN-98210", date: "2026-07-20", type: "CREDIT", category: "Direct Referral BV", ref: "Sponsor Signup", bv: 25000, pv: 250, status: "Credited" },
-    { txId: "TXN-98105", date: "2026-07-15", type: "CREDIT", category: "Bonus Payout", ref: "Executive Milestone", amount: "₹8,500", status: "Disbursed" },
-  ];
+  // Transaction History Log derived from real user orders
+  const transactionHistory = orders.map((o, idx) => ({
+    txId: `TXN-${1000 + idx}`,
+    date: o.orderDate,
+    type: "DEBIT",
+    category: "Product Order",
+    ref: o.id,
+    bv: o.totalBV,
+    pv: o.totalPV,
+    amount: `₹${o.totalAmount.toLocaleString('en-IN')}`,
+    status: o.status
+  }));
 
   return (
     <div className={`space-y-4 animate-fade-in ${isDarkMode ? 'text-slate-100' : 'text-slate-900'}`}>

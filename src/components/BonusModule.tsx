@@ -14,14 +14,8 @@ interface BonusModuleProps {
 export default function BonusModule({ user, isDarkMode = false }: BonusModuleProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'types' | 'history'>('overview');
 
-  // Bonus history records
-  const bonusHistory = [
-    { refNo: "BON-2026-001", date: "2026-07-31", type: "Direct Sponsor Bonus (12%)", basisBV: 50000, gross: 6000, tds: 300, netPaid: 5700, status: "Paid" },
-    { refNo: "BON-2026-002", date: "2026-07-31", type: "Team Level Bonus (6%)", basisBV: 72000, gross: 4320, tds: 216, netPaid: 4104, status: "Paid" },
-    { refNo: "BON-2026-003", date: "2026-07-25", type: "Binary Pair Matching Bonus", basisBV: 30000, gross: 3000, tds: 150, netPaid: 2850, status: "Paid" },
-    { refNo: "BON-2026-004", date: "2026-07-15", type: "Solar Executive Milestone Reward", basisBV: 100000, gross: 8500, tds: 425, netPaid: 8075, status: "Paid" },
-    { refNo: "BON-2026-005", date: "2026-06-30", type: "Monthly Royalty Performance Pool", basisBV: 150000, gross: 12000, tds: 600, netPaid: 11400, status: "Paid" }
-  ];
+  // Bonus history records (Derived dynamically or empty if 0 earnings)
+  const bonusHistory: any[] = [];
 
   const totalBonusEarned = bonusHistory.reduce((sum, item) => sum + item.netPaid, 0);
 

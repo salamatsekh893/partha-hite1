@@ -140,8 +140,11 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
 
   // Dynamic BV Values based on Time Period
   const ratioData = useMemo(() => {
-    let baseLeft = leftMembers.length * 25000 + 125000;
-    let baseRight = rightMembers.length * 22000 + 118000;
+    const activeLefts = leftMembers.filter(m => m.status === 'active').length;
+    const activeRights = rightMembers.filter(m => m.status === 'active').length;
+
+    let baseLeft = activeLefts * 25000;
+    let baseRight = activeRights * 25000;
 
     if (timePeriod === 'daily') {
       baseLeft = Math.round(baseLeft * 0.08);

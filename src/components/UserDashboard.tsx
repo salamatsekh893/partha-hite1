@@ -54,35 +54,8 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Orders State
-  const [orders, setOrders] = useState<ProductOrder[]>([
-    {
-      id: "ORD-84201",
-      userId: user.id,
-      productId: 1,
-      productName: "535W Mono PERC High-Efficiency Solar Panel (2 Units)",
-      qty: 2,
-      totalAmount: 28400,
-      totalBV: 20000,
-      totalPV: 200,
-      orderDate: "2026-07-28",
-      status: "Approved",
-      shippingAddress: "Plot 42, Green Energy Park, New Delhi"
-    },
-    {
-      id: "ORD-84188",
-      userId: user.id,
-      productId: 2,
-      productName: "3kW On-Grid Solar Inverter Pro",
-      qty: 1,
-      totalAmount: 29500,
-      totalBV: 22000,
-      totalPV: 220,
-      orderDate: "2026-07-20",
-      status: "Delivered",
-      shippingAddress: "Sector 14, Solar Enclave, Jaipur"
-    }
-  ]);
+  // Orders State (Real user orders placed via catalog)
+  const [orders, setOrders] = useState<ProductOrder[]>([]);
 
   // UI state
   const [copiedLink, setCopiedLink] = useState(false);
@@ -163,51 +136,56 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
     setOrders(prev => [newOrder, ...prev]);
   };
 
-  // --- STATS CALCULATIONS FOR ALL 12 SUMMARY CARDS ---
+  // --- STATS CALCULATIONS REAL FROM DB ---
   const totalDistributorsCount = downlines.length;
   const activeDistributorsCount = downlines.filter(m => m.status === 'active').length;
   const pendingDistributorsCount = downlines.filter(m => m.status === 'inactive').length;
-  const directDistributorsCount = downlines.filter(m => m.level === 1).length;
+  const activeDirectDistributorsCount = downlines.filter(m => m.level === 1 && m.status === 'active').length;
+  const activeTeamDistributorsCount = downlines.filter(m => m.level > 1 && m.status === 'active').length;
   const totalDownlineCount = downlines.length;
 
-  // Business Values
-  const orderBV = orders.reduce((sum, o) => sum + o.totalBV, 0);
-  const directBV = directDistributorsCount * 25000 + orderBV;
-  const teamBV = (activeDistributorsCount - directDistributorsCount) * 18000;
-  const totalBusinessBV = directBV + teamBV;
-  const totalBusinessINR = Math.round(totalBusinessBV * 1.25);
+  // Business Values calculated strictly from real active network and user orders
+  const orderBV = orders.reduce((sum, o) => sum + (o.totalBV || 0), 0);
+  const orderINR = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
-  const productBusinessINR = Math.round(orderBV * 1.25 + 45000);
-  const totalEarningsINR = Math.round(directBV * 0.12 + teamBV * 0.06 + 15000);
-  const totalBonusINR = Math.round(directBV * 0.08 + 8500);
+  const directBV = (activeDirectDistributorsCount * 25000) + orderBV;
+  const teamBV = activeTeamDistributorsCount * 18000;
+  const totalBusinessBV = directBV + teamBV;
+  const totalBusinessINR = Math.round(totalBusinessBV * 1.25) + orderINR;
+
+  const productBusinessINR = orderINR;
+  const totalEarningsINR = Math.round(directBV * 0.12 + teamBV * 0.06);
+  const totalBonusINR = Math.round(directBV * 0.08);
 
   const directRatio = totalBusinessBV > 0 ? Math.round((directBV / totalBusinessBV) * 100) : 50;
-  const teamRatio = 100 - directRatio;
+  const teamRatio = totalBusinessBV > 0 ? (100 - directRatio) : 50;
   const totalOrdersCount = orders.length;
 
   // Recharts Data for Dashboard
   const businessGraphData = [
-    { month: 'Jan', directBV: 15000, teamBV: 12000 },
-    { month: 'Feb', directBV: 22000, teamBV: 18000 },
-    { month: 'Mar', directBV: 30000, teamBV: 25000 },
-    { month: 'Apr', directBV: 42000, teamBV: 35000 },
-    { month: 'May', directBV: 50000, teamBV: 48000 },
-    { month: 'Jun', directBV: 65000, teamBV: 62000 },
+    { month: 'Jan', directBV: 0, teamBV: 0 },
+    { month: 'Feb', directBV: 0, teamBV: 0 },
+    { month: 'Mar', directBV: 0, teamBV: 0 },
+    { month: 'Apr', directBV: 0, teamBV: 0 },
+    { month: 'May', directBV: 0, teamBV: 0 },
+    { month: 'Jun', directBV: 0, teamBV: 0 },
     { month: 'Jul', directBV: directBV, teamBV: teamBV }
   ];
 
   const earningsGraphData = [
-    { month: 'Apr', income: 7300 },
-    { month: 'May', income: 12400 },
-    { month: 'Jun', income: 20800 },
+    { month: 'Apr', income: 0 },
+    { month: 'May', income: 0 },
+    { month: 'Jun', income: 0 },
     { month: 'Jul', income: totalEarningsINR }
   ];
 
-  const productSalesPieData = [
+  const productSalesPieData = totalOrdersCount > 0 ? [
     { name: 'Solar Panels', value: 45, color: '#6366f1' },
     { name: 'Inverters', value: 30, color: '#f59e0b' },
     { name: 'Batteries', value: 15, color: '#10b981' },
     { name: 'Solar Pumps', value: 10, color: '#8b5cf6' }
+  ] : [
+    { name: 'No Product Sales', value: 100, color: '#94a3b8' }
   ];
 
   return (

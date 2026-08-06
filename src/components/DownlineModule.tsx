@@ -55,8 +55,10 @@ export default function DownlineModule({ user, downlines, isDarkMode = false, on
     const lvl = m.level;
     const current = levelStatsMap.get(lvl) || { count: 0, active: 0, bv: 0 };
     current.count += 1;
-    if (m.status === 'active') current.active += 1;
-    current.bv += (lvl === 1 ? 25000 : 18000);
+    if (m.status === 'active') {
+      current.active += 1;
+      current.bv += (lvl === 1 ? 25000 : 18000);
+    }
     levelStatsMap.set(lvl, current);
   });
 

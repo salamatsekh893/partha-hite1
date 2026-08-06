@@ -22,53 +22,46 @@ export default function BusinessModule({ user, downlines, isDarkMode = false }: 
   const [activeTab, setActiveTab] = useState<'ratio' | 'overview' | 'monthly' | 'daily' | 'product' | 'branch'>('ratio');
 
   const directCount = downlines.filter(m => m.level === 1).length;
-  const teamCount = Math.max(0, downlines.length - directCount);
+  const teamCount = downlines.filter(m => m.level > 1).length;
+  const activeDirectCount = downlines.filter(m => m.level === 1 && m.status === 'active').length;
+  const activeTeamCount = downlines.filter(m => m.level > 1 && m.status === 'active').length;
 
-  // Business calculations
-  const directBV = directCount * 25000 + 40000;
-  const teamBV = teamCount * 18000 + 32000;
+  // Real Business calculations from database downline
+  const directBV = activeDirectCount * 25000;
+  const teamBV = activeTeamCount * 18000;
   const totalBV = directBV + teamBV;
   const totalBusinessINR = Math.round(totalBV * 1.25);
 
   const directRatio = totalBV > 0 ? Math.round((directBV / totalBV) * 100) : 50;
-  const teamRatio = 100 - directRatio;
+  const teamRatio = totalBV > 0 ? (100 - directRatio) : 50;
 
   // Monthly Business Trend Data
   const monthlyBusinessData = [
-    { month: 'Jan', directBV: 15000, teamBV: 12000, totalBV: 27000, revenue: 33750 },
-    { month: 'Feb', directBV: 22000, teamBV: 18000, totalBV: 40000, revenue: 50000 },
-    { month: 'Mar', directBV: 30000, teamBV: 25000, totalBV: 55000, revenue: 68750 },
-    { month: 'Apr', directBV: 42000, teamBV: 35000, totalBV: 77000, revenue: 96250 },
-    { month: 'May', directBV: 50000, teamBV: 48000, totalBV: 98000, revenue: 122500 },
-    { month: 'Jun', directBV: 65000, teamBV: 62000, totalBV: 127000, revenue: 158750 },
+    { month: 'Jan', directBV: 0, teamBV: 0, totalBV: 0, revenue: 0 },
+    { month: 'Feb', directBV: 0, teamBV: 0, totalBV: 0, revenue: 0 },
+    { month: 'Mar', directBV: 0, teamBV: 0, totalBV: 0, revenue: 0 },
+    { month: 'Apr', directBV: 0, teamBV: 0, totalBV: 0, revenue: 0 },
+    { month: 'May', directBV: 0, teamBV: 0, totalBV: 0, revenue: 0 },
+    { month: 'Jun', directBV: 0, teamBV: 0, totalBV: 0, revenue: 0 },
     { month: 'Jul', directBV: directBV, teamBV: teamBV, totalBV: totalBV, revenue: totalBusinessINR }
   ];
 
   // Daily Business Log Data
-  const dailyBusinessLog = [
-    { date: '2026-08-01', directBV: 10000, teamBV: 18000, totalBV: 28000, newSignups: 2, topProduct: '535W Panels' },
-    { date: '2026-07-31', directBV: 25000, teamBV: 12000, totalBV: 37000, newSignups: 3, topProduct: '3kW Inverters' },
-    { date: '2026-07-30', directBV: 15000, teamBV: 22000, totalBV: 37000, newSignups: 1, topProduct: '150Ah Batteries' },
-    { date: '2026-07-29', directBV: 0, teamBV: 18000, totalBV: 18000, newSignups: 1, topProduct: '5HP Solar Pumps' },
-    { date: '2026-07-28', directBV: 20000, teamBV: 15000, totalBV: 35000, newSignups: 2, topProduct: '535W Panels' },
-  ];
+  const dailyBusinessLog = totalBV > 0 ? [
+    { date: new Date().toISOString().split('T')[0], directBV: directBV, teamBV: teamBV, totalBV: totalBV, newSignups: downlines.length, topProduct: 'Solar Panels' }
+  ] : [];
 
   // Product Wise Business Breakdown
-  const productWiseBusiness = [
-    { product: '535W Mono PERC Panels', bv: 420000, salesAmount: 596400, percent: 32 },
-    { product: '3kW Grid-Tied Inverters', bv: 616000, salesAmount: 826000, percent: 28 },
-    { product: '5kW Hybrid Inverters', bv: 760000, salesAmount: 988000, percent: 22 },
-    { product: '5HP Solar Water Pumps', bv: 1020000, salesAmount: 1380000, percent: 12 },
-    { product: '150Ah Lithium Batteries', bv: 630000, salesAmount: 868000, percent: 6 }
-  ];
+  const productWiseBusiness = totalBV > 0 ? [
+    { product: '535W Mono PERC Panels', bv: Math.round(totalBV * 0.5), salesAmount: Math.round(totalBusinessINR * 0.5), percent: 50 },
+    { product: '3kW Grid-Tied Inverters', bv: Math.round(totalBV * 0.3), salesAmount: Math.round(totalBusinessINR * 0.3), percent: 30 },
+    { product: '150Ah Lithium Batteries', bv: Math.round(totalBV * 0.2), salesAmount: Math.round(totalBusinessINR * 0.2), percent: 20 }
+  ] : [];
 
-  // Branch / Regional Office Wise Business
-  const branchWiseBusiness = [
-    { code: "BR-NORTH", branch: "North India Regional Hub (New Delhi)", totalBV: 1250000, revenue: 1562500, activeDistributors: 145, topState: "Delhi / Punjab" },
-    { code: "BR-SOUTH", branch: "South India Headquarters (Bengaluru)", totalBV: 1850000, revenue: 2312500, activeDistributors: 210, topState: "Karnataka / TN" },
-    { code: "BR-WEST", branch: "West India Regional Office (Jaipur / Gujarat)", totalBV: 980000, revenue: 1225000, activeDistributors: 92, topState: "Rajasthan" },
-    { code: "BR-EAST", branch: "East India Distribution Center (Kolkata)", totalBV: 640000, revenue: 800000, activeDistributors: 68, topState: "West Bengal" }
-  ];
+  // Regional / Branch Distribution
+  const branchWiseBusiness = totalBV > 0 ? [
+    { code: "BR-MAIN", branch: "Success India Primary Hub", totalBV: totalBV, revenue: totalBusinessINR, activeDistributors: downlines.length, topState: "India" }
+  ] : [];
 
   // Export CSV
   const handleExportCSV = () => {
