@@ -552,39 +552,63 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
             </div>
 
             {/* Card 3: Total Distributors */}
-            <div className={`p-4 rounded-2xl border shadow-sm space-y-1.5 ${
-              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
-            }`}>
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">3. Total Distributors</span>
-              <div className="text-xl font-black font-mono">{totalDistributorsCount}</div>
-              <span className="text-[10px] text-slate-500 font-bold">Registered Members</span>
+            <div 
+              onClick={() => handleTabSelect('downline')}
+              className={`p-3 rounded-2xl border shadow-xs space-y-1 cursor-pointer transition-all hover:-translate-y-0.5 active:scale-95 ${
+                isDarkMode ? 'bg-slate-900 border-slate-800 hover:border-indigo-500' : 'bg-gradient-to-br from-indigo-50/60 to-white border-indigo-200/80 hover:border-indigo-400'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-wider block">3. Total Distributors</span>
+                <span className="text-[9px] font-bold text-indigo-500">View ➔</span>
+              </div>
+              <div className="text-xl font-black font-mono text-slate-900 dark:text-white">{totalDistributorsCount}</div>
+              <span className="text-[10px] text-slate-500 font-bold block">Registered Members</span>
             </div>
 
             {/* Card 4: Active Distributors */}
-            <div className={`p-4 rounded-2xl border shadow-sm space-y-1.5 ${
-              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
-            }`}>
-              <span className="text-[10px] font-black uppercase text-emerald-500 tracking-wider block">4. Active Distributors</span>
-              <div className="text-xl font-black font-mono text-emerald-500">{activeDistributorsCount}</div>
-              <span className="text-[10px] text-slate-500 font-bold">Verified Network</span>
+            <div 
+              onClick={() => handleTabSelect('downline')}
+              className={`p-3 rounded-2xl border shadow-xs space-y-1 cursor-pointer transition-all hover:-translate-y-0.5 active:scale-95 ${
+                isDarkMode ? 'bg-slate-900 border-slate-800 hover:border-emerald-500' : 'bg-gradient-to-br from-emerald-50/60 to-white border-emerald-200/80 hover:border-emerald-400'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 tracking-wider block">4. Active Distributors</span>
+                <span className="text-[9px] font-bold text-emerald-500">View ➔</span>
+              </div>
+              <div className="text-xl font-black font-mono text-emerald-600 dark:text-emerald-400">{activeDistributorsCount}</div>
+              <span className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 font-bold block">Verified Network</span>
             </div>
 
             {/* Card 5: Pending Distributors */}
-            <div className={`p-4 rounded-2xl border shadow-sm space-y-1.5 ${
-              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
-            }`}>
-              <span className="text-[10px] font-black uppercase text-amber-500 tracking-wider block">5. Pending Distributors</span>
-              <div className="text-xl font-black font-mono text-amber-500">{pendingDistributorsCount}</div>
-              <span className="text-[10px] text-slate-500 font-bold">Awaiting Approval</span>
+            <div 
+              onClick={() => handleTabSelect('downline')}
+              className={`p-3 rounded-2xl border shadow-xs space-y-1 cursor-pointer transition-all hover:-translate-y-0.5 active:scale-95 ${
+                isDarkMode ? 'bg-slate-900 border-slate-800 hover:border-amber-500' : 'bg-gradient-to-br from-amber-50/60 to-white border-amber-200/80 hover:border-amber-400'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider block">5. Pending Distributors</span>
+                <span className="text-[9px] font-bold text-amber-500">View ➔</span>
+              </div>
+              <div className="text-xl font-black font-mono text-amber-600 dark:text-amber-400">{pendingDistributorsCount}</div>
+              <span className="text-[10px] text-amber-600/80 dark:text-amber-400/80 font-bold block">Awaiting Approval</span>
             </div>
 
             {/* Card 6: Total Downline */}
-            <div className={`p-4 rounded-2xl border shadow-sm space-y-1.5 ${
-              isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
-            }`}>
-              <span className="text-[10px] font-black uppercase text-violet-500 tracking-wider block">6. Total Downline</span>
-              <div className="text-xl font-black font-mono text-violet-500">{totalDownlineCount}</div>
-              <span className="text-[10px] text-slate-500 font-bold">All Network Tiers</span>
+            <div 
+              onClick={() => handleTabSelect('downline')}
+              className={`p-3 rounded-2xl border shadow-xs space-y-1 cursor-pointer transition-all hover:-translate-y-0.5 active:scale-95 ${
+                isDarkMode ? 'bg-slate-900 border-slate-800 hover:border-violet-500' : 'bg-gradient-to-br from-violet-50/60 to-white border-violet-200/80 hover:border-violet-400'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black uppercase text-violet-600 dark:text-violet-400 tracking-wider block">6. Total Downline</span>
+                <span className="text-[9px] font-bold text-violet-500">View ➔</span>
+              </div>
+              <div className="text-xl font-black font-mono text-violet-600 dark:text-violet-400">{totalDownlineCount}</div>
+              <span className="text-[10px] text-violet-600/80 dark:text-violet-400/80 font-bold block">All Network Tiers</span>
             </div>
 
             {/* Card 7: Business Ratio */}

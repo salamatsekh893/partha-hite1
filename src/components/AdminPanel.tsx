@@ -596,37 +596,111 @@ export default function AdminPanel({ adminUser, initialTab = 'members', onImpers
           {/* 2. Global Stats Grid */}
 
       {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          <div className="bg-white border border-slate-200/80 hover:border-indigo-300/80 rounded-2xl p-4 text-left shadow-sm hover:shadow-md transition-all">
-            <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center mb-2.5">
-              <Users className="w-4 h-4" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+          {/* Card 1: Total Registered */}
+          <div
+            onClick={() => setStatusFilter('all')}
+            className={`p-3 sm:p-3.5 rounded-2xl border text-left cursor-pointer transition-all active:scale-98 hover:-translate-y-0.5 ${
+              statusFilter === 'all'
+                ? 'bg-blue-500/15 border-blue-500 ring-2 ring-blue-500/40 shadow-md'
+                : 'bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-white dark:to-slate-900 border-blue-200/80 dark:border-blue-900/40 hover:border-blue-400 shadow-xs'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-xs">
+                <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
+              {statusFilter === 'all' && (
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-600 text-white shadow-xs">
+                  Active Filter
+                </span>
+              )}
             </div>
-            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Total Registered</span>
-            <span className="text-xl sm:text-2xl font-black text-slate-900 mt-0.5 block">{stats.totalUsers} <span className="text-xs font-semibold text-slate-500">distributors</span></span>
+            <span className="text-[10px] text-blue-900 dark:text-blue-300 font-extrabold uppercase tracking-wider block">Total Registered</span>
+            <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white mt-0.5 block leading-tight">
+              {stats.totalUsers} <span className="text-xs font-bold text-blue-600 dark:text-blue-400">distributors</span>
+            </span>
+            <span className="text-[10px] font-bold text-blue-600/80 dark:text-blue-400/80 mt-1 block">
+              👆 Click to view All List
+            </span>
           </div>
 
-          <div className="bg-white border border-slate-200/80 hover:border-emerald-300/80 rounded-2xl p-4 text-left shadow-sm hover:shadow-md transition-all">
-            <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2.5">
-              <ShieldCheck className="w-4 h-4" />
+          {/* Card 2: Active Distributors */}
+          <div
+            onClick={() => setStatusFilter('active')}
+            className={`p-3 sm:p-3.5 rounded-2xl border text-left cursor-pointer transition-all active:scale-98 hover:-translate-y-0.5 ${
+              statusFilter === 'active'
+                ? 'bg-emerald-500/15 border-emerald-500 ring-2 ring-emerald-500/40 shadow-md'
+                : 'bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-white dark:to-slate-900 border-emerald-200/80 dark:border-emerald-900/40 hover:border-emerald-400 shadow-xs'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-xs">
+                <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
+              {statusFilter === 'active' && (
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-emerald-600 text-white shadow-xs">
+                  Active Filter
+                </span>
+              )}
             </div>
-            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Active Distributors</span>
-            <span className="text-xl sm:text-2xl font-black text-emerald-600 mt-0.5 block">{stats.activeUsers} <span className="text-xs font-semibold text-emerald-600/70">distributors</span></span>
+            <span className="text-[10px] text-emerald-900 dark:text-emerald-300 font-extrabold uppercase tracking-wider block">Active Distributors</span>
+            <span className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5 block leading-tight">
+              {stats.activeUsers} <span className="text-xs font-bold text-emerald-600/80">distributors</span>
+            </span>
+            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mt-1 block">
+              👆 Click for Active List
+            </span>
           </div>
 
-          <div className="bg-white border border-slate-200/80 hover:border-amber-300/80 rounded-2xl p-4 text-left shadow-sm hover:shadow-md transition-all">
-            <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center mb-2.5">
-              <UserCheck className="w-4 h-4" />
+          {/* Card 3: Pending Approval */}
+          <div
+            onClick={() => setStatusFilter('inactive')}
+            className={`p-3 sm:p-3.5 rounded-2xl border text-left cursor-pointer transition-all active:scale-98 hover:-translate-y-0.5 ${
+              statusFilter === 'inactive'
+                ? 'bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/40 shadow-md'
+                : 'bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-white dark:to-slate-900 border-amber-200/80 dark:border-amber-900/40 hover:border-amber-400 shadow-xs'
+            }`}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-r from-amber-400 to-amber-600 text-slate-950 flex items-center justify-center shadow-xs">
+                <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
+              {statusFilter === 'inactive' && (
+                <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 shadow-xs">
+                  Active Filter
+                </span>
+              )}
             </div>
-            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Pending Approval</span>
-            <span className="text-xl sm:text-2xl font-black text-amber-600 mt-0.5 block">{stats.inactiveUsers} <span className="text-xs font-semibold text-amber-600/70">distributors</span></span>
+            <span className="text-[10px] text-amber-900 dark:text-amber-300 font-extrabold uppercase tracking-wider block">Pending Approval</span>
+            <span className="text-lg sm:text-xl font-black text-amber-600 dark:text-amber-400 mt-0.5 block leading-tight">
+              {stats.inactiveUsers} <span className="text-xs font-bold text-amber-600/80">distributors</span>
+            </span>
+            <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 mt-1 block">
+              👆 Click for Pending List
+            </span>
           </div>
 
-          <div className="bg-white border border-slate-200/80 hover:border-indigo-300/80 rounded-2xl p-4 text-left shadow-sm hover:shadow-md transition-all">
-            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2.5">
-              <Network className="w-4 h-4" />
+          {/* Card 4: System Depth */}
+          <div
+            onClick={() => {
+              setStatusFilter('all');
+              setSearchTerm('');
+            }}
+            className="p-3 sm:p-3.5 rounded-2xl border text-left cursor-pointer transition-all active:scale-98 hover:-translate-y-0.5 bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-white dark:to-slate-900 border-purple-200/80 dark:border-purple-900/40 hover:border-purple-400 shadow-xs"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-xs">
+                <Network className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
             </div>
-            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">System Depth</span>
-            <span className="text-xl sm:text-2xl font-black text-indigo-600 mt-0.5 block">{stats.maxLevelsDeep} <span className="text-xs font-semibold text-indigo-600/70">Levels</span></span>
+            <span className="text-[10px] text-purple-900 dark:text-purple-300 font-extrabold uppercase tracking-wider block">System Depth</span>
+            <span className="text-lg sm:text-xl font-black text-purple-600 dark:text-purple-400 mt-0.5 block leading-tight">
+              {stats.maxLevelsDeep} <span className="text-xs font-bold text-purple-600/80">Levels</span>
+            </span>
+            <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 mt-1 block">
+              👆 Click to view All Levels
+            </span>
           </div>
         </div>
       )}
