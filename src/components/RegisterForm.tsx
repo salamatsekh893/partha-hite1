@@ -331,6 +331,20 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initial
     }
   }, [initialSponsorId]);
 
+  // Helper to calculate age in years from YYYY-MM-DD
+  const calculateAge = (dobString: string): number => {
+    if (!dobString) return 0;
+    const birthDate = new Date(dobString);
+    if (isNaN(birthDate.getTime())) return 0;
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
   const validateStep = (step: number) => {
     setError(null);
     if (step === 1) {
@@ -341,6 +355,17 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initial
       // Simple email validation
       if (!email.includes('@')) {
         setError('Please enter a valid email address.');
+        return false;
+      }
+    }
+    if (step === 2) {
+      if (!dob) {
+        setError('Date of Birth is required. Applicant must be at least 18 years old.');
+        return false;
+      }
+      const age = calculateAge(dob);
+      if (age < 18) {
+        setError(`Applicant is ${age} years old. Minimum required age for distributor registration is 18 years (১৮ বছর বয়স হতে হবে).`);
         return false;
       }
     }
@@ -364,6 +389,10 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initial
     setSuccess(null);
 
     if (!validateStep(1)) return;
+    if (dob && calculateAge(dob) < 18) {
+      setError(`Applicant must be at least 18 years old to register as distributor. Current age is ${calculateAge(dob)} years.`);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -968,17 +997,31 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initial
                         />
                       </div>
 
-                      {/* Date of Birth */}
+                      {/* Date of Birth with 18+ Age Requirement Notice */}
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                          Date of Birth
-                        </label>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="block text-xs font-semibold text-slate-700">
+                            Date of Birth <span className="text-rose-500">*</span>
+                          </label>
+                          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-md border border-amber-200/60">
+                            Min 18 Years (১৮ বছর)
+                          </span>
+                        </div>
                         <input
                           type="date"
                           value={dob}
                           onChange={(e) => setDob(e.target.value)}
                           className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all font-medium"
+                          required
                         />
+                        {dob && (
+                          <p className={`text-[11px] font-bold mt-1 ${calculateAge(dob) >= 18 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                            {calculateAge(dob) >= 18 
+                              ? `✓ Age: ${calculateAge(dob)} years (Eligible)` 
+                              : `✕ Age: ${calculateAge(dob)} years (Ineligible: Must be 18+)`
+                            }
+                          </p>
+                        )}
                       </div>
 
                       {/* Place of Birth */}
