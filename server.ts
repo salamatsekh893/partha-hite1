@@ -313,16 +313,10 @@ app.post('/api/auth/register', async (req, res) => {
       
       referrerIdVal = sponsor.id;
     } else {
-      // If there are already users, then sponsor is mandatory to maintain level plan integrity
+      // Direct Admin Join: if no sponsor provided, default to joining under Admin
       const allUsers = await DB.getUsers();
-      // If only admin exists (length 1), they can join directly under admin (ID 1)
-      if (allUsers.length > 1) {
-        return res.status(400).json({ error: 'A valid Sponsor Mobile Number or Sponsor ID is required to register.' });
-      } else {
-        // Default to joining under Admin (ID 1) if no sponsor provided and database is empty
-        const admin = allUsers.find(u => u.role === 'admin');
-        referrerIdVal = admin ? admin.id : 1;
-      }
+      const admin = allUsers.find(u => u.role === 'admin');
+      referrerIdVal = admin ? admin.id : 1;
     }
 
     // Stringify additionalDetails if they exist

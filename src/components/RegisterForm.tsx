@@ -9,6 +9,7 @@ interface RegisterFormProps {
   onRegisterSuccess: () => void;
   onToggleLogin: () => void;
   initialSponsorId?: string;
+  isPublicRegister?: boolean;
 }
 
 // Country codes list with flags
@@ -29,7 +30,7 @@ const COUNTRY_CODES = [
   { code: '+965', country: 'Kuwait', flag: '🇰🇼' },
 ];
 
-export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initialSponsorId }: RegisterFormProps) {
+export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initialSponsorId, isPublicRegister = false }: RegisterFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   
   // Step 1: Account Info
@@ -678,32 +679,34 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initial
                       </div>
 
                       {/* Sponsor Mobile Number / Distributor ID */}
-                      <div className="md:col-span-2">
-                        <div className="flex justify-between items-center mb-1.5">
-                          <label htmlFor="reg-sponsor" className="block text-xs font-semibold text-slate-700">
-                            Sponsor Distributor ID (Mobile No.) <span className="text-indigo-600 font-normal">(Leave empty for direct admin join)</span>
-                          </label>
-                          {sponsorLocked && (
-                            <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full">
-                              Locked
-                            </span>
-                          )}
-                        </div>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                            <ShieldCheck className="w-4 h-4 text-indigo-500" />
+                      {!isPublicRegister && (
+                        <div className="md:col-span-2">
+                          <div className="flex justify-between items-center mb-1.5">
+                            <label htmlFor="reg-sponsor" className="block text-xs font-semibold text-slate-700">
+                              Sponsor Distributor ID (Mobile No.) <span className="text-indigo-600 font-normal">(Leave empty for direct admin join)</span>
+                            </label>
+                            {sponsorLocked && (
+                              <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-2 py-0.5 rounded-full">
+                                Locked
+                              </span>
+                            )}
                           </div>
-                          <input
-                            id="reg-sponsor"
-                            type="text"
-                            value={sponsorId}
-                            onChange={(e) => setSponsorId(e.target.value)}
-                            disabled={sponsorLocked}
-                            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all disabled:opacity-75 disabled:bg-indigo-50/50 disabled:text-indigo-900 disabled:border-indigo-200 font-semibold"
-                            placeholder="Enter Sponsor Distributor ID (Mobile No. e.g. 9876543210)"
-                          />
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                              <ShieldCheck className="w-4 h-4 text-indigo-500" />
+                            </div>
+                            <input
+                              id="reg-sponsor"
+                              type="text"
+                              value={sponsorId}
+                              onChange={(e) => setSponsorId(e.target.value)}
+                              disabled={sponsorLocked}
+                              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all disabled:opacity-75 disabled:bg-indigo-50/50 disabled:text-indigo-900 disabled:border-indigo-200 font-semibold"
+                              placeholder="Enter Sponsor Distributor ID (Mobile No. e.g. 9876543210)"
+                            />
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       {/* Name */}
                       <div>

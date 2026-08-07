@@ -342,6 +342,7 @@ export default function App() {
                   <RegisterForm 
                     onRegisterSuccess={() => setAuthView('login')} 
                     onToggleLogin={() => setAuthView('login')} 
+                    isPublicRegister={true}
                   />
                 )}
               </div>
