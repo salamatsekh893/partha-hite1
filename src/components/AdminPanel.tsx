@@ -128,7 +128,7 @@ export default function AdminPanel({
   const [pAdvancePaymentRequired, setPAdvancePaymentRequired] = useState(false);
   const [pAdvancePaymentNote, setPAdvancePaymentNote] = useState('');
 
-  // Custom Product Commission Setup (% or ৳)
+  // Custom Product Commission Setup (% or Flat Amount)
   const [pCommissionType, setPCommissionType] = useState<'percentage' | 'fixed'>('percentage');
   const [pCommissionValue, setPCommissionValue] = useState<number>(10);
 
@@ -244,11 +244,11 @@ export default function AdminPanel({
   const handleSaveProductSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!pName.trim()) {
-      alert('প্রোডাক্টের নাম লিখুন (Product Name is required)');
+      alert('Product Name is required');
       return;
     }
     if (pMrp <= 0 || pDistributorPrice <= 0) {
-      alert('সঠিক MRP এবং Selling Price নির্ধারণ করুন');
+      alert('Please specify valid MRP and Selling Price');
       return;
     }
 
@@ -295,15 +295,15 @@ export default function AdminPanel({
 
     updateProductsState(newProds);
     setIsProductModalOpen(false);
-    setSuccessMsg(editingProduct ? 'প্রোডাক্ট সফলভাবে আপডেট করা হয়েছে!' : 'নতুন প্রোডাক্ট সফলভাবে যুক্ত করা হয়েছে!');
+    setSuccessMsg(editingProduct ? 'Product updated successfully!' : 'New product added successfully!');
     setTimeout(() => setSuccessMsg(null), 4000);
   };
 
   const handleDeleteProduct = (prodId: number, prodName: string) => {
-    if (confirm(`আপনি কি নিশ্চিত যে "${prodName}" প্রোডাক্টটি সম্পূর্ণ মুছে ফেলতে চান?`)) {
+    if (confirm(`Are you sure you want to completely delete the product "${prodName}"?`)) {
       const newProds = products.filter(p => p.id !== prodId);
       updateProductsState(newProds);
-      setSuccessMsg(`"${prodName}" প্রোডাক্টটি সফলভাবে মুছে ফেলা হয়েছে।`);
+      setSuccessMsg(`Product "${prodName}" has been successfully deleted.`);
       setTimeout(() => setSuccessMsg(null), 4000);
     }
   };
@@ -361,7 +361,7 @@ export default function AdminPanel({
   };
 
   const handleDeleteCategory = (catId: string, catName: string) => {
-    if (confirm(`আপনি কি "${catName}" ক্যাটাগরি এবং এর সকল সাব-ক্যাটাগরি মুছে ফেলতে চান?`)) {
+    if (confirm(`Are you sure you want to delete category "${catName}" and all of its subcategories?`)) {
       updateCategoriesState(categories.filter(c => c.id !== catId));
     }
   };
@@ -406,7 +406,7 @@ export default function AdminPanel({
         percentage: 15,
         timestamp: "06 Aug 2026, 02:30:15 PM",
         dateOnly: "2026-08-06",
-        reason: "নির্ধারিত লেভেল ৩-এ কোনো যোগ্য আপলাইন সদস্য না থাকা (Unclaimed Upline Level Reversion)",
+        reason: "No eligible upline member found at Level 3 (Unclaimed Upline Level Reversion)",
         productName: "5kW Grid-Tied Solar System",
         totalBV: 25000
       },
@@ -421,7 +421,7 @@ export default function AdminPanel({
         percentage: 10,
         timestamp: "06 Aug 2026, 02:30:15 PM",
         dateOnly: "2026-08-06",
-        reason: "নির্ধারিত লেভেল ৪-এ কোনো যোগ্য আপলাইন সদস্য না থাকা (Unclaimed Upline Level Reversion)",
+        reason: "No eligible upline member found at Level 4 (Unclaimed Upline Level Reversion)",
         productName: "5kW Grid-Tied Solar System",
         totalBV: 25000
       },
@@ -436,7 +436,7 @@ export default function AdminPanel({
         percentage: 5,
         timestamp: "06 Aug 2026, 02:30:15 PM",
         dateOnly: "2026-08-06",
-        reason: "নির্ধারিত লেভেল ৫-এ কোনো যোগ্য আপলাইন সদস্য না থাকা (Unclaimed Upline Level Reversion)",
+        reason: "No eligible upline member found at Level 5 (Unclaimed Upline Level Reversion)",
         productName: "5kW Grid-Tied Solar System",
         totalBV: 25000
       },
@@ -451,7 +451,7 @@ export default function AdminPanel({
         percentage: 20,
         timestamp: "05 Aug 2026, 11:15:40 AM",
         dateOnly: "2026-08-05",
-        reason: "নির্ধারিত লেভেল ২-এ কোনো যোগ্য আপলাইন সদস্য না থাকা (Unclaimed Upline Level Reversion)",
+        reason: "No eligible upline member found at Level 2 (Unclaimed Upline Level Reversion)",
         productName: "3kW Solar Inverter",
         totalBV: 18000
       }
@@ -473,7 +473,7 @@ export default function AdminPanel({
     return {
       id: 'TARGET-2026-01',
       title: 'Executive Star Royalty & Business Target 2026',
-      description: 'বিজনেস ভ্যালু (BV) ও পয়েন্ট ভ্যালু (PV)-এর জন্য ৫০:৫০ রেশিও অনুযায়ী পৃথক ও সম্মিলিত টার্গেট সিস্টেম',
+      description: 'Separate and combined target system based on 50:50 ratio for Business Value (BV) and Point Value (PV)',
       targetPeriodType: 'yearly',
       bvTarget: 60000,
       pvTarget: 3000,
@@ -604,7 +604,7 @@ export default function AdminPanel({
             percentage: levelPct,
             timestamp: nowFormatted,
             dateOnly,
-            reason: `নির্ধারিত লেভেল ${l}-এ কোনো যোগ্য আপলাইন সদস্য না থাকা (Unclaimed Upline Level Reversion)`,
+            reason: `No eligible upline member found at Level ${l} (Unclaimed Upline Level Reversion)`,
             productName: order.productName,
             totalBV: order.totalBV || 0
           });
@@ -1238,7 +1238,7 @@ export default function AdminPanel({
           }`}
         >
           <Building2 className="w-4 h-4 text-emerald-300" />
-          <span>Company Fund History (কোম্পানি ফান্ড)</span>
+          <span>Company Fund History</span>
         </button>
 
         <button
@@ -1250,7 +1250,7 @@ export default function AdminPanel({
           }`}
         >
           <Package className="w-4 h-4 text-blue-300" />
-          <span>Product Management (প্রোডাক্ট ম্যানেজমেন্ট)</span>
+          <span>Product Management</span>
           <span className="text-[10px] bg-blue-500/30 text-white font-extrabold px-2 py-0.5 rounded-full border border-blue-400/30">
             {products.length}
           </span>
@@ -1265,7 +1265,7 @@ export default function AdminPanel({
           }`}
         >
           <Sliders className="w-4 h-4 text-amber-300" />
-          <span>Business Targets (বিজনেস টার্গেট ৫০:৫০)</span>
+          <span>Business Targets (50:50)</span>
         </button>
 
         <button
@@ -2478,17 +2478,17 @@ export default function AdminPanel({
 
               <h2 className="text-xl sm:text-2xl font-black text-amber-100 flex items-center gap-2">
                 <ShoppingBag className="w-6 h-6 text-amber-400" />
-                <span>পণ্য অর্ডার অনুমোদন ও লেভেল ইনসেন্টিভ বণ্টন ব্যবস্থাপনা</span>
+                <span>Product Order Approval & Level Incentive Distribution Management</span>
               </h2>
 
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-4xl font-medium">
-                ডিজিটাল ক্যাটালগ থেকে যেকোনো অর্ডার সম্পন্ন হলে স্ট্যাটাস ডিফল্টভাবে <strong className="text-amber-300">Pending</strong> থাকবে। অ্যাডমিন অনুমোদন করলে: 
+                When any order is placed from the digital catalog, the status will default to <strong className="text-amber-300">Pending</strong>. Once approved by the admin: 
                 <br />
-                <span className="text-emerald-300 font-bold">১. ক্রেতা (Buyer) নিজস্ব ক্রয়ের ওপর ০% কমিশন পাবে।</span>
+                <span className="text-emerald-300 font-bold">1. The buyer receives 0% commission on their own purchase.</span>
                 <br />
-                <span className="text-amber-300 font-bold">২. ক্রেতার উপরের ১ থেকে ১৫ লেভেল পর্যন্ত নিবন্ধিত আপলাইনরা নির্ধারিত % হারে লেভেল ইনসেন্টিভ পাবেন।</span>
+                <span className="text-amber-300 font-bold">2. Registered uplines from Level 1 to 15 above the buyer receive level incentives at the specified percentage.</span>
                 <br />
-                <span className="text-rose-300 font-bold">৩. আপলাইন না থাকলে ওই লেভেলের আনক্লেমড ইনসেন্টিভ স্বয়ংক্রিয়ভাবে কোম্পানি ফান্ডে (Company Treasury Reverted Fund) ফেরত জমা হবে।</span>
+                <span className="text-rose-300 font-bold">3. If there is no upline, the unclaimed incentive for that level is automatically reverted and deposited to the Company Treasury Fund.</span>
               </p>
             </div>
           </div>
@@ -2498,49 +2498,49 @@ export default function AdminPanel({
             {/* Metric 1: Pending Orders */}
             <div className="bg-white p-4 rounded-2xl border border-amber-200 shadow-sm space-y-1">
               <div className="flex items-center justify-between text-amber-600">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">অপেক্ষমাণ অর্ডার</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Pending Orders</span>
                 <Clock className="w-4 h-4 text-amber-500" />
               </div>
               <div className="text-xl sm:text-2xl font-black text-slate-900">
-                {ordersList.filter(o => o.status === 'Pending').length} <span className="text-xs font-semibold text-slate-500">টি</span>
+                {ordersList.filter(o => o.status === 'Pending').length} <span className="text-xs font-semibold text-slate-500">Items</span>
               </div>
-              <p className="text-[10px] text-amber-700 font-bold">অ্যাডমিন অনুমোদনের অপেক্ষায়</p>
+              <p className="text-[10px] text-amber-700 font-bold">Awaiting Admin Approval</p>
             </div>
 
             {/* Metric 2: Approved Orders */}
             <div className="bg-white p-4 rounded-2xl border border-emerald-200 shadow-sm space-y-1">
               <div className="flex items-center justify-between text-emerald-600">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">অনুমোদিত অর্ডার</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Approved Orders</span>
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
               </div>
               <div className="text-xl sm:text-2xl font-black text-slate-900">
-                {ordersList.filter(o => o.status === 'Approved').length} <span className="text-xs font-semibold text-slate-500">টি</span>
+                {ordersList.filter(o => o.status === 'Approved').length} <span className="text-xs font-semibold text-slate-500">Items</span>
               </div>
-              <p className="text-[10px] text-emerald-700 font-bold">লেভেল বোনাস বন্টিত</p>
+              <p className="text-[10px] text-emerald-700 font-bold">Level Bonus Distributed</p>
             </div>
 
             {/* Metric 3: Total Allocated Incentive */}
             <div className="bg-white p-4 rounded-2xl border border-indigo-200 shadow-sm space-y-1">
               <div className="flex items-center justify-between text-indigo-600">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">মোট লেভেল ইনসেন্টিভ</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Level Incentive</span>
                 <DollarSign className="w-4 h-4 text-indigo-500" />
               </div>
               <div className="text-xl sm:text-2xl font-black text-slate-900">
                 ₹{auditLogs.reduce((s, a) => s + a.uplinePaidTotal, 0).toLocaleString('en-IN')}
               </div>
-              <p className="text-[10px] text-indigo-700 font-bold">আপলাইনদের পেইড বোনাস</p>
+              <p className="text-[10px] text-indigo-700 font-bold">Paid Bonus to Uplines</p>
             </div>
 
             {/* Metric 4: Company Reverted Unclaimed Fund */}
             <div className="bg-white p-4 rounded-2xl border border-rose-200 shadow-sm space-y-1">
               <div className="flex items-center justify-between text-rose-600">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">কোম্পানি ফেরত টাকা</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Company Reverted Fund</span>
                 <ArrowUpRight className="w-4 h-4 text-rose-500" />
               </div>
               <div className="text-xl sm:text-2xl font-black text-rose-900">
                 ₹{auditLogs.reduce((s, a) => s + a.companyRevertedAmount, 0).toLocaleString('en-IN')}
               </div>
-              <p className="text-[10px] text-rose-700 font-bold">অনুপস্থিত আপলাইন ফেরত টাকা</p>
+              <p className="text-[10px] text-rose-700 font-bold">Reverted from Missing Uplines</p>
             </div>
           </div>
 
@@ -2552,27 +2552,27 @@ export default function AdminPanel({
                   <Settings className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900">লেভেল ইনসেন্টিভ ও কোম্পানি ফান্ড কনফিগারেশন</h3>
-                  <p className="text-[11px] text-slate-500 font-medium">১ থেকে ১৫ লেভেল বোনাস বিতরণ এবং অনুপস্থিত লেভেল রিভার্শন সেটিংস</p>
+                  <h3 className="text-sm font-black text-slate-900">Level Incentive & Company Fund Configuration</h3>
+                  <p className="text-[11px] text-slate-500 font-medium">Configure Level 1 to 15 bonus distribution and missing upline reversion settings</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-                  <span className="text-xs font-extrabold text-slate-700">সর্বোচ্চ লেভেল গভীরতা:</span>
+                  <span className="text-xs font-extrabold text-slate-700">Max Level Depth:</span>
                   <select
                     value={maxIncentiveLevels}
                     onChange={(e) => setMaxIncentiveLevels(Number(e.target.value))}
                     className="bg-white border border-slate-300 rounded-lg text-xs font-black px-2 py-1 text-indigo-950 focus:outline-none"
                   >
                     {[5, 10, 12, 15].map(lvl => (
-                      <option key={lvl} value={lvl}>{lvl} লেভেল পর্যন্ত</option>
+                      <option key={lvl} value={lvl}>Up to Level {lvl}</option>
                     ))}
                   </select>
                 </div>
 
                 <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-                  <span className="text-xs font-extrabold text-slate-700">কমিশন পুল (BV %):</span>
+                  <span className="text-xs font-extrabold text-slate-700">Commission Pool (BV %):</span>
                   <input
                     type="number"
                     min="1"
@@ -2680,8 +2680,8 @@ export default function AdminPanel({
                 return (
                   <div className="p-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-2">
                     <ShoppingBag className="w-10 h-10 text-slate-300 mx-auto" />
-                    <h4 className="text-sm font-bold text-slate-700">কোনো অর্ডার পাওয়া যায়নি</h4>
-                    <p className="text-xs text-slate-500">অন্য স্ট্যাটাস ফিল্টার সিলেক্ট করুন বা ডিজিটাল ক্যাটালগ থেকে নতুন অর্ডার দিন।</p>
+                    <h4 className="text-sm font-bold text-slate-700">No Orders Found</h4>
+                    <p className="text-xs text-slate-500">Select another status filter or place a new order from the digital catalog.</p>
                   </div>
                 );
               }
@@ -2809,8 +2809,8 @@ export default function AdminPanel({
                   <CheckSquare className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900">লেভেল ইনসেন্টিভ ও কোম্পানি ফেরত ফান্ড অ্যাকাউন্টস লেজার</h3>
-                  <p className="text-[11px] text-slate-500 font-medium">অনুমোদিত প্রতিটি অর্ডারের নিখুঁত অডিট ট্রেইল ও আনক্লেমড ট্র্যাজারি রিভার্শন</p>
+                  <h3 className="text-sm font-black text-slate-900">Level Incentive & Company Reverted Funds Audit Ledger</h3>
+                  <p className="text-[11px] text-slate-500 font-medium">Precise audit trail for every approved order and unclaimed treasury reversions</p>
                 </div>
               </div>
 
@@ -2820,7 +2820,7 @@ export default function AdminPanel({
             </div>
 
             {auditLogs.length === 0 ? (
-              <p className="text-xs text-slate-500 text-center py-6 font-semibold">কোনো অডিট হিসাব রেকর্ড নেই। অর্ডার অ্যাপ্রুভ করলে এখানে স্বয়ংক্রিয়ভাবে স্টেটমেন্ট জমা হবে।</p>
+              <p className="text-xs text-slate-500 text-center py-6 font-semibold">No audit log records found. Statement entries will automatically populate here upon order approval.</p>
             ) : (
               <div className="space-y-3">
                 {auditLogs.map((log, index) => (
@@ -2903,7 +2903,7 @@ export default function AdminPanel({
         </div>
       )}
 
-      {/* 5. COMPANY FUND HISTORY (কোম্পানি ফান্ড হিস্ট্রি) TAB */}
+      {/* 5. COMPANY FUND HISTORY TAB */}
       {(() => {
         if (activeTab !== 'company-fund') return null;
 
@@ -2957,7 +2957,7 @@ export default function AdminPanel({
           ]);
           const totalReverted = filteredCompanyFundLogs.reduce((s, l) => s + l.amount, 0);
           printPDFReport(
-            "Company Fund Reversion Audit Report (কোম্পানি ফান্ড অডিট রিপোর্ট)",
+            "Company Fund Reversion Audit Report",
             `Total Unclaimed Level Reversion Deposited: ₹${totalReverted.toLocaleString('en-IN')} across ${filteredCompanyFundLogs.length} Entries`,
             headers,
             rows,
@@ -2996,15 +2996,15 @@ export default function AdminPanel({
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase border border-emerald-500/30">
-                        কোম্পানি ফান্ড ট্র্যাজারি লেজার
+                        Company Fund Treasury Ledger
                       </span>
                       <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-indigo-500/30">
                         Unlimited Levels Supported
                       </span>
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-black text-white mt-1">Company Fund History (কোম্পানি ফান্ড হিস্ট্রি)</h2>
+                    <h2 className="text-xl sm:text-2xl font-black text-white mt-1">Company Fund History</h2>
                     <p className="text-xs text-slate-300 max-w-2xl mt-0.5">
-                      অ্যাডমিন সেট করা লেভেল ডিসবার্সমেন্টে যোগ্য আপলাইন সদস্য না থাকলে সেই কমিশন স্বয়ংক্রিয়ভাবে কোম্পানি ফান্ডে জমা হয়। প্রতিটি জমার সম্পূর্ণ অডিট রেকর্ড নিচে সংরক্ষিত আছে।
+                      If there are no eligible upline network members for a level commission disbursement set by the admin, that commission is automatically deposited to the company fund. Complete audit records for every reversion are logged below.
                     </p>
                   </div>
                 </div>
@@ -3012,8 +3012,8 @@ export default function AdminPanel({
                 {/* Quick Level Limit Config Box */}
                 <div className="bg-white/10 backdrop-blur-md border border-white/20 p-3.5 rounded-2xl flex items-center gap-3 shrink-0">
                   <div className="text-left">
-                    <span className="text-[10px] font-bold text-slate-300 block uppercase">কমিশন লেভেল সীমা (Level Limit)</span>
-                    <div className="text-xs font-bold text-amber-300">অ্যাডমিন কন্ট্রোল সেটআপ</div>
+                    <span className="text-[10px] font-bold text-slate-300 block uppercase">Commission Level Limit</span>
+                    <div className="text-xs font-bold text-amber-300">Admin Control Setup</div>
                   </div>
                   <div className="flex items-center gap-1.5 bg-slate-950/60 p-1.5 rounded-xl border border-white/10">
                     <button
@@ -3044,7 +3044,7 @@ export default function AdminPanel({
                   <Wallet className="w-6 h-6" />
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold text-slate-500 uppercase block">কোম্পানি ফান্ড মোট জমা</span>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase block">Total Deposited Company Fund</span>
                   <div className="text-lg font-black font-mono text-emerald-700">
                     ₹{filteredCompanyFundLogs.reduce((s, l) => s + l.amount, 0).toLocaleString('en-IN')}
                   </div>
@@ -3057,9 +3057,9 @@ export default function AdminPanel({
                   <FileText className="w-6 h-6" />
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold text-slate-500 uppercase block">মোট ফান্ড জমা এন্ট্রি</span>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase block">Total Fund Entry Logs</span>
                   <div className="text-lg font-black font-mono text-indigo-950">
-                    {filteredCompanyFundLogs.length} টি
+                    {filteredCompanyFundLogs.length} Logs
                   </div>
                   <span className="text-[10px] font-bold text-slate-400 block">Reversion Audit Records</span>
                 </div>
@@ -3070,7 +3070,7 @@ export default function AdminPanel({
                   <Layers className="w-6 h-6" />
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold text-slate-500 uppercase block">চলতি কমিশন লেভেল সীমা</span>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase block">Active Commission Level Limit</span>
                   <div className="text-lg font-black font-mono text-amber-600">
                     Level 1 to {maxIncentiveLevels}
                   </div>
@@ -3083,7 +3083,7 @@ export default function AdminPanel({
                   <Clock className="w-6 h-6" />
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold text-slate-500 uppercase block">সর্বশেষ ফান্ড জমা</span>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase block">Latest Fund Reversion</span>
                   <div className="text-xs font-black text-slate-900 truncate max-w-[140px]">
                     {companyFundLogs[0]?.timestamp ? companyFundLogs[0].timestamp.split(',')[0] : 'No Record'}
                   </div>
@@ -3102,7 +3102,7 @@ export default function AdminPanel({
                   <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    placeholder="খুঁজুন (সদস্যের নাম, আইডি, অর্ডার নম্বর, প্রোডাক্ট বা কারণ)..."
+                    placeholder="Search (member name, ID, order number, product or reason)..."
                     value={fundSearchTerm}
                     onChange={(e) => setFundSearchTerm(e.target.value)}
                     className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
@@ -3123,7 +3123,7 @@ export default function AdminPanel({
                     onChange={(e) => setFundLevelFilter(e.target.value)}
                     className="py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-hidden"
                   >
-                    <option value="all">সকল লেভেল (All Levels)</option>
+                    <option value="all">All Levels</option>
                     <option value="1">Level 1</option>
                     <option value="2">Level 2</option>
                     <option value="3">Level 3</option>
@@ -3138,10 +3138,10 @@ export default function AdminPanel({
                     onChange={(e) => setFundDateFilter(e.target.value as any)}
                     className="py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-hidden"
                   >
-                    <option value="all">সকল তারিখ (All Time)</option>
-                    <option value="today">আজ (Today)</option>
-                    <option value="week">গত ৭ দিন (7 Days)</option>
-                    <option value="month">এই মাস (This Month)</option>
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">Last 7 Days</option>
+                    <option value="month">This Month</option>
                   </select>
 
                   {/* Report Print PDF */}
@@ -3152,7 +3152,7 @@ export default function AdminPanel({
                     title="Print Printable PDF Audit Report"
                   >
                     <Printer className="w-3.5 h-3.5 text-amber-400" />
-                    <span>প্রিন্ট অডিট রিপোর্ট</span>
+                    <span>Print Audit Report</span>
                   </button>
 
                   {/* CSV Export */}
@@ -3163,7 +3163,7 @@ export default function AdminPanel({
                     title="Export Data to Excel CSV File"
                   >
                     <FileSpreadsheet className="w-3.5 h-3.5" />
-                    <span>এক্সেল এক্সপোর্ট</span>
+                    <span>Export Excel</span>
                   </button>
 
                 </div>
@@ -3179,8 +3179,8 @@ export default function AdminPanel({
                     📋
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-slate-900">কোম্পানি ফান্ড জমাকৃত ট্র্যানজ্যাকশন অডিট লেজার</h3>
-                    <p className="text-[11px] text-slate-500 font-medium">প্রতিটি অর্ডারের কারণে নির্দিষ্ট লেভেলে সদস্য না থাকায় যে অর্থ কোম্পানি ফান্ডে জমা হয়েছে</p>
+                    <h3 className="text-sm font-black text-slate-900">Company Fund Received Transactions Audit Ledger</h3>
+                    <p className="text-[11px] text-slate-500 font-medium">Financial logs of unclaimed commissions deposited to company fund due to lack of eligible network members</p>
                   </div>
                 </div>
                 <span className="text-xs font-black bg-emerald-50 text-emerald-800 px-3 py-1 rounded-full border border-emerald-200">
@@ -3193,11 +3193,11 @@ export default function AdminPanel({
                   <thead>
                     <tr className="bg-slate-900 text-slate-200 uppercase font-extrabold text-[10px] tracking-wider border-b border-slate-800">
                       <th className="p-3.5">Log ID & Date/Time</th>
-                      <th className="p-3.5">Member Details (সদস্য)</th>
-                      <th className="p-3.5">Order & Product (অর্ডার ও পণ্য)</th>
+                      <th className="p-3.5">Member Details</th>
+                      <th className="p-3.5">Order & Product</th>
                       <th className="p-3.5 text-center">Unclaimed Level</th>
-                      <th className="p-3.5 text-right">Reverted Amount (টাকা)</th>
-                      <th className="p-3.5">Audit Reason (জমার কারণ)</th>
+                      <th className="p-3.5 text-right">Reverted Amount (₹)</th>
+                      <th className="p-3.5">Audit Reason</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200/80 font-medium">
@@ -3259,8 +3259,8 @@ export default function AdminPanel({
                       <tr>
                         <td colSpan={6} className="p-12 text-center text-slate-400 font-semibold">
                           <Building2 className="w-10 h-10 mx-auto mb-2 text-slate-300" />
-                          <p className="text-sm font-bold text-slate-600">কোনো কোম্পানি ফান্ড হিস্ট্রি রেকর্ড পাওয়া যায়নি</p>
-                          <p className="text-xs text-slate-400 mt-1">ফিল্টার পরিবর্তন করে চেষ্টা করুন অথবা নতুন অর্ডার অ্যাপ্রুভ করুন।</p>
+                          <p className="text-sm font-bold text-slate-600">No Company Fund audit logs found</p>
+                          <p className="text-xs text-slate-400 mt-1">Please try changing your filters or approve new orders.</p>
                         </td>
                       </tr>
                     )}
@@ -3354,11 +3354,11 @@ export default function AdminPanel({
             `${item.directBv.toLocaleString('en-IN')} BV / ${item.directPv} PV (${item.directBvPercent}%)`,
             `${item.teamBv.toLocaleString('en-IN')} BV / ${item.teamPv} PV (${item.teamBvPercent}%)`,
             `${item.ratioPercent}% Ratio Balance`,
-            item.isAchieved ? "ACHIEVED (সম্পন্ন)" : `In Progress (${item.overallCompletion}%)`
+            item.isAchieved ? "ACHIEVED" : `In Progress (${item.overallCompletion}%)`
           ]);
 
           printPDFReport(
-            "Business Target & 50:50 Ratio Achievement Report (বিজনেস টার্গেট রিপোর্ট)",
+            "Business Target & 50:50 Ratio Achievement Report",
             `Target: ${targetConfig.title} | Achieved Members: ${totalAchievedCount} / ${users.length}`,
             ["Member Details", "Direct Business (BV/PV)", "Team Business (BV/PV)", "50:50 Ratio", "Target Status"],
             rows
@@ -3396,15 +3396,15 @@ export default function AdminPanel({
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase border border-amber-500/30">
-                        অ্যাডমিন রেশিও মডিউল
+                        Admin Ratio Module
                       </span>
                       <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-emerald-500/30">
                         50:50 Business Target System Active
                       </span>
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-black text-white mt-1">বিজনেস টার্গেট ও ৫০:৫০ রেশিও সেটআপ</h2>
+                    <h2 className="text-xl sm:text-2xl font-black text-white mt-1">Business Target & 50:50 Ratio Setup</h2>
                     <p className="text-xs text-amber-200/90 max-w-2xl mt-0.5">
-                      অ্যাডমিন প্যানেল থেকে Direct Business & Team Business-এর জন্য BV এবং PV অনুযায়ী ৫০:৫০ রেশিও ভিত্তিক টার্গেট কনফিগার করুন।
+                      Configure Direct & Team Business BV/PV targets based on 50:50 ratio from the admin panel.
                     </p>
                   </div>
                 </div>
@@ -3427,13 +3427,13 @@ export default function AdminPanel({
                     ⚙️
                   </div>
                   <div>
-                    <h3 className="font-black text-slate-900 text-lg">টার্গেট ও ৫০:৫০ রেশিও কনফিগারেশন</h3>
-                    <p className="text-xs text-slate-500">অ্যাডমিন নির্ধারিত মান অনুযায়ী সরাসরি সমস্ত সদস্যের ড্যাশবোর্ডে আপডেট হবে</p>
+                    <h3 className="font-black text-slate-900 text-lg">Target & 50:50 Ratio Configuration</h3>
+                    <p className="text-xs text-slate-500">Admin values will update on all member dashboards in real-time</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <label className="text-xs font-black text-slate-700">ক্যাম্পেইন স্ট্যাটাস:</label>
+                  <label className="text-xs font-black text-slate-700">Campaign Status:</label>
                   <button
                     type="button"
                     onClick={() => setTargetConfig(prev => ({ ...prev, isActive: !prev.isActive }))}
@@ -3443,7 +3443,7 @@ export default function AdminPanel({
                         : 'bg-rose-100 text-rose-800 border border-rose-300'
                     }`}
                   >
-                    {targetConfig.isActive ? 'ACTIVE (সক্রিয়)' : 'INACTIVE (বন্ধ)'}
+                    {targetConfig.isActive ? 'ACTIVE' : 'INACTIVE'}
                   </button>
                 </div>
               </div>
@@ -3452,9 +3452,9 @@ export default function AdminPanel({
               <div className="bg-amber-50/70 p-4 rounded-2xl border border-amber-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="space-y-0.5">
                   <span className="text-[10px] uppercase font-black tracking-wider text-amber-800 bg-amber-200/80 px-2 py-0.5 rounded-md">
-                    টার্গেট সময়কাল ও ধরণ (Target Timeframe)
+                    Target Timeframe
                   </span>
-                  <h4 className="font-black text-slate-900 text-sm">বার্ষিক, মাসিক বা নির্দিষ্ট সময়সীমার টার্গেট নির্বাচন করুন</h4>
+                  <h4 className="font-black text-slate-900 text-sm">Select annual, monthly, or a custom target period</h4>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
@@ -3478,7 +3478,7 @@ export default function AdminPanel({
                         : 'bg-white text-slate-700 hover:bg-amber-100 border border-slate-200'
                     }`}
                   >
-                    📅 মাসিক টার্গেট (Monthly)
+                    📅 Monthly Target
                   </button>
 
                   <button
@@ -3501,7 +3501,7 @@ export default function AdminPanel({
                         : 'bg-white text-slate-700 hover:bg-amber-100 border border-slate-200'
                     }`}
                   >
-                    🏆 বার্ষিক টার্গেট (Yearly)
+                    🏆 Yearly Target
                   </button>
 
                   <button
@@ -3513,7 +3513,7 @@ export default function AdminPanel({
                         : 'bg-white text-slate-700 hover:bg-amber-100 border border-slate-200'
                     }`}
                   >
-                    ⏳ কাস্টম সময়সীমা (Custom)
+                    ⏳ Custom Period
                   </button>
                 </div>
               </div>
@@ -3525,7 +3525,7 @@ export default function AdminPanel({
                   <div className="flex items-center justify-between">
                     <h4 className="font-black text-amber-950 text-sm flex items-center gap-2">
                       <span className="p-1 bg-amber-200 text-amber-900 rounded-md text-xs">01</span>
-                      <span>ডাইরেক্ট বিজনেস টার্গেট (Direct Target)</span>
+                      <span>Direct Business Target</span>
                     </h4>
                   </div>
 
@@ -3567,7 +3567,7 @@ export default function AdminPanel({
                   <div className="flex items-center justify-between">
                     <h4 className="font-black text-indigo-950 text-sm flex items-center gap-2">
                       <span className="p-1 bg-indigo-200 text-indigo-900 rounded-md text-xs">02</span>
-                      <span>টিম বিজনেস টার্গেট (Team Target)</span>
+                      <span>Team Business Target</span>
                     </h4>
                   </div>
 
@@ -3609,13 +3609,13 @@ export default function AdminPanel({
                   <div className="flex items-center justify-between">
                     <h4 className="font-black text-emerald-950 text-sm flex items-center gap-2">
                       <span className="p-1 bg-emerald-200 text-emerald-900 rounded-md text-xs">03</span>
-                      <span>৫০:৫০ বিজনেস রেশিও সেটিংস</span>
+                      <span>50:50 Business Ratio Settings</span>
                     </h4>
                   </div>
 
                   <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-emerald-200">
                     <label htmlFor="ratioRuleCheck" className="text-xs font-black text-emerald-950 cursor-pointer">
-                      ৫০:৫০ রেশিও নিয়ম প্রয়োগ করুন
+                      Apply 50:50 Ratio Rule
                     </label>
                     <input
                       type="checkbox"
@@ -3652,7 +3652,7 @@ export default function AdminPanel({
                   </div>
 
                   <p className="text-[11px] text-emerald-800 font-medium bg-emerald-100/60 p-2.5 rounded-xl border border-emerald-200 leading-snug">
-                    💡 ৫০:৫০ বিজনেস রেশিও অনুযায়ী স্ট্রং লেগ থেকে সর্বোচ্চ ৫০% এবং আদার্স লেগ থেকে সর্বনিম্ন ৫০% সাপেক্ষে টার্গেট কাউন্ট হবে।
+                    💡 According to the 50:50 business ratio, the target count will be computed with a maximum of 50% from the strong leg and a minimum of 50% from other legs.
                   </p>
                 </div>
 
@@ -3662,13 +3662,13 @@ export default function AdminPanel({
               <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
                 <h4 className="font-black text-slate-900 text-sm flex items-center gap-2">
                   <span className="p-1.5 bg-amber-500 text-slate-950 rounded-lg text-xs">🎁</span>
-                  <span>উপহার, রিওয়ার্ড, বোনাস ও ইনসেনটিভ কনফিগারেশন (Gifts & Rewards)</span>
+                  <span>Gifts, Rewards, Incentives & Cash Bonus Configuration</span>
                 </h4>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      উপহার / গিফটের নাম (Gift Item Name) *
+                      Gift Item Name *
                     </label>
                     <input
                       type="text"
@@ -3681,7 +3681,7 @@ export default function AdminPanel({
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      ইনসেনটিভ / বোনাস বিবরণ (Incentive & Bonus) *
+                      Incentive & Bonus Description *
                     </label>
                     <input
                       type="text"
@@ -3694,7 +3694,7 @@ export default function AdminPanel({
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      ক্যাশ বোনাস পরিমাণ (Cash Bonus Amount ₹/BDT)
+                      Cash Bonus Amount (₹)
                     </label>
                     <input
                       type="number"
@@ -3712,7 +3712,7 @@ export default function AdminPanel({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    টার্গেট ক্যাম্পেইন শিরোনাম (Campaign Title)
+                    Target Campaign Title
                   </label>
                   <input
                     type="text"
@@ -3724,7 +3724,7 @@ export default function AdminPanel({
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    র‍্যাংক / পদের নাম (Rank Badge Title)
+                    Rank Badge Title
                   </label>
                   <input
                     type="text"
@@ -3737,7 +3737,7 @@ export default function AdminPanel({
                 <div className="space-y-2">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">শুরুর তারিখ (Start Date)</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Start Date</label>
                       <input
                         type="date"
                         value={targetConfig.startDate}
@@ -3746,7 +3746,7 @@ export default function AdminPanel({
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">শেষের তারিখ (End Date)</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">End Date</label>
                       <input
                         type="date"
                         value={targetConfig.endDate}
@@ -3758,7 +3758,7 @@ export default function AdminPanel({
 
                   {/* Date Extend Quick Buttons */}
                   <div className="flex items-center gap-1.5 pt-1">
-                    <span className="text-[10px] font-black text-amber-800 uppercase">মেয়াদ বাড়ান (Date Extend):</span>
+                    <span className="text-[10px] font-black text-amber-800 uppercase">Date Extend:</span>
                     <button
                       type="button"
                       onClick={() => {
@@ -3800,7 +3800,7 @@ export default function AdminPanel({
               <div className="flex items-center justify-between pt-2">
                 <span className="text-xs text-emerald-600 font-bold flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                  <span>পরিবর্তন করার সাথে সাথে রিয়েল-টাইমে সিস্টেম ও ড্যাশবোর্ডে আপডেট সংরক্ষিত হয়</span>
+                  <span>Changes are saved and updated in real-time across the system and dashboards.</span>
                 </span>
 
                 <button
@@ -3808,13 +3808,13 @@ export default function AdminPanel({
                   onClick={() => {
                     localStorage.setItem('mlm_business_target_config', JSON.stringify(targetConfig));
                     window.dispatchEvent(new CustomEvent('business-target-updated', { detail: targetConfig }));
-                    setSuccessMsg('বিজনেস টার্গেট ও ৫০:৫০ রেশিও সেটিংস সফলভাবে ব্যাকএন্ডে সংরক্ষিত হয়েছে!');
+                    setSuccessMsg('Business targets and 50:50 ratio configuration updated successfully!');
                     setTimeout(() => setSuccessMsg(null), 3000);
                   }}
                   className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-700 hover:to-orange-800 text-white rounded-xl font-black text-xs transition-all shadow-md shadow-amber-600/20 active:scale-95 cursor-pointer flex items-center gap-2"
                 >
                   <Check className="w-4 h-4" />
-                  <span>টার্গেট সেটিংস আপডেট করুন (Save Settings)</span>
+                  <span>Save Settings</span>
                 </button>
               </div>
             </div>
@@ -3824,12 +3824,12 @@ export default function AdminPanel({
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                   <h3 className="font-black text-slate-900 text-lg flex items-center gap-2">
-                    <span>সদস্যদের বিজনেস টার্গেট ও ৫০:৫০ রেশিও অগ্রগতি রিপোর্ট</span>
+                    <span>Members Business Target & 50:50 Ratio Progress Report</span>
                     <span className="bg-amber-100 text-amber-900 text-xs font-black px-2.5 py-0.5 rounded-full">
                       {filteredTargetList.length} Records
                     </span>
                   </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">প্রতিটি ইউজারের ডাইরেক্ট ও টিম বিজনেস BV/PV অগ্রগতি এবং ৫০:৫০ রেশিও ট্র্যাকিং</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Track each member's Direct & Team Business BV/PV progress and 50:50 ratio alignment</p>
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
@@ -3839,7 +3839,7 @@ export default function AdminPanel({
                     className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
                   >
                     <Printer className="w-3.5 h-3.5 text-amber-300" />
-                    <span>প্রিন্ট/PDF রিপোর্ট</span>
+                    <span>Print/PDF Report</span>
                   </button>
 
                   <button
@@ -3848,7 +3848,7 @@ export default function AdminPanel({
                     className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
                   >
                     <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-200" />
-                    <span>CSV এক্সপোর্ট</span>
+                    <span>Export CSV</span>
                   </button>
                 </div>
               </div>
@@ -3859,7 +3859,7 @@ export default function AdminPanel({
                   <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                   <input
                     type="text"
-                    placeholder="সদস্যের নাম, মোবাইল নম্বর বা ID লিখুন..."
+                    placeholder="Enter member name, phone, or ID..."
                     value={targetSearchTerm}
                     onChange={(e) => setTargetSearchTerm(e.target.value)}
                     className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800"
@@ -3873,9 +3873,9 @@ export default function AdminPanel({
                     onChange={(e) => setTargetStatusFilter(e.target.value as any)}
                     className="p-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800"
                   >
-                    <option value="all">সব সদস্য (All Members)</option>
-                    <option value="achieved">🎉 Achieved (টার্গেট সম্পন্ন)</option>
-                    <option value="in_progress">⏳ In Progress (চলমান)</option>
+                    <option value="all">All Members</option>
+                    <option value="achieved">🎉 Achieved</option>
+                    <option value="in_progress">⏳ In Progress</option>
                   </select>
                 </div>
               </div>
@@ -3885,11 +3885,11 @@ export default function AdminPanel({
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr className="bg-slate-900 text-slate-200 font-bold uppercase tracking-wider text-[10px]">
-                      <th className="p-3.5">Member Details (সদস্য বিবরণ)</th>
+                      <th className="p-3.5">Member Details</th>
                       <th className="p-3.5">Direct Business (BV & PV)</th>
                       <th className="p-3.5">Team Business (BV & PV)</th>
                       <th className="p-3.5 text-center">50:50 Ratio Balance</th>
-                      <th className="p-3.5 text-right">Target Status (অবস্থা)</th>
+                      <th className="p-3.5 text-right">Target Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200/80 font-medium">
@@ -3955,7 +3955,7 @@ export default function AdminPanel({
                           <td className="p-3.5 text-right space-y-1">
                             {item.isAchieved ? (
                               <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-600 text-white font-black text-xs rounded-full shadow-xs">
-                                🎉 ACHIEVED (সম্পন্ন)
+                                🎉 ACHIEVED
                               </span>
                             ) : (
                               <div className="space-y-0.5">
@@ -3973,7 +3973,7 @@ export default function AdminPanel({
                     ) : (
                       <tr>
                         <td colSpan={5} className="p-8 text-center text-slate-400 font-bold">
-                          কোনো টার্গেট রেকর্ড পাওয়া যায়নি
+                          No target records found
                         </td>
                       </tr>
                     )}
@@ -4023,15 +4023,15 @@ export default function AdminPanel({
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase border border-amber-500/30">
-                        অ্যাডমিন প্রোডাক্ট মডিউল
+                        Admin Product Module
                       </span>
                       <span className="bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-blue-500/30">
                         Unlimited Products & Level Commission
                       </span>
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-black text-white mt-1">প্রোডাক্ট ক্যাটাগরি, মূল্য, স্টক ও কমিশন ম্যানেজমেন্ট</h2>
+                    <h2 className="text-xl sm:text-2xl font-black text-white mt-1">Product Category, Price, Stock & Commission Management</h2>
                     <p className="text-xs text-slate-300 max-w-2xl mt-0.5">
-                      এখানে যেকোনো ক্যাটাগরি, প্রোডাক্ট তৈরি, MRP/Selling Price, BV/PV, কাস্টম লেভেল কমিশন, COD/অনলাইন পেমেন্ট নিয়ম এবং অফার নিয়ন্ত্রণ করতে পারবেন।
+                      Manage categories, products, prices, BV/PV value, level commissions, payments, and active offers here.
                     </p>
                   </div>
                 </div>
@@ -4044,7 +4044,7 @@ export default function AdminPanel({
                     className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-md active:scale-95 cursor-pointer"
                   >
                     <FolderPlus className="w-4 h-4 text-indigo-300" />
-                    <span>ক্যাটাগরি মডিউল ({categories.length})</span>
+                    <span>Category Module ({categories.length})</span>
                   </button>
 
                   <button
@@ -4053,7 +4053,7 @@ export default function AdminPanel({
                     className="px-4 py-2.5 bg-amber-400 hover:bg-amber-500 text-slate-950 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-amber-400/20 active:scale-95 cursor-pointer"
                   >
                     <Plus className="w-4 h-4 text-slate-950" />
-                    <span>নতুন প্রোডাক্ট যোগ করুন</span>
+                    <span>Add New Product</span>
                   </button>
                 </div>
               </div>
@@ -4066,8 +4066,8 @@ export default function AdminPanel({
                   📦
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block">মোট প্রোডাক্ট</span>
-                  <div className="text-base font-black font-mono text-slate-900">{products.length} টি</div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase block">Total Products</span>
+                  <div className="text-base font-black font-mono text-slate-900">{products.length} Items</div>
                 </div>
               </div>
 
@@ -4076,8 +4076,8 @@ export default function AdminPanel({
                   ✅
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block">ইন স্টক (In Stock)</span>
-                  <div className="text-base font-black font-mono text-emerald-600">{inStockCount} টি</div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase block">In Stock</span>
+                  <div className="text-base font-black font-mono text-emerald-600">{inStockCount} Items</div>
                 </div>
               </div>
 
@@ -4086,8 +4086,8 @@ export default function AdminPanel({
                   🛑
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block">স্টক আউট / সোল্ড আউট</span>
-                  <div className="text-base font-black font-mono text-rose-600">{soldOutCount} টি</div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase block">Sold Out / Out of Stock</span>
+                  <div className="text-base font-black font-mono text-rose-600">{soldOutCount} Items</div>
                 </div>
               </div>
 
@@ -4096,8 +4096,8 @@ export default function AdminPanel({
                   🔥
                 </div>
                 <div>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase block">অফার ও ডিসকাউন্ট</span>
-                  <div className="text-base font-black font-mono text-amber-600">{activeOffersCount} টি</div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase block">Offers & Discounts</span>
+                  <div className="text-base font-black font-mono text-amber-600">{activeOffersCount} Items</div>
                 </div>
               </div>
             </div>
@@ -4109,7 +4109,7 @@ export default function AdminPanel({
                   <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    placeholder="প্রোডাক্ট খুঁজুন (নাম, ব্র্যান্ড বা SKU দিয়ে)..."
+                    placeholder="Search product (name, brand, or SKU)..."
                     value={prodSearchTerm}
                     onChange={(e) => setProdSearchTerm(e.target.value)}
                     className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500"
@@ -4122,7 +4122,7 @@ export default function AdminPanel({
                     onChange={(e) => setProdCategoryFilter(e.target.value)}
                     className="py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700"
                   >
-                    <option value="all">সকল ক্যাটাগরি (All Categories)</option>
+                    <option value="all">All Categories</option>
                     {categories.map(c => (
                       <option key={c.id} value={c.name}>{c.name}</option>
                     ))}
@@ -4133,8 +4133,8 @@ export default function AdminPanel({
                     onChange={(e) => setProdStockFilter(e.target.value as any)}
                     className="py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700"
                   >
-                    <option value="all">সকল স্টক স্ট্যাটাস</option>
-                    <option value="in_stock">In Stock (স্টকে আছে)</option>
+                    <option value="all">All Stock Status</option>
+                    <option value="in_stock">In Stock</option>
                     <option value="sold_out">Sold Out / Out of Stock</option>
                   </select>
 
@@ -4143,8 +4143,8 @@ export default function AdminPanel({
                     onChange={(e) => setProdOfferFilter(e.target.value as any)}
                     className="py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700"
                   >
-                    <option value="all">সকল প্রোডাক্ট</option>
-                    <option value="offer_only">🔥 অফার প্রোডাক্টসমূহ (Active Offers)</option>
+                    <option value="all">All Products</option>
+                    <option value="offer_only">🔥 Active Offers</option>
                   </select>
                 </div>
               </div>
@@ -4185,7 +4185,7 @@ export default function AdminPanel({
                         <div className="absolute top-2.5 right-2.5">
                           {isSoldOut ? (
                             <span className="bg-rose-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md animate-pulse">
-                              🛑 Sold Out / স্টক আউট
+                              🛑 Sold Out
                             </span>
                           ) : (
                             <span className="bg-emerald-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md">
@@ -4209,7 +4209,7 @@ export default function AdminPanel({
                         {/* Price Metrics Grid */}
                         <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 font-mono">
                           <div>
-                            <span className="text-[9px] font-bold text-slate-400 uppercase block">MRP (বাজার মূল্য)</span>
+                            <span className="text-[9px] font-bold text-slate-400 uppercase block">MRP (Market Price)</span>
                             <span className="text-xs line-through text-slate-400">₹{prod.mrp.toLocaleString('en-IN')}</span>
                           </div>
 
@@ -4231,7 +4231,7 @@ export default function AdminPanel({
 
                         {/* Payment Method Badge */}
                         <div className="flex items-center justify-between text-[10px] bg-slate-100/80 p-2 rounded-lg border border-slate-200/60 font-medium">
-                          <span className="text-slate-500 font-bold">পেমেন্ট সুবিধা:</span>
+                          <span className="text-slate-500 font-bold">Allowed Payments:</span>
                           {prod.paymentType === 'cod_only' ? (
                             <span className="text-amber-800 bg-amber-100 font-bold px-2 py-0.5 rounded">Cash on Delivery Only</span>
                           ) : prod.paymentType === 'online_only' ? (
@@ -4244,7 +4244,7 @@ export default function AdminPanel({
                         {/* Level Commission Breakdown Badge */}
                         <div className="bg-indigo-50/70 border border-indigo-100 p-2.5 rounded-lg text-[10px] space-y-1.5">
                           <div className="flex items-center justify-between font-bold text-indigo-950">
-                            <span>কমিশন স্ট্রাকচার:</span>
+                            <span>Commission Structure:</span>
                             {prod.useCustomCommission ? (
                               <span className="bg-indigo-600 text-white text-[9px] px-1.5 py-0.5 rounded font-black">Custom Levels</span>
                             ) : (
@@ -4281,7 +4281,7 @@ export default function AdminPanel({
                         {prod.isOfferActive && (
                           <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 p-2.5 rounded-xl font-bold shadow-xs space-y-1">
                             <div className="flex items-center justify-between text-[11px]">
-                              <span>🔥 অফার প্রাইজ: ₹{prod.offerPrice?.toLocaleString('en-IN')}</span>
+                              <span>🔥 Offer Price: ₹{prod.offerPrice?.toLocaleString('en-IN')}</span>
                               {prod.discountPercent && <span className="bg-slate-950 text-amber-300 text-[9px] px-2 py-0.5 rounded-full font-black">{prod.discountPercent}% OFF</span>}
                             </div>
                             {prod.couponOffer && (
@@ -4336,8 +4336,8 @@ export default function AdminPanel({
             {filteredProds.length === 0 && (
               <div className="bg-white rounded-3xl p-12 text-center border border-slate-200">
                 <Package className="w-12 h-12 text-slate-300 mx-auto mb-2" />
-                <h3 className="text-base font-black text-slate-800">কোনো প্রোডাক্ট পাওয়া যায়নি</h3>
-                <p className="text-xs text-slate-500 mt-1">অনুগ্রহ করে ফিল্টার পরিবর্তন করুন অথবা নতুন প্রোডাক্ট তৈরি করুন।</p>
+                <h3 className="text-base font-black text-slate-800">No products found</h3>
+                <p className="text-xs text-slate-500 mt-1">Please change filters or add a new product.</p>
                 <button
                   type="button"
                   onClick={handleOpenAddProductModal}
@@ -4443,7 +4443,7 @@ export default function AdminPanel({
                 </div>
                 <div>
                   <h3 className="text-base font-black">
-                    {editingProduct ? 'প্রোডাক্ট তথ্য সম্পাদনা করুন (Edit Product)' : 'নতুন প্রোডাক্ট যুক্ত করুন (Add Product)'}
+                    {editingProduct ? 'Edit Product Details' : 'Add New Product'}
                   </h3>
                   <p className="text-xs text-slate-300">
                     MRP, Selling Price, BV/PV, Stock, COD/Online, Custom Level Commission and Offers
@@ -4465,13 +4465,13 @@ export default function AdminPanel({
               {/* SECTION 1: BASIC INFORMATION */}
               <div className="space-y-4">
                 <h4 className="font-extrabold text-indigo-950 uppercase tracking-wider text-[11px] bg-indigo-50 p-2 rounded-lg border border-indigo-100 flex items-center gap-2">
-                  <span>1. মৌলিক তথ্য (Basic Info & Identifiers)</span>
+                  <span>1. Basic Info & Identifiers</span>
                 </h4>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">
-                      প্রোডাক্টের নাম *
+                      Product Name *
                     </label>
                     <input
                       type="text"
@@ -4485,7 +4485,7 @@ export default function AdminPanel({
 
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">
-                      ক্যাটাগরি *
+                      Category *
                     </label>
                     <select
                       value={pCategory}
@@ -4509,7 +4509,7 @@ export default function AdminPanel({
 
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">
-                      সাব-ক্যাটাগরি
+                      Sub-Category
                     </label>
                     {(() => {
                       const activeCatObj = categories.find(c => c.name === pCategory);
@@ -4520,7 +4520,7 @@ export default function AdminPanel({
                             onChange={(e) => setPSubCategory(e.target.value)}
                             className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs"
                           >
-                            <option value="">-- নির্বাচন করুন --</option>
+                            <option value="">-- Select Sub-Category --</option>
                             {activeCatObj.subCategories.map((sub, idx) => (
                               <option key={idx} value={sub}>{sub}</option>
                             ))}
@@ -4541,7 +4541,7 @@ export default function AdminPanel({
 
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">
-                      ব্র্যান্ড / প্রস্তুতকারক (Brand Name)
+                      Brand / Manufacturer
                     </label>
                     <input
                       type="text"
@@ -4554,7 +4554,7 @@ export default function AdminPanel({
 
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">
-                      SKU কোড / আইডি
+                      SKU Code / ID
                     </label>
                     <input
                       type="text"
@@ -4567,7 +4567,7 @@ export default function AdminPanel({
 
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">
-                      ছবি URL (Product Image)
+                      Image URL (Product Image)
                     </label>
                     <input
                       type="url"
@@ -4581,7 +4581,7 @@ export default function AdminPanel({
 
                 {/* Preset Image Options */}
                 <div>
-                  <span className="text-[10px] font-bold text-slate-500 block mb-1">দ্রুত নমুনা ছবি বেছে নিন:</span>
+                  <span className="text-[10px] font-bold text-slate-500 block mb-1">Choose Sample Image:</span>
                   <div className="flex items-center gap-2 flex-wrap">
                     {[
                       { name: 'Solar Panel', url: 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=600&auto=format&fit=crop&q=80' },
@@ -4605,7 +4605,7 @@ export default function AdminPanel({
 
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">
-                    প্রোডাক্টের বিবরণ (Product Description)
+                    Product Description
                   </label>
                   <textarea
                     rows={2}
@@ -4625,7 +4625,7 @@ export default function AdminPanel({
                     className="w-4 h-4 text-indigo-600 rounded"
                   />
                   <label htmlFor="isUpcoming" className="font-extrabold text-slate-800 cursor-pointer">
-                    Upcoming Product হিসেবে চিহ্নিত করুন (আসন্ন প্রোডাক্ট)
+                    Mark as Upcoming Product
                   </label>
                 </div>
               </div>
@@ -4633,13 +4633,13 @@ export default function AdminPanel({
               {/* SECTION 2: PRICING, BV & PV */}
               <div className="space-y-4">
                 <h4 className="font-extrabold text-indigo-950 uppercase tracking-wider text-[11px] bg-amber-50 p-2 rounded-lg border border-amber-200 flex items-center gap-2">
-                  <span>2. মূল্য, বিজনেস ভ্যালু (BV) এবং পয়েন্ট ভ্যালু (PV)</span>
+                  <span>2. Price, Business Value (BV) & Point Value (PV)</span>
                 </h4>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">
-                      MRP (বাজার মূল্য ₹) *
+                      MRP (Market Price ₹) *
                     </label>
                     <input
                       type="number"
@@ -4724,8 +4724,8 @@ export default function AdminPanel({
                     />
                     <p className="text-[10px] text-slate-500 mt-1">
                       {pCommissionType === 'percentage' 
-                        ? 'বিক্রয় মূল্যের (Selling Price/DP) ওপর এই শতকরা হার অনুযায়ী মোট কমিশন হিসেব করা হবে।' 
-                        : 'প্রতিটি পণ্য বিক্রয়ের জন্য এই নির্দিষ্ট টাকা কমিশন হিসেবে বন্টন করা হবে।'}
+                        ? 'Total commission pool will be calculated as a percentage of the Selling Price (DP).' 
+                        : 'A flat commission amount will be distributed per item sold.'}
                     </p>
                   </div>
                 </div>
@@ -4734,13 +4734,13 @@ export default function AdminPanel({
               {/* SECTION 3: STOCK & PAYMENT METHODS */}
               <div className="space-y-4">
                 <h4 className="font-extrabold text-indigo-950 uppercase tracking-wider text-[11px] bg-slate-100 p-2 rounded-lg border border-slate-200 flex items-center gap-2">
-                  <span>3. ইনভেন্টরি, স্টক ও পেমেন্ট সুবিধা (COD/Advance Payment)</span>
+                  <span>3. Inventory, Stock & Payment Allowed</span>
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">
-                      স্টক সংখ্যা (Stock Count)
+                      Stock Count
                     </label>
                     <input
                       type="number"
@@ -4753,31 +4753,31 @@ export default function AdminPanel({
 
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">
-                      স্টক স্ট্যাটাস (Stock Status)
+                      Stock Status
                     </label>
                     <select
                       value={pStockStatus}
                       onChange={(e) => setPStockStatus(e.target.value as any)}
                       className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs"
                     >
-                      <option value="in_stock">⚡ In Stock (স্টকে আছে)</option>
-                      <option value="out_of_stock">⚠️ Out of Stock (স্টক সাময়িক শেষ)</option>
-                      <option value="sold_out">🛑 Sold Out (সম্পূর্ণ সোল্ড আউট)</option>
+                      <option value="in_stock">⚡ In Stock</option>
+                      <option value="out_of_stock">⚠️ Out of Stock</option>
+                      <option value="sold_out">🛑 Sold Out</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block font-bold text-slate-700 mb-1">
-                      পেমেন্ট টাইপ সুবিধা (Allowed Payment)
+                      Allowed Payments
                     </label>
                     <select
                       value={pPaymentType}
                       onChange={(e) => setPPaymentType(e.target.value as any)}
                       className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs"
                     >
-                      <option value="both">✅ COD & Online Payment (উভয় প্রযোজ্য)</option>
-                      <option value="cod_only">💵 Only Cash on Delivery (শুধুমাত্র সিওডি)</option>
-                      <option value="online_only">💳 Online / Advance Payment Only (শুধুমাত্র অনলাইন/অগ্রিম)</option>
+                      <option value="both">✅ COD & Online Payment</option>
+                      <option value="cod_only">💵 Only Cash on Delivery</option>
+                      <option value="online_only">💳 Online / Advance Payment Only</option>
                     </select>
                   </div>
                 </div>
@@ -4792,14 +4792,14 @@ export default function AdminPanel({
                       className="w-4 h-4 text-amber-600 rounded"
                     />
                     <label htmlFor="advancePayReq" className="font-black text-amber-950 cursor-pointer">
-                      অগ্রিম টোকেন পেমেন্ট আবশ্যক (Advance Payment Required for High-Value Delivery)
+                      Advance Payment Required for High-Value Delivery
                     </label>
                   </div>
 
                   {pAdvancePaymentRequired && (
                     <div>
                       <label className="block font-bold text-slate-700 mb-1 text-[11px]">
-                        অগ্রিম পেমেন্ট নির্দেশনা / নোট (e.g. "20% token payment required before dispatch")
+                        Advance Payment Instructions / Notes (e.g. "20% token payment required before dispatch")
                       </label>
                       <input
                         type="text"
@@ -4817,8 +4817,8 @@ export default function AdminPanel({
               <div className="space-y-4">
                 <div className="flex items-center justify-between bg-indigo-900 text-white p-3 rounded-2xl border border-indigo-800">
                   <div>
-                    <h4 className="font-extrabold text-xs">4. কাস্টম লেভেল কমিশন সেটিংস (Custom Product Commission)</h4>
-                    <p className="text-[10px] text-indigo-200">এই নির্দিষ্ট প্রোডাক্টের জন্য লেভেলভিত্তিক কাস্টম শতাংশ বা টাকা সেট করুন</p>
+                    <h4 className="font-extrabold text-xs">4. Custom Level Commission Settings</h4>
+                    <p className="text-[10px] text-indigo-200">Set custom percentage or flat commission per level specifically for this product.</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <input
@@ -4829,7 +4829,7 @@ export default function AdminPanel({
                       className="w-5 h-5 text-amber-400 rounded cursor-pointer"
                     />
                     <label htmlFor="useCustomComm" className="font-black text-amber-300 text-xs cursor-pointer">
-                      {pUseCustomCommission ? 'কাস্টম কমিশন সক্রিয় ✅' : 'গ্লোবাল সিস্টেম কমিশন ⚙️'}
+                      {pUseCustomCommission ? 'Custom Commission Active ✅' : 'Global System Commission ⚙️'}
                     </label>
                   </div>
                 </div>
@@ -4837,7 +4837,7 @@ export default function AdminPanel({
                 {pUseCustomCommission && (
                   <div className="bg-indigo-50/80 p-4 rounded-2xl border border-indigo-200 space-y-3">
                     <div className="flex items-center justify-between text-indigo-950 font-extrabold text-xs">
-                      <span>কাস্টম লেভেল কমিশন তালিকা:</span>
+                      <span>Custom Level Commission List:</span>
                       <button
                         type="button"
                         onClick={() => {
@@ -4846,7 +4846,7 @@ export default function AdminPanel({
                         }}
                         className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-[10px] font-bold cursor-pointer"
                       >
-                        + লেভেল যোগ করুন
+                        + Add Level
                       </button>
                     </div>
 
@@ -4871,13 +4871,13 @@ export default function AdminPanel({
                               className="p-1 text-[10px] font-bold bg-indigo-50 border border-indigo-100 rounded cursor-pointer"
                             >
                               <option value="percentage">% Pct</option>
-                              <option value="fixed">৳ Fixed</option>
+                              <option value="fixed">₹ Fixed</option>
                             </select>
                           </div>
                           <div className="flex items-center gap-1">
                             {lvlItem.type === 'fixed' ? (
                               <>
-                                <span className="text-slate-500 font-bold text-xs">৳</span>
+                                <span className="text-slate-500 font-bold text-xs">₹</span>
                                 <input
                                   type="number"
                                   min={0}
@@ -4921,8 +4921,8 @@ export default function AdminPanel({
               <div className="space-y-4">
                 <div className="flex items-center justify-between bg-amber-500 text-slate-950 p-3 rounded-2xl border border-amber-600 shadow-sm">
                   <div>
-                    <h4 className="font-extrabold text-xs">5. প্রমোশনাল অফার ও কুপন ডিসকাউন্ট (Offers & Coupons)</h4>
-                    <p className="text-[10px] text-slate-900 font-medium">নির্দিষ্ট সময়সীমাভিত্তিক অফার ও স্পেশাল কুপন সেট করুন</p>
+                    <h4 className="font-extrabold text-xs">5. Promotional Offers & Coupon Discounts</h4>
+                    <p className="text-[10px] text-slate-900 font-medium">Set active promotional offers and special coupons with validity dates.</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <input
@@ -4933,7 +4933,7 @@ export default function AdminPanel({
                       className="w-5 h-5 text-slate-950 rounded cursor-pointer"
                     />
                     <label htmlFor="isOfferActive" className="font-black text-slate-950 text-xs cursor-pointer">
-                      {pIsOfferActive ? 'অফার চালুকৃত 🔥' : 'অফার বন্ধ ⚪'}
+                      {pIsOfferActive ? 'Offer Active 🔥' : 'Offer Inactive ⚪'}
                     </label>
                   </div>
                 </div>
@@ -4943,7 +4943,7 @@ export default function AdminPanel({
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div>
                         <label className="block font-bold text-slate-700 mb-1">
-                          অফার প্রাইস (Offer Price ₹)
+                          Offer Price (₹)
                         </label>
                         <input
                           type="number"
@@ -4956,7 +4956,7 @@ export default function AdminPanel({
 
                       <div>
                         <label className="block font-bold text-slate-700 mb-1">
-                          ডিসকাউন্ট শতাংশ (%)
+                          Discount Percent (%)
                         </label>
                         <input
                           type="number"
@@ -4970,7 +4970,7 @@ export default function AdminPanel({
 
                       <div>
                         <label className="block font-bold text-slate-700 mb-1">
-                          কুপন কোড (Coupon Code)
+                          Coupon Code
                         </label>
                         <input
                           type="text"
@@ -4983,7 +4983,7 @@ export default function AdminPanel({
 
                       <div>
                         <label className="block font-bold text-slate-700 mb-1">
-                          ফ্ল্যাট ছাড় (Flat Discount ₹)
+                          Flat Discount (₹)
                         </label>
                         <input
                           type="number"
