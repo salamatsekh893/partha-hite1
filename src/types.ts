@@ -156,6 +156,9 @@ export interface BusinessTargetConfig {
   id: string;
   title: string;
   description: string;
+  targetPeriodType: 'monthly' | 'yearly' | 'custom';
+  bvTarget: number;
+  pvTarget: number;
   directBvTarget: number;
   directPvTarget: number;
   teamBvTarget: number;
@@ -167,5 +170,8 @@ export interface BusinessTargetConfig {
   endDate: string;
   isActive: boolean;
   rewardTitle?: string;
+  rewardGift?: string;
+  rewardIncentive?: string;
+  rewardBonusAmount?: number;
 }
 

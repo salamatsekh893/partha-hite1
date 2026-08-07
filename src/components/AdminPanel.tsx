@@ -463,7 +463,10 @@ export default function AdminPanel({
     return {
       id: 'TARGET-2026-01',
       title: 'Executive Star Royalty & Business Target 2026',
-      description: 'ডাইরেক্ট বিজনেস ও টিম বিজনেসের জন্য ৫০:৫০ রেশিও অনুযায়ী BV ও PV টার্গেট নির্ধারণ মডিউল',
+      description: 'বিজনেস ভ্যালু (BV) ও পয়েন্ট ভ্যালু (PV)-এর জন্য ৫০:৫০ রেশিও অনুযায়ী পৃথক ও সম্মিলিত টার্গেট সিস্টেম',
+      targetPeriodType: 'yearly',
+      bvTarget: 60000,
+      pvTarget: 3000,
       directBvTarget: 10000,
       directPvTarget: 500,
       teamBvTarget: 50000,
@@ -474,7 +477,10 @@ export default function AdminPanel({
       startDate: '2026-08-01',
       endDate: '2026-12-31',
       isActive: true,
-      rewardTitle: 'Executive Star Rank & Royalty Pool Qualification'
+      rewardTitle: 'Executive Star Rank & Royalty Qualification',
+      rewardGift: 'iPhone 15 Pro / 55" Smart 4K TV / Gold Coin',
+      rewardIncentive: '5% Monthly Company Global Royalty Pool Share',
+      rewardBonusAmount: 25000
     };
   });
 
@@ -3407,6 +3413,76 @@ export default function AdminPanel({
                 </div>
               </div>
 
+              {/* Target Type & Timeframe Selector Bar */}
+              <div className="bg-amber-50/70 p-4 rounded-2xl border border-amber-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="space-y-0.5">
+                  <span className="text-[10px] uppercase font-black tracking-wider text-amber-800 bg-amber-200/80 px-2 py-0.5 rounded-md">
+                    টার্গেট সময়কাল ও ধরণ (Target Timeframe)
+                  </span>
+                  <h4 className="font-black text-slate-900 text-sm">বার্ষিক, মাসিক বা নির্দিষ্ট সময়সীমার টার্গেট নির্বাচন করুন</h4>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const now = new Date();
+                      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+                      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+                      setTargetConfig(prev => ({
+                        ...prev,
+                        targetPeriodType: 'monthly',
+                        startDate: firstDay,
+                        endDate: lastDay,
+                        title: `Monthly Business Target (${now.toLocaleString('en-US', { month: 'long', year: 'numeric' })})`
+                      }));
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                      targetConfig.targetPeriodType === 'monthly'
+                        ? 'bg-amber-600 text-white shadow-sm'
+                        : 'bg-white text-slate-700 hover:bg-amber-100 border border-slate-200'
+                    }`}
+                  >
+                    📅 মাসিক টার্গেট (Monthly)
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const now = new Date();
+                      const startYear = `${now.getFullYear()}-01-01`;
+                      const endYear = `${now.getFullYear()}-12-31`;
+                      setTargetConfig(prev => ({
+                        ...prev,
+                        targetPeriodType: 'yearly',
+                        startDate: startYear,
+                        endDate: endYear,
+                        title: `Annual Business & Royalty Target ${now.getFullYear()}`
+                      }));
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                      targetConfig.targetPeriodType === 'yearly'
+                        ? 'bg-amber-600 text-white shadow-sm'
+                        : 'bg-white text-slate-700 hover:bg-amber-100 border border-slate-200'
+                    }`}
+                  >
+                    🏆 বার্ষিক টার্গেট (Yearly)
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setTargetConfig(prev => ({ ...prev, targetPeriodType: 'custom' }))}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                      targetConfig.targetPeriodType === 'custom'
+                        ? 'bg-amber-600 text-white shadow-sm'
+                        : 'bg-white text-slate-700 hover:bg-amber-100 border border-slate-200'
+                    }`}
+                  >
+                    ⏳ কাস্টম সময়সীমা (Custom)
+                  </button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 
                 {/* Direct Business Target Box */}
@@ -3547,7 +3623,57 @@ export default function AdminPanel({
 
               </div>
 
-              {/* Campaign Title & Dates Row */}
+              {/* Gifts, Rewards, Incentives & Cash Bonus Section */}
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200 space-y-4">
+                <h4 className="font-black text-slate-900 text-sm flex items-center gap-2">
+                  <span className="p-1.5 bg-amber-500 text-slate-950 rounded-lg text-xs">🎁</span>
+                  <span>উপহার, রিওয়ার্ড, বোনাস ও ইনসেনটিভ কনফিগারেশন (Gifts & Rewards)</span>
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      উপহার / গিফটের নাম (Gift Item Name) *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. iPhone 15 Pro / Smart TV / Gold Coin"
+                      value={targetConfig.rewardGift || ''}
+                      onChange={(e) => setTargetConfig(prev => ({ ...prev, rewardGift: e.target.value }))}
+                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      ইনসেনটিভ / বোনাস বিবরণ (Incentive & Bonus) *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 5% Monthly Royalty Pool Share"
+                      value={targetConfig.rewardIncentive || ''}
+                      onChange={(e) => setTargetConfig(prev => ({ ...prev, rewardIncentive: e.target.value }))}
+                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      ক্যাশ বোনাস পরিমাণ (Cash Bonus Amount ₹/BDT)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="e.g. 25000"
+                      value={targetConfig.rewardBonusAmount || 0}
+                      onChange={(e) => setTargetConfig(prev => ({ ...prev, rewardBonusAmount: Number(e.target.value) }))}
+                      className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Campaign Title, Start/End Dates & Quick Date Extension (Date Extend) */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -3563,7 +3689,7 @@ export default function AdminPanel({
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    পুরস্কার / র‍্যাংক নাম (Reward Title)
+                    র‍্যাংক / পদের নাম (Rank Badge Title)
                   </label>
                   <input
                     type="text"
@@ -3573,24 +3699,64 @@ export default function AdminPanel({
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">শুরুর তারিখ</label>
-                    <input
-                      type="date"
-                      value={targetConfig.startDate}
-                      onChange={(e) => setTargetConfig(prev => ({ ...prev, startDate: e.target.value }))}
-                      className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold"
-                    />
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">শুরুর তারিখ (Start Date)</label>
+                      <input
+                        type="date"
+                        value={targetConfig.startDate}
+                        onChange={(e) => setTargetConfig(prev => ({ ...prev, startDate: e.target.value }))}
+                        className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">শেষের তারিখ (End Date)</label>
+                      <input
+                        type="date"
+                        value={targetConfig.endDate}
+                        onChange={(e) => setTargetConfig(prev => ({ ...prev, endDate: e.target.value }))}
+                        className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">শেষের তারিখ</label>
-                    <input
-                      type="date"
-                      value={targetConfig.endDate}
-                      onChange={(e) => setTargetConfig(prev => ({ ...prev, endDate: e.target.value }))}
-                      className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold"
-                    />
+
+                  {/* Date Extend Quick Buttons */}
+                  <div className="flex items-center gap-1.5 pt-1">
+                    <span className="text-[10px] font-black text-amber-800 uppercase">মেয়াদ বাড়ান (Date Extend):</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const curr = new Date(targetConfig.endDate || new Date());
+                        curr.setDate(curr.getDate() + 15);
+                        setTargetConfig(prev => ({ ...prev, endDate: curr.toISOString().split('T')[0] }));
+                      }}
+                      className="px-2 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-md text-[10px] font-black cursor-pointer border border-amber-300"
+                    >
+                      +15 Days
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const curr = new Date(targetConfig.endDate || new Date());
+                        curr.setDate(curr.getDate() + 30);
+                        setTargetConfig(prev => ({ ...prev, endDate: curr.toISOString().split('T')[0] }));
+                      }}
+                      className="px-2 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-md text-[10px] font-black cursor-pointer border border-amber-300"
+                    >
+                      +30 Days
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const curr = new Date(targetConfig.endDate || new Date());
+                        curr.setDate(curr.getDate() + 90);
+                        setTargetConfig(prev => ({ ...prev, endDate: curr.toISOString().split('T')[0] }));
+                      }}
+                      className="px-2 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-md text-[10px] font-black cursor-pointer border border-amber-300"
+                    >
+                      +90 Days
+                    </button>
                   </div>
                 </div>
               </div>

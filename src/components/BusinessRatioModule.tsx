@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { 
   TrendingUp, Scale, Percent, Download, Printer, Filter, Calendar, 
   RefreshCw, CheckCircle, ArrowRightLeft, Sparkles, PieChart as PieIcon, 
-  BarChart2, Zap, Layers, AlertCircle, ShieldCheck
+  BarChart2, Zap, Layers, AlertCircle, ShieldCheck, Clock
 } from 'lucide-react';
 import { 
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, 
@@ -227,6 +227,52 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
     };
   }, [leftMembers, rightMembers, timePeriod]);
 
+  // Distributor Target & Reward Progress Calculations
+  const targetProgress = useMemo(() => {
+    const currentBv = ratioData.totalBV;
+    const currentPv = Math.round(currentBv / 20); // 1 PV = 20 BV ratio
+
+    const directBv = Math.round(currentBv * 0.35);
+    const directPv = Math.round(currentPv * 0.35);
+    const teamBv = Math.round(currentBv * 0.65);
+    const teamPv = Math.round(currentPv * 0.65);
+
+    const targetBv = targetConfig.bvTarget || (targetConfig.directBvTarget + targetConfig.teamBvTarget) || 60000;
+    const targetPv = targetConfig.pvTarget || (targetConfig.directPvTarget + targetConfig.teamPvTarget) || 3000;
+
+    const bvProgress = targetBv > 0 ? Math.min(100, Math.round((currentBv / targetBv) * 100)) : 100;
+    const pvProgress = targetPv > 0 ? Math.min(100, Math.round((currentPv / targetPv) * 100)) : 100;
+    const overallProgress = Math.min(100, Math.round((bvProgress + pvProgress) / 2));
+
+    const isBvAchieved = currentBv >= targetBv;
+    const isPvAchieved = currentPv >= targetPv;
+    const isRatioMet = !targetConfig.ratioRuleEnabled || ratioData.balanceScore >= 50;
+    const isAchieved = isBvAchieved && isPvAchieved && isRatioMet;
+
+    const today = new Date();
+    const endDateObj = new Date(targetConfig.endDate || '2026-12-31');
+    const diffTime = endDateObj.getTime() - today.getTime();
+    const daysLeft = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+
+    return {
+      currentBv,
+      currentPv,
+      directBv,
+      directPv,
+      teamBv,
+      teamPv,
+      targetBv,
+      targetPv,
+      bvProgress,
+      pvProgress,
+      overallProgress,
+      isBvAchieved,
+      isPvAchieved,
+      isAchieved,
+      daysLeft
+    };
+  }, [ratioData, targetConfig]);
+
   // Historical Ratio Timeline for Charts & Reports using 50:50 Rule
   const ratioTimeline = useMemo(() => {
     const computeRow = (period: string, leftBV: number, rightBV: number) => {
@@ -380,7 +426,184 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
         </div>
       </div>
 
-      {/* 2. DATE FILTER & TIME PERIOD PRESETS BAR */}
+      {/* 1.5 DISTRIBUTOR TARGET MANAGEMENT SYSTEM (BV & PV LIVE PROGRESS CARD) */}
+      <div className={`p-5 rounded-3xl border shadow-lg space-y-5 transition-all relative overflow-hidden ${
+        targetProgress.isAchieved 
+          ? isDarkMode 
+            ? 'bg-gradient-to-br from-emerald-950 via-slate-900 to-indigo-950 border-emerald-500/50 text-white' 
+            : 'bg-gradient-to-br from-emerald-900 via-emerald-800 to-slate-900 border-emerald-400 text-white shadow-emerald-900/20'
+          : isDarkMode 
+            ? 'bg-slate-900 border-indigo-500/30 text-white' 
+            : 'bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 border-indigo-800 text-white shadow-indigo-950/20'
+      }`}>
+        {/* Banner Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-white/10 pb-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-3 py-0.5 bg-amber-400 text-slate-950 font-black text-[10px] rounded-full uppercase tracking-wider shadow-xs">
+                {targetConfig.targetPeriodType === 'monthly' ? '📅 মাসিক টার্গেট' : targetConfig.targetPeriodType === 'yearly' ? '🏆 বার্ষিক টার্গেট' : '⏳ কাস্টম টার্গেট'}
+              </span>
+              <span className="px-2.5 py-0.5 bg-white/15 backdrop-blur-md text-amber-200 font-mono text-[10px] font-bold rounded-full border border-white/20">
+                Start: {targetConfig.startDate} ➔ End: {targetConfig.endDate}
+              </span>
+              <span className="px-2.5 py-0.5 bg-emerald-500/30 text-emerald-300 font-mono text-[10px] font-bold rounded-full border border-emerald-400/30">
+                ⏳ {targetProgress.daysLeft > 0 ? `${targetProgress.daysLeft} Days Remaining` : 'Campaign Ending Soon'}
+              </span>
+            </div>
+            <h3 className="text-lg sm:text-xl font-black text-amber-300 flex items-center gap-2">
+              <Zap className="w-5 h-5 text-amber-400 animate-pulse" />
+              <span>{targetConfig.title}</span>
+            </h3>
+            <p className="text-xs text-indigo-100/80 font-medium">
+              {targetConfig.description}
+            </p>
+          </div>
+
+          {/* Achievement Status Badge */}
+          <div className="shrink-0 flex items-center gap-2">
+            {targetProgress.isAchieved ? (
+              <div className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg flex items-center gap-2 animate-bounce">
+                <CheckCircle className="w-4 h-4 text-slate-950" />
+                <span>🎉 TARGET ACHIEVED! (টার্গেট অর্জিত)</span>
+              </div>
+            ) : (
+              <div className="px-4 py-2 bg-white/10 backdrop-blur-md rounded-2xl font-black text-xs text-amber-300 border border-amber-400/30 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-amber-400" />
+                <span>⏳ TARGET IN PROGRESS ({targetProgress.overallProgress}%)</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* BV & PV Progress Bars Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          {/* Business Value (BV) Progress Box */}
+          <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/15 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black uppercase text-amber-300 tracking-wider flex items-center gap-1.5">
+                <BarChart2 className="w-4 h-4 text-amber-400" />
+                Business Value (BV) Target
+              </span>
+              <span className="text-xs font-black font-mono text-amber-200">
+                {targetProgress.bvProgress}%
+              </span>
+            </div>
+
+            <div className="flex items-baseline justify-between font-mono">
+              <div>
+                <span className="text-2xl font-black text-white">{targetProgress.currentBv.toLocaleString('en-IN')}</span>
+                <span className="text-xs text-amber-200 ml-1 font-bold">BV Achieved</span>
+              </div>
+              <div className="text-right">
+                <span className="text-sm font-bold text-slate-300">/ {targetProgress.targetBv.toLocaleString('en-IN')} BV Target</span>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full h-3 bg-black/40 rounded-full overflow-hidden p-0.5 border border-white/10">
+              <div 
+                className={`h-full rounded-full transition-all duration-1000 ${
+                  targetProgress.isBvAchieved ? 'bg-gradient-to-r from-emerald-400 to-teal-300' : 'bg-gradient-to-r from-amber-500 to-orange-400'
+                }`}
+                style={{ width: `${targetProgress.bvProgress}%` }}
+              ></div>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-indigo-200/90 font-medium">
+              <span>Direct BV: <strong>{targetProgress.directBv.toLocaleString('en-IN')}</strong></span>
+              <span>Team BV: <strong>{targetProgress.teamBv.toLocaleString('en-IN')}</strong></span>
+            </div>
+          </div>
+
+          {/* Point Value (PV) Progress Box */}
+          <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/15 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-black uppercase text-indigo-300 tracking-wider flex items-center gap-1.5">
+                <PieIcon className="w-4 h-4 text-indigo-400" />
+                Point Value (PV) Target
+              </span>
+              <span className="text-xs font-black font-mono text-indigo-200">
+                {targetProgress.pvProgress}%
+              </span>
+            </div>
+
+            <div className="flex items-baseline justify-between font-mono">
+              <div>
+                <span className="text-2xl font-black text-white">{targetProgress.currentPv.toLocaleString('en-IN')}</span>
+                <span className="text-xs text-indigo-200 ml-1 font-bold">PV Achieved</span>
+              </div>
+              <div className="text-right">
+                <span className="text-sm font-bold text-slate-300">/ {targetProgress.targetPv.toLocaleString('en-IN')} PV Target</span>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="w-full h-3 bg-black/40 rounded-full overflow-hidden p-0.5 border border-white/10">
+              <div 
+                className={`h-full rounded-full transition-all duration-1000 ${
+                  targetProgress.isPvAchieved ? 'bg-gradient-to-r from-emerald-400 to-teal-300' : 'bg-gradient-to-r from-indigo-500 to-purple-400'
+                }`}
+                style={{ width: `${targetProgress.pvProgress}%` }}
+              ></div>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-indigo-200/90 font-medium">
+              <span>Direct PV: <strong>{targetProgress.directPv.toLocaleString('en-IN')}</strong></span>
+              <span>Team PV: <strong>{targetProgress.teamPv.toLocaleString('en-IN')}</strong></span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Gifts, Rewards & Bonus Showcase Footer Box */}
+        <div className="bg-black/30 backdrop-blur-md p-4 rounded-2xl border border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 flex items-center gap-1">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              GIFT, REWARD & BONUS UPON TARGET COMPLETION
+            </span>
+            <div className="flex items-center gap-3 flex-wrap">
+              {targetConfig.rewardGift && (
+                <div className="flex items-center gap-1.5 text-xs font-bold text-white bg-amber-400/20 px-2.5 py-1 rounded-lg border border-amber-400/30">
+                  <span>🎁 Gift:</span>
+                  <strong className="text-amber-300">{targetConfig.rewardGift}</strong>
+                </div>
+              )}
+              {targetConfig.rewardIncentive && (
+                <div className="flex items-center gap-1.5 text-xs font-bold text-white bg-indigo-500/20 px-2.5 py-1 rounded-lg border border-indigo-400/30">
+                  <span>🌟 Incentive:</span>
+                  <strong className="text-indigo-200">{targetConfig.rewardIncentive}</strong>
+                </div>
+              )}
+              {targetConfig.rewardBonusAmount ? (
+                <div className="flex items-center gap-1.5 text-xs font-bold text-white bg-emerald-500/20 px-2.5 py-1 rounded-lg border border-emerald-400/30">
+                  <span>💵 Cash Bonus:</span>
+                  <strong className="text-emerald-300">₹{targetConfig.rewardBonusAmount.toLocaleString('en-IN')}</strong>
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="shrink-0">
+            {targetProgress.isAchieved ? (
+              <button
+                type="button"
+                onClick={() => alert(`🎉 congratulations! Your target reward (${targetConfig.rewardGift || 'Executive Reward'}) has been approved for claim in your account!`)}
+                className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl transition-all shadow-md active:scale-95 cursor-pointer flex items-center gap-1.5"
+              >
+                <span>🏆 CLAIM REWARD (পুরস্কার দাবি করুন)</span>
+              </button>
+            ) : (
+              <div className="text-right">
+                <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 block">50:50 Ratio Status</span>
+                <span className="text-xs font-black text-emerald-400 font-mono">Strong 50% : Others 50%</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+      </div>
       <div className={`p-3 rounded-xl border shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 ${
         isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
       }`}>
