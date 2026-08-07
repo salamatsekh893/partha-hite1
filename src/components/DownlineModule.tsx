@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { 
   Network, Search, Users, ChevronRight, ChevronDown, Download, Printer, 
   Layers, UserCheck, Clock, Award, ShieldCheck, Phone, Mail, Sparkles,
@@ -7,6 +7,128 @@ import {
 } from 'lucide-react';
 import { User, DownlineMember } from '../types.js';
 import { exportToCSV, printPDFReport } from '../utils/exportUtils.js';
+
+// Custom Graphical Vector Avatar Component
+function UserAvatar({ status = 'active' }: { status?: 'active' | 'inactive' }) {
+  const isActive = status === 'active';
+  return (
+    <div className={`relative w-14 h-14 rounded-full flex items-center justify-center shrink-0 border-[3px] ${
+      isActive ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 bg-slate-100'
+    } shadow-md overflow-hidden`}>
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        <defs>
+          <linearGradient id="avatarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f8fafc" />
+            <stop offset="100%" stopColor="#e2e8f0" />
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="46" fill="url(#avatarGrad)" />
+        {/* Head / Neck */}
+        <path d="M50,30 L50,45" stroke="#334155" strokeWidth="4" strokeLinecap="round" />
+        {/* Face circle */}
+        <circle cx="50" cy="36" r="15" fill="#fbcfe8" className="fill-amber-100" />
+        {/* Hair */}
+        <path d="M34,36 C34,22 66,22 66,36 C66,24 34,24 34,36 Z" fill="#78350f" />
+        {/* Eyes */}
+        <circle cx="44" cy="34" r="2.5" fill="#1e293b" />
+        <circle cx="56" cy="34" r="2.5" fill="#1e293b" />
+        {/* Mouth/Smile */}
+        <path d="M44,42 Q50,46 56,42" fill="none" stroke="#1e293b" strokeWidth="2.5" strokeLinecap="round" />
+        {/* Shirt/Shoulders */}
+        <path d="M22,78 C25,60 38,54 50,54 C62,54 75,60 78,78 Z" fill={isActive ? '#ef4444' : '#64748b'} />
+      </svg>
+    </div>
+  );
+}
+
+// Genealogy Tree Node Component
+function GenealogyNode({ 
+  member, 
+  title, 
+  onAddClick, 
+  onFocusClick, 
+  onProfileClick,
+  isRoot = false
+}: { 
+  member?: DownlineMember | User | null; 
+  title: string; 
+  onAddClick?: () => void; 
+  onFocusClick?: (m: any) => void;
+  onProfileClick?: (m: any) => void;
+  isRoot?: boolean;
+}) {
+  if (!member) {
+    return (
+      <div className="flex flex-col items-center p-3 w-32 sm:w-40 bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-300 dark:border-slate-800 rounded-3xl shadow-xs hover:border-indigo-400 dark:hover:border-indigo-500 transition-all group shrink-0">
+        <div className="w-14 h-14 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-all mb-2 shadow-inner">
+          <UserPlus className="w-5 h-5" />
+        </div>
+        <div className="text-[10px] font-black text-slate-400 tracking-wider uppercase mb-1">ADD</div>
+        <button
+          type="button"
+          onClick={onAddClick}
+          className="px-2.5 py-1 bg-slate-200 dark:bg-slate-800 hover:bg-indigo-600 dark:hover:bg-indigo-600 hover:text-white dark:hover:text-white text-slate-700 dark:text-slate-300 font-extrabold text-[9px] rounded-xl transition-all cursor-pointer shadow-2xs"
+        >
+          Add Partner
+        </button>
+      </div>
+    );
+  }
+
+  const isActive = member.status === 'active';
+
+  return (
+    <div className={`flex flex-col items-center p-3 w-32 sm:w-40 rounded-3xl border shadow-sm relative transition-all duration-300 hover:scale-[1.03] hover:shadow-md shrink-0 ${
+      isActive 
+        ? 'bg-white border-emerald-500 ring-4 ring-emerald-500/5' 
+        : 'bg-white border-amber-500/80 ring-4 ring-amber-500/5'
+    }`}>
+      {/* Active/Inactive Status Dot */}
+      <span className={`absolute top-2 right-2 w-2 h-2 rounded-full ${
+        isActive ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'
+      }`} />
+
+      {/* Beautiful Custom SVG Avatar */}
+      <div className="mb-2">
+        <UserAvatar status={member.status} />
+      </div>
+
+      {/* ID Label */}
+      <div className="text-[9px] font-mono font-bold text-indigo-600 dark:text-indigo-500 truncate max-w-full px-1 mb-0.5">
+        {member.phone}
+      </div>
+
+      {/* Name Label */}
+      <div className="text-xs font-black text-slate-900 truncate max-w-full text-center mb-2 px-1">
+        {member.name}
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-1 flex-wrap justify-center w-full">
+        {onProfileClick && (
+          <button
+            type="button"
+            onClick={() => onProfileClick(member)}
+            className="px-2 py-0.5 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 font-bold text-[9px] rounded-lg transition-all border border-indigo-100 cursor-pointer"
+            title="View details"
+          >
+            Profile
+          </button>
+        )}
+        {onFocusClick && !isRoot && (
+          <button
+            type="button"
+            onClick={() => onFocusClick(member)}
+            className="px-2 py-0.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold text-[9px] rounded-lg transition-all cursor-pointer animate-pulse"
+            title="Focus tree here"
+          >
+            Focus
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 interface DownlineModuleProps {
   user: User;
@@ -357,65 +479,230 @@ export default function DownlineModule({ user, downlines, isDarkMode = false, on
       </div>
 
       {/* 4. SUB-TAB VIEWS */}
-
+      
       {/* A. TREE VIEW */}
-      {activeSubTab === 'tree' && (
-        <div className={`p-6 rounded-3xl border shadow-sm space-y-4 ${
-          isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
-        }`}>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h3 className="text-base font-black">Visual Downline Tree Hierarchy</h3>
-              <p className="text-xs text-slate-500">
-                Click member names to open profile details or enter their account directly.
-              </p>
-            </div>
-            
-            {focusedRootMember ? (
-              <button
-                onClick={() => setFocusedRootMember(null)}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-500 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-3 py-1.5 rounded-xl cursor-pointer transition-all self-start sm:self-auto"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Reset Tree to Main Root ({user.name})</span>
-              </button>
-            ) : (
-              <span className="text-xs font-mono font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-950 px-3 py-1 rounded-full border border-indigo-200 dark:border-indigo-800">
-                Root Node: {user.name} ({user.phone})
-              </span>
-            )}
-          </div>
+      {activeSubTab === 'tree' && (() => {
+        // Calculate root node
+        const rootNode = focusedRootMember || {
+          id: user.id,
+          name: user.name,
+          phone: user.phone,
+          email: user.email,
+          referrer_id: user.referrer_id,
+          status: user.status || 'active',
+          level: 0,
+          created_at: user.created_at
+        };
 
-          {/* Root Card */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-900 to-slate-900 text-white shadow-md flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-amber-400 text-slate-950 font-black flex items-center justify-center text-sm shadow-sm">
-                👑
-              </div>
+        // Level 1: Direct children of the active root
+        const rootChildren = downlines.filter(m => m.referrer_id === rootNode.id);
+        const leftChild = rootChildren[0];
+        const rightChild = rootChildren[1];
+
+        // Level 2: Children of the left and right child nodes
+        const leftChildren = leftChild ? downlines.filter(m => m.referrer_id === leftChild.id) : [];
+        const leftLeftChild = leftChildren[0];
+        const leftRightChild = leftChildren[1];
+
+        const rightChildren = rightChild ? downlines.filter(m => m.referrer_id === rightChild.id) : [];
+        const rightLeftChild = rightChildren[0];
+        const rightRightChild = rightChildren[1];
+
+        return (
+          <div className={`p-6 rounded-3xl border shadow-sm space-y-6 ${
+            isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+          }`}>
+            {/* Tree Info & ID Search Tool */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
               <div>
-                <div className="font-extrabold text-sm">
-                  {focusedRootMember ? focusedRootMember.name : `${user.name} (YOU)`}
-                </div>
-                <div className="text-xs text-indigo-200 font-mono">
-                  Mobile Distributor ID: {focusedRootMember ? focusedRootMember.phone : user.phone}
-                </div>
+                <h3 className="text-base font-black flex items-center gap-2 text-indigo-950 dark:text-white">
+                  <Network className="w-5 h-5 text-indigo-600" />
+                  <span>Genealogy Network Tree</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Visual mapping of your distributor downlines. Focus on any distributor to expand their downline branches.
+                </p>
+              </div>
+
+              {/* Search By ID form */}
+              <div className="flex flex-wrap items-center gap-2">
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const val = (e.currentTarget.elements.namedItem('searchTreeId') as HTMLInputElement).value.trim();
+                    if (!val) return;
+                    const found = downlines.find(m => m.phone === val || m.id.toString() === val);
+                    if (found) {
+                      setFocusedRootMember(found);
+                    } else if (user.phone === val || user.id.toString() === val) {
+                      setFocusedRootMember(null);
+                    } else {
+                      alert("Distributor ID not found in your downline network.");
+                    }
+                  }}
+                  className="flex items-center gap-1.5"
+                >
+                  <label htmlFor="searchTreeId" className="text-xs font-bold text-slate-500 mr-1">Search By ID:</label>
+                  <input
+                    id="searchTreeId"
+                    name="searchTreeId"
+                    type="text"
+                    placeholder="Enter Phone Number..."
+                    className="px-3 py-1.5 text-xs font-medium border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50 dark:bg-slate-800 w-36 sm:w-44 text-slate-900 dark:text-white"
+                  />
+                  <button
+                    type="submit"
+                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition-all cursor-pointer shadow-xs"
+                  >
+                    Search
+                  </button>
+                </form>
+
+                {focusedRootMember && (
+                  <button
+                    type="button"
+                    onClick={() => setFocusedRootMember(null)}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3 py-1.5 rounded-xl cursor-pointer transition-all"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Reset to Top ({user.name})</span>
+                  </button>
+                )}
               </div>
             </div>
-            <span className="bg-emerald-500 text-slate-950 font-black px-3 py-1 rounded-full text-xs">
-              {focusedRootMember ? `FOCUSED NODE` : `TOP SPONSOR`}
-            </span>
-          </div>
 
-          {/* Tree Root Children */}
-          {downlines.some(m => m.referrer_id === activeRootId) ? (
-            renderTreeNode(activeRootId)
-          ) : (
-            <div className="p-8 text-center text-xs text-slate-400 font-medium">
-              No downline members found under this root node yet. Share Sponsor Link to grow team network!
+            {/* Main Scrollable Genealogy Tree Board */}
+            <div className="overflow-x-auto pb-6 pt-4 flex justify-center">
+              <div className="min-w-[640px] flex flex-col items-center">
+                
+                {/* 1. ROOT LEVEL (Level 0) */}
+                <div className="flex justify-center w-full relative">
+                  <GenealogyNode 
+                    member={rootNode} 
+                    title="Root Sponsor" 
+                    onProfileClick={setSelectedMemberProfile}
+                    isRoot={true}
+                  />
+                </div>
+
+                {/* Root -> Children Connectors */}
+                <div className="w-full h-10 relative flex justify-center">
+                  {/* Center vertical trunk line coming down from root */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[3px] h-4 bg-indigo-500/40"></div>
+                  {/* Horizontal connecting shoulder line */}
+                  <div className="absolute top-4 left-[25%] right-[25%] h-[3px] bg-indigo-500/40 rounded-full"></div>
+                  {/* Two vertical drops to left & right nodes */}
+                  <div className="absolute top-4 left-[25%] w-[3px] h-6 bg-indigo-500/40"></div>
+                  <div className="absolute top-4 right-[25%] w-[3px] h-6 bg-indigo-500/40"></div>
+                </div>
+
+                {/* 2. LEVEL 1: Left Leg and Right Leg */}
+                <div className="flex justify-between w-full gap-8">
+                  
+                  {/* Left Branch */}
+                  <div className="flex flex-col items-center w-1/2">
+                    <GenealogyNode 
+                      member={leftChild} 
+                      title="Left Leg" 
+                      onAddClick={onOpenNewDistributorModal}
+                      onFocusClick={setFocusedRootMember}
+                      onProfileClick={setSelectedMemberProfile}
+                    />
+
+                    {/* Left Child -> Left Grandchildren Connectors */}
+                    {leftChild ? (
+                      <div className="w-full h-10 relative flex justify-center">
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[3px] h-4 bg-indigo-500/40"></div>
+                        <div className="absolute top-4 left-[25%] right-[25%] h-[3px] bg-indigo-500/40 rounded-full"></div>
+                        <div className="absolute top-4 left-[25%] w-[3px] h-6 bg-indigo-500/40"></div>
+                        <div className="absolute top-4 right-[25%] w-[3px] h-6 bg-indigo-500/40"></div>
+                      </div>
+                    ) : (
+                      <div className="h-10" />
+                    )}
+                  </div>
+
+                  {/* Right Branch */}
+                  <div className="flex flex-col items-center w-1/2">
+                    <GenealogyNode 
+                      member={rightChild} 
+                      title="Right Leg" 
+                      onAddClick={onOpenNewDistributorModal}
+                      onFocusClick={setFocusedRootMember}
+                      onProfileClick={setSelectedMemberProfile}
+                    />
+
+                    {/* Right Child -> Right Grandchildren Connectors */}
+                    {rightChild ? (
+                      <div className="w-full h-10 relative flex justify-center">
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[3px] h-4 bg-indigo-500/40"></div>
+                        <div className="absolute top-4 left-[25%] right-[25%] h-[3px] bg-indigo-500/40 rounded-full"></div>
+                        <div className="absolute top-4 left-[25%] w-[3px] h-6 bg-indigo-500/40"></div>
+                        <div className="absolute top-4 right-[25%] w-[3px] h-6 bg-indigo-500/40"></div>
+                      </div>
+                    ) : (
+                      <div className="h-10" />
+                    )}
+                  </div>
+
+                </div>
+
+                {/* 3. LEVEL 2: Grandchildren */}
+                <div className="flex justify-between w-full gap-8">
+                  
+                  {/* Left Side Grandchildren */}
+                  <div className="flex justify-around w-1/2 gap-4">
+                    <GenealogyNode 
+                      member={leftChild ? leftLeftChild : null} 
+                      title="Left-Left" 
+                      onAddClick={onOpenNewDistributorModal}
+                      onFocusClick={setFocusedRootMember}
+                      onProfileClick={setSelectedMemberProfile}
+                    />
+                    <GenealogyNode 
+                      member={leftChild ? leftRightChild : null} 
+                      title="Left-Right" 
+                      onAddClick={onOpenNewDistributorModal}
+                      onFocusClick={setFocusedRootMember}
+                      onProfileClick={setSelectedMemberProfile}
+                    />
+                  </div>
+
+                  {/* Right Side Grandchildren */}
+                  <div className="flex justify-around w-1/2 gap-4">
+                    <GenealogyNode 
+                      member={rightChild ? rightLeftChild : null} 
+                      title="Right-Left" 
+                      onAddClick={onOpenNewDistributorModal}
+                      onFocusClick={setFocusedRootMember}
+                      onProfileClick={setSelectedMemberProfile}
+                    />
+                    <GenealogyNode 
+                      member={rightChild ? rightRightChild : null} 
+                      title="Right-Right" 
+                      onAddClick={onOpenNewDistributorModal}
+                      onFocusClick={setFocusedRootMember}
+                      onProfileClick={setSelectedMemberProfile}
+                    />
+                  </div>
+
+                </div>
+
+              </div>
             </div>
-          )}
-        </div>
-      )}
+
+            {/* Tree Help Footnote */}
+            <div className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 text-[11px] text-slate-500 font-medium leading-relaxed">
+              <span className="font-extrabold text-indigo-950 dark:text-white block mb-1">💡 Pro-Tips for Genealogy Navigation:</span>
+              <ul className="list-disc list-inside space-y-1">
+                <li>Click <strong>Focus</strong> on any distributor node to reposition that distributor at the top of the tree, allowing you to explore deep downlines.</li>
+                <li>If a downline slot is empty, click the <strong>Add Partner</strong> button to open the fast registration form under that line.</li>
+                <li>Click <strong>Profile</strong> to see complete contact information, performance reports, and audit certificates.</li>
+              </ul>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* B. LEVEL WISE LIST VIEW WITH SEARCH */}
       {activeSubTab === 'level' && (

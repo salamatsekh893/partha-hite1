@@ -104,7 +104,7 @@ export default function ProductModule({ user, orders, onOrderPlaced, isDarkMode 
         onOrderPlaced(newOrderObj);
       }
 
-      setOrderSuccessMsg(`Order #${newOrderObj.id} submitted successfully! Status: Pending Approval (অর্ডারটি অ্যাডমিন প্যানেলে অনুমোদনের জন্য পাঠানো হয়েছে)।`);
+      setOrderSuccessMsg(`Order #${newOrderObj.id} submitted successfully! Status: Pending Approval (Sent to the admin panel for authorization).`);
       setTimeout(() => {
         setOrderProduct(null);
         setOrderSuccessMsg('');
@@ -216,7 +216,7 @@ export default function ProductModule({ user, orders, onOrderPlaced, isDarkMode 
         onOrderPlaced(newOrderObj);
       }
 
-      setOrderSuccessMsg(`Order #${newOrderObj.id} submitted! Status: Pending Approval (অর্ডারটি অ্যাডমিন প্যানেলে অনুমোদনের জন্য পেন্ডিং রয়েছে)।`);
+      setOrderSuccessMsg(`Order #${newOrderObj.id} submitted! Status: Pending Approval (Pending admin authorization).`);
       setTimeout(() => {
         setOrderProduct(null);
         setOrderSuccessMsg('');
@@ -529,9 +529,9 @@ export default function ProductModule({ user, orders, onOrderPlaced, isDarkMode 
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <div>
-                <span className="font-bold block text-xs">🔒 Personal Purchase Privacy Rule (ক্রয় তথ্যের গোপনীয়তা)</span>
+                <span className="font-bold block text-xs">🔒 Personal Purchase Privacy Rule</span>
                 <p className="text-[11px] text-slate-500 dark:text-slate-300">
-                  আপনার পারচেজের সম্পূর্ণ বিবরণ (পণ্য, পরিমাণ, টাকা ও ইনভয়েস) শুধুমাত্র আপনার আইডি <strong>#{user.id}</strong>-তেই সংরক্ষিত থাকবে। আপলাইনদের কাছে কেবল রিয়েল-টাইম বিজনেস কাউন্ট (+১) ও বিজনেস ভলিউম (BV) যুক্ত হবে।
+                  Your full purchase history (product, quantity, price, and invoice) will remain private to your ID <strong>#{user.id}</strong>. Upline members will only receive real-time business count increment (+1) and Business Volume (BV) updates.
                 </p>
               </div>
             </div>
@@ -587,7 +587,7 @@ export default function ProductModule({ user, orders, onOrderPlaced, isDarkMode 
                   ) : (
                     <tr>
                       <td colSpan={8} className="p-8 text-center text-slate-400 font-medium">
-                        User ID #{user.id} এর অধীনে কোনো পারচেজ ইনভয়েস রেকর্ড নেই। সোলার প্রোডাক্ট ক্যাটালগ থেকে নতুন অর্ডার সাবমিট করুন।
+                        There are no purchase invoices recorded under User ID #{user.id}. Please submit a new order from the Solar Product Catalog.
                       </td>
                     </tr>
                   )}

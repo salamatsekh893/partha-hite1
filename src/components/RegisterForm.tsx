@@ -366,7 +366,7 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initial
       }
       const age = calculateAge(dob);
       if (age < 18) {
-        setError(`Applicant is ${age} years old. Minimum required age for distributor registration is 18 years (১৮ বছর বয়স হতে হবে).`);
+        setError(`Applicant is ${age} years old. Minimum required age for distributor registration is 18 years.`);
         return false;
       }
     }
@@ -965,7 +965,7 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initial
                             Date of Birth <span className="text-rose-500">*</span>
                           </label>
                           <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.5 rounded-md border border-amber-200/60">
-                            Min 18 Years (১৮ বছর)
+                            Min 18 Years
                           </span>
                         </div>
                         <input

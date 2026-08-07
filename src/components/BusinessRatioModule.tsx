@@ -27,7 +27,7 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
     return {
       id: 'TARGET-2026-01',
       title: 'Executive Star Royalty & Business Target 2026',
-      description: 'ডাইরেক্ট বিজনেস ও টিম বিজনেসের জন্য ৫০:৫০ রেশিও অনুযায়ী BV ও PV টার্গেট নির্ধারণ মডিউল',
+      description: 'BV and PV target setting module according to 50:50 ratio rule for direct and team business.',
       directBvTarget: 10000,
       directPvTarget: 500,
       teamBvTarget: 50000,
@@ -359,12 +359,12 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
               <!-- Header Logos -->
               <div class="mb-4">
                 <span class="text-xs font-black tracking-widest text-amber-800 uppercase block">SUCCESS INDIA SOLAR ENERGY NETWORK</span>
-                <span class="text-[9px] text-slate-500 font-bold block tracking-wider mt-0.5">গ্লোবাল ডিস্ট্রিবিউশন অ্যান্ড লিডারশিপ পোর্টাল</span>
+                <span class="text-[9px] text-slate-500 font-bold block tracking-wider mt-0.5">Global Distribution & Leadership Portal</span>
               </div>
 
               <!-- Certificate Title -->
               <h1 class="text-4xl font-extrabold text-amber-900 tracking-wide uppercase font-serif mt-2 mb-1">CERTIFICATE OF ACHIEVEMENT</h1>
-              <div class="text-[11px] text-slate-500 tracking-widest uppercase font-bold italic mb-6">সাফল্য ও স্বীকৃতি প্রশংসাপত্র</div>
+              <div class="text-[11px] text-slate-500 tracking-widest uppercase font-bold italic mb-6">Achievement & Recognition Certificate</div>
 
               <!-- Presentation Text -->
               <p class="text-sm text-slate-700 italic mb-2">This is proudly presented to</p>
@@ -397,7 +397,7 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
                 This achievement entitles the holder to the premium reward of 
                 <strong class="text-slate-900">${targetConfig.rewardGift || 'iPhone 15 Pro'}</strong>, 
                 along with a cash bonus of 
-                <strong class="text-slate-900">৳${(targetConfig.rewardBonusAmount || 0).toLocaleString('en-IN')}</strong> 
+                <strong class="text-slate-900">₹${(targetConfig.rewardBonusAmount || 0).toLocaleString('en-IN')}</strong> 
                 and exclusive <strong class="text-slate-900">${targetConfig.rewardIncentive || '5% Royalty Pool Shares'}</strong>.
               </div>
 
@@ -429,7 +429,7 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
           
           <div class="no-print text-center mt-6">
             <button onclick="window.print()" class="px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm rounded-lg shadow-md cursor-pointer transition-all">
-              🖨️ Print Certificate (প্রিন্ট করুন)
+              🖨️ Print Certificate
             </button>
           </div>
         </body>
@@ -607,7 +607,7 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="px-3 py-0.5 bg-amber-400 text-slate-950 font-black text-[10px] rounded-full uppercase tracking-wider shadow-xs">
-                {targetConfig.targetPeriodType === 'monthly' ? '📅 মাসিক টার্গেট' : targetConfig.targetPeriodType === 'yearly' ? '🏆 বার্ষিক টার্গেট' : '⏳ কাস্টম টার্গেট'}
+                {targetConfig.targetPeriodType === 'monthly' ? '📅 Monthly Target' : targetConfig.targetPeriodType === 'yearly' ? '🏆 Yearly Target' : '⏳ Custom Target'}
               </span>
               <span className="px-2.5 py-0.5 bg-white/15 backdrop-blur-md text-amber-200 font-mono text-[10px] font-bold rounded-full border border-white/20">
                 Start: {targetConfig.startDate} ➔ End: {targetConfig.endDate}
@@ -630,7 +630,7 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
             {targetProgress.isAchieved ? (
               <div className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 rounded-2xl font-black text-xs uppercase tracking-wider shadow-lg flex items-center gap-2 animate-bounce">
                 <CheckCircle className="w-4 h-4 text-slate-950" />
-                <span>🎉 TARGET ACHIEVED! (টার্গেট অর্জিত)</span>
+                <span>🎉 TARGET ACHIEVED!</span>
               </div>
             ) : (
               <div className="px-4 py-2 bg-white/10 backdrop-blur-md rounded-2xl font-black text-xs text-amber-300 border border-amber-400/30 flex items-center gap-2">
@@ -758,7 +758,7 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
                 onClick={() => alert(`🎉 congratulations! Your target reward (${targetConfig.rewardGift || 'Executive Reward'}) has been approved for claim in your account!`)}
                 className="px-5 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl transition-all shadow-md active:scale-95 cursor-pointer flex items-center gap-1.5"
               >
-                <span>🏆 CLAIM REWARD (পুরস্কার দাবি করুন)</span>
+                <span>🏆 CLAIM REWARD</span>
               </button>
             ) : (
               <div className="text-right">
@@ -778,10 +778,10 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
           <div>
             <h3 className="text-base font-black uppercase tracking-wider flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
-              🏆 প্রশংসাপত্র ও অগ্রগতি রিপোর্ট (Certificate & Progress Audit)
+              🏆 Certificate & Progress Audit
             </h3>
             <p className="text-xs text-slate-500">
-              টার্গেটের সফল অর্জনের উপর ভিত্তি করে প্রশংসাপত্র এবং লাইভ চার-স্তরের অগ্রগতি ট্র্যাক রিপোর্ট।
+              Live certificate generation and four-level progress tracking audit report based on target achievements.
             </p>
           </div>
           <button
@@ -789,7 +789,7 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
             className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
           >
             <Printer className="w-4 h-4 text-slate-950" />
-            <span>প্রশংসাপত্র প্রিন্ট করুন (Print Certificate)</span>
+            <span>Print Certificate</span>
           </button>
         </div>
 
@@ -826,7 +826,7 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
                 <div className="space-y-0.5">
                   <span className="text-[9px] font-extrabold tracking-widest text-amber-700 uppercase block">SUCCESS INDIA PORTAL</span>
                   <span className="text-[16px] font-serif font-black text-slate-800 dark:text-slate-200 block">CERTIFICATE OF ACHIEVEMENT</span>
-                  <span className="text-[8px] text-slate-500 block">সাফল্য ও স্বীকৃতি প্রশংসাপত্র</span>
+                  <span className="text-[8px] text-slate-500 block">Achievement & Recognition Certificate</span>
                 </div>
 
                 <div className="space-y-1">
@@ -868,14 +868,14 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
           {/* Right: Detailed Live Progress Checklist Panel */}
           <div className="lg:col-span-5 space-y-4">
             <h4 className="font-black text-slate-900 dark:text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
-              <span>📊 ৪-স্তরের অগ্রগতি ট্র্যাক রিপোর্ট (Progress Audit Checklist)</span>
+              <span>📊 Progress Audit Checklist (4-Level Verification)</span>
             </h4>
 
             <div className="space-y-3">
               {/* Milestone 1: Direct BV */}
               <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/80 flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">১. ডাইরেক্ট সেলস ভলিউম (Direct BV)</span>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">1. Direct Sales Volume (Direct BV)</span>
                   {targetProgress.isDirectBvAchieved ? (
                     <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 font-black px-2 py-0.5 rounded-full uppercase">Completed</span>
                   ) : (
@@ -894,7 +894,7 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
               {/* Milestone 2: Direct PV */}
               <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/80 flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">২. ডাইরেক্ট পয়েন্ট ভলিউম (Direct PV)</span>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">2. Direct Point Volume (Direct PV)</span>
                   {targetProgress.isDirectPvAchieved ? (
                     <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 font-black px-2 py-0.5 rounded-full uppercase">Completed</span>
                   ) : (
@@ -913,7 +913,7 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
               {/* Milestone 3: Team BV */}
               <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/80 flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">৩. টিম সেলস ভলিউম (Team BV)</span>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">3. Team Sales Volume (Team BV)</span>
                   {targetProgress.isTeamBvAchieved ? (
                     <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 font-black px-2 py-0.5 rounded-full uppercase">Completed</span>
                   ) : (
@@ -932,7 +932,7 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
               {/* Milestone 4: Team PV */}
               <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/80 flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">৪. টিম পয়েন্ট ভলিউম (Team PV)</span>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">4. Team Point Volume (Team PV)</span>
                   {targetProgress.isTeamPvAchieved ? (
                     <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 font-black px-2 py-0.5 rounded-full uppercase">Completed</span>
                   ) : (
@@ -951,7 +951,7 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
               {/* 50:50 Ratio Status */}
               <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/80 flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">⚡ ৫০:৫০ বিজনেস রেশিও ভারসাম্য (Leg Matching)</span>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">⚡ 50:50 Business Ratio Balance (Leg Matching)</span>
                   {targetProgress.isRatioMet ? (
                     <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 font-black px-2 py-0.5 rounded-full uppercase">Balanced</span>
                   ) : (

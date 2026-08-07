@@ -4253,27 +4253,27 @@ export default function AdminPanel({
                           </div>
                           
                           <div className="flex items-center justify-between bg-white px-2 py-1 rounded border border-indigo-100 text-slate-700 font-bold">
-                            <span>মূল প্রোডাক্ট কমিশন:</span>
+                            <span>Base Product Commission:</span>
                             <span className="text-emerald-700 font-extrabold font-mono">
                               {prod.commissionType === 'fixed' 
-                                ? `৳${(prod.commissionValue || 0).toLocaleString('en-IN')} (Fixed)` 
+                                ? `₹${(prod.commissionValue || 0).toLocaleString('en-IN')} (Fixed)` 
                                 : `${prod.commissionValue || 10}% (Percentage)`}
                             </span>
                           </div>
 
                           {prod.useCustomCommission && prod.customCommissionLevels && prod.customCommissionLevels.length > 0 ? (
                             <div className="space-y-1">
-                              <span className="text-[9px] font-bold text-indigo-900 block">লেভেলভিত্তিক কাস্টম ডিস্ট্রিবিউশন:</span>
+                              <span className="text-[9px] font-bold text-indigo-900 block">Level-wise Custom Distribution:</span>
                               <div className="flex items-center gap-1.5 flex-wrap text-slate-600 font-mono font-bold">
                                 {prod.customCommissionLevels.map(c => (
                                   <span key={c.level} className="bg-white border border-indigo-200 px-1.5 py-0.5 rounded text-[9px]">
-                                    L{c.level}: {c.type === 'fixed' || c.amount !== undefined ? `৳${c.amount}` : `${c.percentage}%`}
+                                    L{c.level}: {c.type === 'fixed' || c.amount !== undefined ? `₹${c.amount}` : `${c.percentage}%`}
                                   </span>
                                 ))}
                               </div>
                             </div>
                           ) : (
-                            <span className="text-[9px] text-slate-500 block">গ্লোবাল সিস্টেমে এই কমিশন পুলটি ডিস্ট্রিবিউট হবে।</span>
+                            <span className="text-[9px] text-slate-500 block">This commission pool will be distributed across the global system network.</span>
                           )}
                         </div>
 
@@ -4698,21 +4698,21 @@ export default function AdminPanel({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-emerald-50/55 p-3 rounded-2xl border border-emerald-100">
                   <div>
                     <label className="block font-bold text-slate-800 mb-1">
-                      কমিশনের ধরন (Commission Type) *
+                      Commission Type *
                     </label>
                     <select
                       value={pCommissionType}
                       onChange={(e) => setPCommissionType(e.target.value as 'percentage' | 'fixed')}
                       className="w-full p-2.5 bg-white border border-emerald-200 rounded-xl font-bold text-xs"
                     >
-                      <option value="percentage">শতকরা কমিশন / Percentage (%)</option>
-                      <option value="fixed">নির্দিষ্ট টাকা / Fixed Amount (৳/₹)</option>
+                      <option value="percentage">Percentage (%)</option>
+                      <option value="fixed">Fixed Amount (₹)</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block font-bold text-slate-800 mb-1">
-                      কমিশনের পরিমাণ (Commission Value) *
+                      Commission Value *
                     </label>
                     <input
                       type="number"
@@ -4998,7 +4998,7 @@ export default function AdminPanel({
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div>
                         <label className="block font-bold text-slate-700 mb-1">
-                          শুরুর তারিখ (Start Date)
+                          Start Date
                         </label>
                         <input
                           type="date"
@@ -5010,7 +5010,7 @@ export default function AdminPanel({
 
                       <div>
                         <label className="block font-bold text-slate-700 mb-1">
-                          শেষের তারিখ (End Date)
+                          End Date
                         </label>
                         <input
                           type="date"
@@ -5022,7 +5022,7 @@ export default function AdminPanel({
 
                       <div>
                         <label className="block font-bold text-slate-700 mb-1">
-                          শুরুর সময় (Start Time)
+                          Start Time
                         </label>
                         <input
                           type="time"
@@ -5034,7 +5034,7 @@ export default function AdminPanel({
 
                       <div>
                         <label className="block font-bold text-slate-700 mb-1">
-                          শেষের সময় (End Time)
+                          End Time
                         </label>
                         <input
                           type="time"
@@ -5055,7 +5055,7 @@ export default function AdminPanel({
                   onClick={() => setIsProductModalOpen(false)}
                   className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold text-xs transition-all cursor-pointer"
                 >
-                  বাতিল করুন (Cancel)
+                  Cancel
                 </button>
 
                 <button
@@ -5063,7 +5063,7 @@ export default function AdminPanel({
                   className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl font-black text-xs transition-all shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer flex items-center gap-2"
                 >
                   <Check className="w-4 h-4" />
-                  <span>{editingProduct ? 'পরিবর্তন সংরক্ষণ করুন' : 'প্রোডাক্ট সংরক্ষণ করুন'}</span>
+                  <span>{editingProduct ? 'Save Changes' : 'Save Product'}</span>
                 </button>
               </div>
 
@@ -5082,7 +5082,7 @@ export default function AdminPanel({
                   📁
                 </div>
                 <div>
-                  <h3 className="text-base font-black">প্রোডাক্ট ক্যাটাগরি ও সাব-ক্যাটাগরি ম্যানেজমেন্ট</h3>
+                  <h3 className="text-base font-black">Product Category & Subcategory Management</h3>
                   <p className="text-xs text-indigo-200">Create, rename, or delete categories and subcategories</p>
                 </div>
               </div>
@@ -5098,7 +5098,7 @@ export default function AdminPanel({
             <div className="p-6 space-y-6 text-xs max-h-[75vh] overflow-y-auto">
               {/* Form to Add Category */}
               <form onSubmit={handleAddCategorySubmit} className="bg-indigo-50/80 p-4 rounded-2xl border border-indigo-200 space-y-3">
-                <h4 className="font-extrabold text-indigo-950 text-xs">নতুন ক্যাটাগরি তৈরি করুন</h4>
+                <h4 className="font-extrabold text-indigo-950 text-xs">Create New Category</h4>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
@@ -5112,14 +5112,14 @@ export default function AdminPanel({
                     type="submit"
                     className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-xs cursor-pointer shrink-0"
                   >
-                    + ক্যাটাগরি যোগ করুন
+                    + Add Category
                   </button>
                 </div>
               </form>
 
               {/* List of Existing Categories */}
               <div className="space-y-4">
-                <h4 className="font-extrabold text-slate-900 text-xs">বর্তমান ক্যাটাগরি ও সাব-ক্যাটাগরি সমূহ ({categories.length}):</h4>
+                <h4 className="font-extrabold text-slate-900 text-xs">Current Categories & Subcategories ({categories.length}):</h4>
 
                 <div className="space-y-3">
                   {categories.map((cat) => (
@@ -5161,7 +5161,7 @@ export default function AdminPanel({
                       <div className="pt-2 border-t border-slate-200/80 flex items-center gap-2">
                         <input
                           type="text"
-                          placeholder="নতুন সাব-ক্যাটাগরি লিখুন..."
+                          placeholder="Type new subcategory..."
                           value={selectedCatIdForSub === cat.id ? newSubCatName : ''}
                           onChange={(e) => {
                             setSelectedCatIdForSub(cat.id);
@@ -5174,7 +5174,7 @@ export default function AdminPanel({
                           onClick={() => handleAddSubCategorySubmit(cat.id)}
                           className="px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[11px] font-bold cursor-pointer"
                         >
-                          + সাব-ক্যাটাগরি
+                          + Subcategory
                         </button>
                       </div>
                     </div>
@@ -5189,7 +5189,7 @@ export default function AdminPanel({
                 onClick={() => setIsCategoryModalOpen(false)}
                 className="px-5 py-2 bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer"
               >
-                বন্ধ করুন (Close)
+                Close
               </button>
             </div>
           </div>
