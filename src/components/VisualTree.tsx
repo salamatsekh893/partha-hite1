@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'motion/react';
 import { User, ChevronDown, ChevronRight, CheckCircle2, XCircle, Search, Eye, Maximize2, Minimize2 } from 'lucide-react';
 import { ReferralTreeNode } from '../types.js';
 
@@ -22,16 +23,16 @@ function TreeNode({ node, initiallyExpanded = true }: TreeNodeProps) {
   };
 
   return (
-    <div className="flex flex-col pl-4 sm:pl-8 border-l border-slate-200 relative my-1.5 first:mt-0 last:mb-0">
+    <div className="flex flex-col pl-4 sm:pl-8 border-l border-transparent relative my-1.5 first:mt-0 last:mb-0">
       {/* Horizontal connector line */}
-      <div className="absolute left-0 top-5 w-4 sm:w-8 border-t border-slate-200"></div>
+      <div className="absolute left-0 top-5 w-4 sm:w-8 border-t border-transparent"></div>
 
       <div className="flex items-start gap-2 sm:gap-3 group">
         {/* Expand / Collapse toggle */}
         {hasChildren ? (
           <button
             onClick={toggleExpand}
-            className="mt-1 w-5 h-5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors cursor-pointer"
+            className="mt-1 w-5 h-5 rounded bg-purple-900/30 hover:bg-purple-800/40 text-purple-300 flex items-center justify-center transition-colors cursor-pointer border border-purple-800/30"
           >
             {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
           </button>
@@ -40,65 +41,71 @@ function TreeNode({ node, initiallyExpanded = true }: TreeNodeProps) {
         )}
 
         {/* Node card */}
-        <div className={`p-3.5 rounded-xl border transition-all text-left max-w-xs sm:max-w-md ${
-          node.level === 0 
-            ? 'bg-indigo-50 border-indigo-200 ring-1 ring-indigo-500/10' 
-            : node.status === 'active'
-              ? 'bg-white hover:bg-slate-50 border-slate-200 hover:border-emerald-200 hover:shadow-sm'
-              : 'bg-amber-50/40 hover:bg-amber-50/80 border-amber-100 hover:border-amber-200'
-        }`}>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          whileHover={{ scale: 1.02, y: -2, boxShadow: "0 8px 16px -6px rgba(168,85,247,0.3)" }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          className={`p-3.5 rounded-xl border transition-all text-left max-w-xs sm:max-w-md ${
+            node.level === 0 
+              ? 'bg-gradient-to-br from-purple-900 to-indigo-950 border-purple-500/50 shadow-md text-white' 
+              : node.status === 'active'
+                ? 'bg-gradient-to-br from-purple-950 via-indigo-950 to-purple-900 border-purple-500/30 text-white hover:border-purple-400'
+                : 'bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 border border-purple-900/20 text-slate-200'
+          }`}
+        >
           <div className="flex items-center gap-2.5">
             {/* Status indicator icon */}
             <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
               node.level === 0
-                ? 'bg-indigo-600 text-white'
+                ? 'bg-purple-600 text-white'
                 : node.status === 'active'
-                  ? 'bg-emerald-100 text-emerald-700'
-                  : 'bg-amber-100 text-amber-700'
+                  ? 'bg-purple-900/50 text-purple-200 border border-purple-700/50'
+                  : 'bg-slate-800 text-slate-400'
             }`}>
               <User className="w-4 h-4" />
             </div>
 
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-slate-800 text-xs sm:text-sm leading-tight">{node.name}</span>
+                <span className="font-extrabold text-white text-xs sm:text-sm leading-tight">{node.name}</span>
                 
                 {/* Level Tag */}
                 <span className={`text-[10px] px-1.5 py-0.2 rounded font-semibold shrink-0 uppercase ${
                   node.level === 0
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-slate-200 text-slate-700'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-purple-900/40 text-purple-300 border border-purple-800/30'
                 }`}>
                   {node.level === 0 ? 'Root' : `Level ${node.level}`}
                 </span>
               </div>
               
-              <div className="text-[11px] text-slate-500 font-medium mt-0.5 font-mono select-all">
+              <div className="text-[11px] text-purple-300 font-semibold mt-0.5 font-mono select-all">
                 Distributor ID: {node.phone}
               </div>
             </div>
           </div>
 
           {/* Contact Details */}
-          <div className="mt-2.5 pt-2 border-t border-slate-100/80 text-[11px] space-y-1 text-slate-600">
-            <div>Email: <span className="font-semibold text-slate-800">{node.email}</span></div>
-            <div>Phone: <span className="font-semibold text-slate-800">{node.phone}</span></div>
-            <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-slate-50">
+          <div className="mt-2.5 pt-2 border-t border-purple-900/30 text-[11px] space-y-1 text-slate-300">
+            <div>Email: <span className="font-semibold text-slate-200">{node.email}</span></div>
+            <div>Phone: <span className="font-semibold text-slate-200">{node.phone}</span></div>
+            <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-purple-900/30">
               <span className="text-slate-400">Status:</span>
               {node.status === 'active' ? (
-                <span className="inline-flex items-center gap-0.5 font-bold text-emerald-600">
+                <span className="inline-flex items-center gap-0.5 font-bold text-emerald-400">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   Active
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-0.5 font-bold text-amber-600">
+                <span className="inline-flex items-center gap-0.5 font-bold text-amber-400">
                   <XCircle className="w-3.5 h-3.5" />
                   Pending
                 </span>
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Render child nodes recursively */}

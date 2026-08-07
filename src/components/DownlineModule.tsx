@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { motion } from 'motion/react';
 import { 
   Network, Search, Users, ChevronRight, ChevronDown, Download, Printer, 
   Layers, UserCheck, Clock, Award, ShieldCheck, Phone, Mail, Sparkles,
@@ -9,33 +10,34 @@ import { User, DownlineMember } from '../types.js';
 import { exportToCSV, printPDFReport } from '../utils/exportUtils.js';
 
 // Custom Graphical Vector Avatar Component
-function UserAvatar({ status = 'active' }: { status?: 'active' | 'inactive' }) {
+function UserAvatar({ status = 'active', size = 'small' }: { status?: 'active' | 'inactive'; size?: 'small' | 'normal' }) {
   const isActive = status === 'active';
+  const sizeClass = size === 'small' ? 'w-10 h-10 border-2' : 'w-14 h-14 border-[3px]';
   return (
-    <div className={`relative w-14 h-14 rounded-full flex items-center justify-center shrink-0 border-[3px] ${
-      isActive ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 bg-slate-100'
+    <div className={`relative ${sizeClass} rounded-full flex items-center justify-center shrink-0 ${
+      isActive ? 'border-purple-300 bg-purple-950/40' : 'border-slate-500 bg-slate-800'
     } shadow-md overflow-hidden`}>
       <svg viewBox="0 0 100 100" className="w-full h-full">
         <defs>
           <linearGradient id="avatarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#f8fafc" />
-            <stop offset="100%" stopColor="#e2e8f0" />
+            <stop offset="0%" stopColor="#2e1065" />
+            <stop offset="100%" stopColor="#0f172a" />
           </linearGradient>
         </defs>
         <circle cx="50" cy="50" r="46" fill="url(#avatarGrad)" />
         {/* Head / Neck */}
-        <path d="M50,30 L50,45" stroke="#334155" strokeWidth="4" strokeLinecap="round" />
+        <path d="M50,30 L50,45" stroke="#a78bfa" strokeWidth="4" strokeLinecap="round" />
         {/* Face circle */}
-        <circle cx="50" cy="36" r="15" fill="#fbcfe8" className="fill-amber-100" />
+        <circle cx="50" cy="36" r="15" fill="#fbcfe8" className="fill-purple-200" />
         {/* Hair */}
-        <path d="M34,36 C34,22 66,22 66,36 C66,24 34,24 34,36 Z" fill="#78350f" />
+        <path d="M34,36 C34,22 66,22 66,36 C66,24 34,24 34,36 Z" fill="#4c1d95" />
         {/* Eyes */}
         <circle cx="44" cy="34" r="2.5" fill="#1e293b" />
         <circle cx="56" cy="34" r="2.5" fill="#1e293b" />
         {/* Mouth/Smile */}
         <path d="M44,42 Q50,46 56,42" fill="none" stroke="#1e293b" strokeWidth="2.5" strokeLinecap="round" />
         {/* Shirt/Shoulders */}
-        <path d="M22,78 C25,60 38,54 50,54 C62,54 75,60 78,78 Z" fill={isActive ? '#ef4444' : '#64748b'} />
+        <path d="M22,78 C25,60 38,54 50,54 C62,54 75,60 78,78 Z" fill={isActive ? '#a855f7' : '#6b7280'} />
       </svg>
     </div>
   );
@@ -59,47 +61,63 @@ function GenealogyNode({
 }) {
   if (!member) {
     return (
-      <div className="flex flex-col items-center p-3 w-32 sm:w-40 bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-300 dark:border-slate-800 rounded-3xl shadow-xs hover:border-indigo-400 dark:hover:border-indigo-500 transition-all group shrink-0">
-        <div className="w-14 h-14 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-700 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-all mb-2 shadow-inner">
-          <UserPlus className="w-5 h-5" />
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        whileHover={{ scale: 1.05, y: -3 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        className="flex flex-col items-center p-2.5 w-28 sm:w-34 bg-purple-950/10 dark:bg-purple-950/5 border-2 border-dashed border-purple-800/40 hover:border-purple-500/50 rounded-2xl shadow-xs transition-all group shrink-0"
+      >
+        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-900/10 dark:bg-purple-950/30 border-2 border-dashed border-purple-800/30 text-purple-400 group-hover:text-purple-300 transition-all mb-1.5 shadow-inner">
+          <UserPlus className="w-4 h-4" />
         </div>
-        <div className="text-[10px] font-black text-slate-400 tracking-wider uppercase mb-1">ADD</div>
+        <div className="text-[8px] font-black text-purple-400/80 tracking-wider uppercase mb-1">ADD</div>
         <button
           type="button"
           onClick={onAddClick}
-          className="px-2.5 py-1 bg-slate-200 dark:bg-slate-800 hover:bg-indigo-600 dark:hover:bg-indigo-600 hover:text-white dark:hover:text-white text-slate-700 dark:text-slate-300 font-extrabold text-[9px] rounded-xl transition-all cursor-pointer shadow-2xs"
+          className="px-2 py-0.5 bg-purple-900/20 hover:bg-purple-600 hover:text-white text-purple-300 dark:text-purple-400 font-extrabold text-[8px] sm:text-[9px] rounded-lg transition-all cursor-pointer shadow-2xs border border-purple-800/30"
         >
           Add Partner
         </button>
-      </div>
+      </motion.div>
     );
   }
 
   const isActive = member.status === 'active';
 
   return (
-    <div className={`flex flex-col items-center p-3 w-32 sm:w-40 rounded-3xl border shadow-sm relative transition-all duration-300 hover:scale-[1.03] hover:shadow-md shrink-0 ${
-      isActive 
-        ? 'bg-white border-emerald-500 ring-4 ring-emerald-500/5' 
-        : 'bg-white border-amber-500/80 ring-4 ring-amber-500/5'
-    }`}>
+    <motion.div 
+      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      whileHover={{ 
+        scale: 1.05, 
+        y: -4, 
+        boxShadow: "0 12px 24px -10px rgba(168, 85, 247, 0.45)"
+      }}
+      transition={{ type: "spring", stiffness: 300, damping: 18 }}
+      className={`flex flex-col items-center p-2.5 w-28 sm:w-34 rounded-2xl border relative shrink-0 ${
+        isActive 
+          ? 'bg-gradient-to-b from-purple-900 to-indigo-950 border-purple-500/60 shadow-md text-white' 
+          : 'bg-gradient-to-b from-slate-900 to-indigo-950 border-purple-900/40 shadow-sm text-slate-200'
+      }`}
+    >
       {/* Active/Inactive Status Dot */}
-      <span className={`absolute top-2 right-2 w-2 h-2 rounded-full ${
-        isActive ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'
+      <span className={`absolute top-2 right-2 w-1.5 h-1.5 rounded-full ${
+        isActive ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
       }`} />
 
       {/* Beautiful Custom SVG Avatar */}
-      <div className="mb-2">
-        <UserAvatar status={member.status} />
+      <div className="mb-1.5">
+        <UserAvatar status={member.status} size="small" />
       </div>
 
       {/* ID Label */}
-      <div className="text-[9px] font-mono font-bold text-indigo-600 dark:text-indigo-500 truncate max-w-full px-1 mb-0.5">
+      <div className="text-[8px] sm:text-[9px] font-mono font-bold text-purple-300 truncate max-w-full px-1 mb-0.5 select-all text-center">
         {member.phone}
       </div>
 
       {/* Name Label */}
-      <div className="text-xs font-black text-slate-900 truncate max-w-full text-center mb-2 px-1">
+      <div className="text-[10px] sm:text-xs font-black text-white truncate max-w-full text-center mb-2 px-1">
         {member.name}
       </div>
 
@@ -109,7 +127,7 @@ function GenealogyNode({
           <button
             type="button"
             onClick={() => onProfileClick(member)}
-            className="px-2 py-0.5 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 font-bold text-[9px] rounded-lg transition-all border border-indigo-100 cursor-pointer"
+            className="px-1.5 sm:px-2 py-0.5 bg-purple-500/20 hover:bg-purple-600 hover:text-white text-purple-200 hover:text-white font-extrabold text-[8px] sm:text-[9px] rounded-md transition-all border border-purple-500/30 cursor-pointer"
             title="View details"
           >
             Profile
@@ -119,14 +137,14 @@ function GenealogyNode({
           <button
             type="button"
             onClick={() => onFocusClick(member)}
-            className="px-2 py-0.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold text-[9px] rounded-lg transition-all cursor-pointer animate-pulse"
+            className="px-1.5 sm:px-2 py-0.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-[8px] sm:text-[9px] rounded-md transition-all cursor-pointer"
             title="Focus tree here"
           >
             Focus
           </button>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -585,16 +603,8 @@ export default function DownlineModule({ user, downlines, isDarkMode = false, on
                   />
                 </div>
 
-                {/* Root -> Children Connectors */}
-                <div className="w-full h-10 relative flex justify-center">
-                  {/* Center vertical trunk line coming down from root */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[3px] h-4 bg-indigo-500/40"></div>
-                  {/* Horizontal connecting shoulder line */}
-                  <div className="absolute top-4 left-[25%] right-[25%] h-[3px] bg-indigo-500/40 rounded-full"></div>
-                  {/* Two vertical drops to left & right nodes */}
-                  <div className="absolute top-4 left-[25%] w-[3px] h-6 bg-indigo-500/40"></div>
-                  <div className="absolute top-4 right-[25%] w-[3px] h-6 bg-indigo-500/40"></div>
-                </div>
+                {/* Clean, minimalist spacial transition (No connecting lines) */}
+                <div className="w-full h-4"></div>
 
                 {/* 2. LEVEL 1: Left Leg and Right Leg */}
                 <div className="flex justify-between w-full gap-8">
@@ -609,16 +619,11 @@ export default function DownlineModule({ user, downlines, isDarkMode = false, on
                       onProfileClick={setSelectedMemberProfile}
                     />
 
-                    {/* Left Child -> Left Grandchildren Connectors */}
+                    {/* Left Child -> Left Grandchildren Spacing */}
                     {leftChild ? (
-                      <div className="w-full h-10 relative flex justify-center">
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[3px] h-4 bg-indigo-500/40"></div>
-                        <div className="absolute top-4 left-[25%] right-[25%] h-[3px] bg-indigo-500/40 rounded-full"></div>
-                        <div className="absolute top-4 left-[25%] w-[3px] h-6 bg-indigo-500/40"></div>
-                        <div className="absolute top-4 right-[25%] w-[3px] h-6 bg-indigo-500/40"></div>
-                      </div>
+                      <div className="w-full h-4" />
                     ) : (
-                      <div className="h-10" />
+                      <div className="h-4" />
                     )}
                   </div>
 
@@ -632,16 +637,11 @@ export default function DownlineModule({ user, downlines, isDarkMode = false, on
                       onProfileClick={setSelectedMemberProfile}
                     />
 
-                    {/* Right Child -> Right Grandchildren Connectors */}
+                    {/* Right Child -> Right Grandchildren Spacing */}
                     {rightChild ? (
-                      <div className="w-full h-10 relative flex justify-center">
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[3px] h-4 bg-indigo-500/40"></div>
-                        <div className="absolute top-4 left-[25%] right-[25%] h-[3px] bg-indigo-500/40 rounded-full"></div>
-                        <div className="absolute top-4 left-[25%] w-[3px] h-6 bg-indigo-500/40"></div>
-                        <div className="absolute top-4 right-[25%] w-[3px] h-6 bg-indigo-500/40"></div>
-                      </div>
+                      <div className="w-full h-4" />
                     ) : (
-                      <div className="h-10" />
+                      <div className="h-4" />
                     )}
                   </div>
 
