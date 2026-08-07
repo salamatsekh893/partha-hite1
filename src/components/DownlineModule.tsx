@@ -15,29 +15,29 @@ function UserAvatar({ status = 'active', size = 'small' }: { status?: 'active' |
   const sizeClass = size === 'small' ? 'w-10 h-10 border-2' : 'w-14 h-14 border-[3px]';
   return (
     <div className={`relative ${sizeClass} rounded-full flex items-center justify-center shrink-0 ${
-      isActive ? 'border-purple-300 bg-purple-950/40' : 'border-slate-500 bg-slate-800'
+      isActive ? 'border-indigo-300 bg-indigo-950/40' : 'border-slate-500 bg-slate-800'
     } shadow-md overflow-hidden`}>
       <svg viewBox="0 0 100 100" className="w-full h-full">
         <defs>
           <linearGradient id="avatarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#2e1065" />
+            <stop offset="0%" stopColor="#1e1b4b" />
             <stop offset="100%" stopColor="#0f172a" />
           </linearGradient>
         </defs>
         <circle cx="50" cy="50" r="46" fill="url(#avatarGrad)" />
         {/* Head / Neck */}
-        <path d="M50,30 L50,45" stroke="#a78bfa" strokeWidth="4" strokeLinecap="round" />
+        <path d="M50,30 L50,45" stroke="#818cf8" strokeWidth="4" strokeLinecap="round" />
         {/* Face circle */}
-        <circle cx="50" cy="36" r="15" fill="#fbcfe8" className="fill-purple-200" />
+        <circle cx="50" cy="36" r="15" fill="#fbcfe8" className="fill-indigo-100" />
         {/* Hair */}
-        <path d="M34,36 C34,22 66,22 66,36 C66,24 34,24 34,36 Z" fill="#4c1d95" />
+        <path d="M34,36 C34,22 66,22 66,36 C66,24 34,24 34,36 Z" fill="#312e81" />
         {/* Eyes */}
         <circle cx="44" cy="34" r="2.5" fill="#1e293b" />
         <circle cx="56" cy="34" r="2.5" fill="#1e293b" />
         {/* Mouth/Smile */}
         <path d="M44,42 Q50,46 56,42" fill="none" stroke="#1e293b" strokeWidth="2.5" strokeLinecap="round" />
         {/* Shirt/Shoulders */}
-        <path d="M22,78 C25,60 38,54 50,54 C62,54 75,60 78,78 Z" fill={isActive ? '#a855f7' : '#6b7280'} />
+        <path d="M22,78 C25,60 38,54 50,54 C62,54 75,60 78,78 Z" fill={isActive ? '#6366f1' : '#6b7280'} />
       </svg>
     </div>
   );
@@ -66,16 +66,16 @@ function GenealogyNode({
         animate={{ opacity: 1, scale: 1 }}
         whileHover={{ scale: 1.05, y: -3 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        className="flex flex-col items-center p-2.5 w-28 sm:w-34 bg-purple-950/10 dark:bg-purple-950/5 border-2 border-dashed border-purple-800/40 hover:border-purple-500/50 rounded-2xl shadow-xs transition-all group shrink-0"
+        className="flex flex-col items-center p-2.5 w-28 sm:w-34 bg-[#111c2e]/10 dark:bg-slate-900/40 border-2 border-dashed border-indigo-500/20 hover:border-indigo-500/50 rounded-2xl shadow-xs transition-all group shrink-0"
       >
-        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-900/10 dark:bg-purple-950/30 border-2 border-dashed border-purple-800/30 text-purple-400 group-hover:text-purple-300 transition-all mb-1.5 shadow-inner">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-900/10 dark:bg-indigo-950/30 border-2 border-dashed border-indigo-500/30 text-indigo-400 group-hover:text-indigo-300 transition-all mb-1.5 shadow-inner">
           <UserPlus className="w-4 h-4" />
         </div>
-        <div className="text-[8px] font-black text-purple-400/80 tracking-wider uppercase mb-1">ADD</div>
+        <div className="text-[8px] font-black text-indigo-400/80 tracking-wider uppercase mb-1">ADD</div>
         <button
           type="button"
           onClick={onAddClick}
-          className="px-2 py-0.5 bg-purple-900/20 hover:bg-purple-600 hover:text-white text-purple-300 dark:text-purple-400 font-extrabold text-[8px] sm:text-[9px] rounded-lg transition-all cursor-pointer shadow-2xs border border-purple-800/30"
+          className="px-2 py-0.5 bg-indigo-900/20 hover:bg-indigo-600 hover:text-white text-indigo-300 dark:text-indigo-400 font-extrabold text-[8px] sm:text-[9px] rounded-lg transition-all cursor-pointer shadow-2xs border border-indigo-800/30"
         >
           Add Partner
         </button>
@@ -92,13 +92,13 @@ function GenealogyNode({
       whileHover={{ 
         scale: 1.05, 
         y: -4, 
-        boxShadow: "0 12px 24px -10px rgba(168, 85, 247, 0.45)"
+        boxShadow: "0 12px 24px -10px rgba(79, 70, 229, 0.55)"
       }}
       transition={{ type: "spring", stiffness: 300, damping: 18 }}
       className={`flex flex-col items-center p-2.5 w-28 sm:w-34 rounded-2xl border relative shrink-0 ${
         isActive 
-          ? 'bg-gradient-to-b from-purple-900 to-indigo-950 border-purple-500/60 shadow-md text-white' 
-          : 'bg-gradient-to-b from-slate-900 to-indigo-950 border-purple-900/40 shadow-sm text-slate-200'
+          ? 'bg-[#111c2e] border-indigo-500/80 shadow-md text-white' 
+          : 'bg-[#1e293b]/90 border-slate-700/60 shadow-sm text-slate-200'
       }`}
     >
       {/* Active/Inactive Status Dot */}
@@ -112,7 +112,7 @@ function GenealogyNode({
       </div>
 
       {/* ID Label */}
-      <div className="text-[8px] sm:text-[9px] font-mono font-bold text-purple-300 truncate max-w-full px-1 mb-0.5 select-all text-center">
+      <div className="text-[8px] sm:text-[9px] font-mono font-bold text-indigo-200 truncate max-w-full px-1 mb-0.5 select-all text-center">
         {member.phone}
       </div>
 
@@ -127,7 +127,7 @@ function GenealogyNode({
           <button
             type="button"
             onClick={() => onProfileClick(member)}
-            className="px-1.5 sm:px-2 py-0.5 bg-purple-500/20 hover:bg-purple-600 hover:text-white text-purple-200 hover:text-white font-extrabold text-[8px] sm:text-[9px] rounded-md transition-all border border-purple-500/30 cursor-pointer"
+            className="px-1.5 sm:px-2 py-0.5 bg-indigo-500/25 hover:bg-indigo-600 hover:text-white text-indigo-100 hover:text-white font-extrabold text-[8px] sm:text-[9px] rounded-md transition-all border border-indigo-400/30 cursor-pointer"
             title="View details"
           >
             Profile
@@ -514,17 +514,6 @@ export default function DownlineModule({ user, downlines, isDarkMode = false, on
 
         // Level 1: Direct children of the active root
         const rootChildren = downlines.filter(m => m.referrer_id === rootNode.id);
-        const leftChild = rootChildren[0];
-        const rightChild = rootChildren[1];
-
-        // Level 2: Children of the left and right child nodes
-        const leftChildren = leftChild ? downlines.filter(m => m.referrer_id === leftChild.id) : [];
-        const leftLeftChild = leftChildren[0];
-        const leftRightChild = leftChildren[1];
-
-        const rightChildren = rightChild ? downlines.filter(m => m.referrer_id === rightChild.id) : [];
-        const rightLeftChild = rightChildren[0];
-        const rightRightChild = rightChildren[1];
 
         return (
           <div className={`p-6 rounded-3xl border shadow-sm space-y-6 ${
@@ -603,90 +592,161 @@ export default function DownlineModule({ user, downlines, isDarkMode = false, on
                   />
                 </div>
 
-                {/* Clean, minimalist spacial transition (No connecting lines) */}
-                <div className="w-full h-4"></div>
-
-                {/* 2. LEVEL 1: Left Leg and Right Leg */}
-                <div className="flex justify-between w-full gap-8">
-                  
-                  {/* Left Branch */}
-                  <div className="flex flex-col items-center w-1/2">
-                    <GenealogyNode 
-                      member={leftChild} 
-                      title="Left Leg" 
-                      onAddClick={onOpenNewDistributorModal}
-                      onFocusClick={setFocusedRootMember}
-                      onProfileClick={setSelectedMemberProfile}
-                    />
-
-                    {/* Left Child -> Left Grandchildren Spacing */}
-                    {leftChild ? (
-                      <div className="w-full h-4" />
-                    ) : (
-                      <div className="h-4" />
-                    )}
-                  </div>
-
-                  {/* Right Branch */}
-                  <div className="flex flex-col items-center w-1/2">
-                    <GenealogyNode 
-                      member={rightChild} 
-                      title="Right Leg" 
-                      onAddClick={onOpenNewDistributorModal}
-                      onFocusClick={setFocusedRootMember}
-                      onProfileClick={setSelectedMemberProfile}
-                    />
-
-                    {/* Right Child -> Right Grandchildren Spacing */}
-                    {rightChild ? (
-                      <div className="w-full h-4" />
-                    ) : (
-                      <div className="h-4" />
-                    )}
-                  </div>
-
+                {/* Clean, minimalist spatial transition */}
+                <div className="w-full h-2 flex flex-col items-center">
+                  <div className="w-[3px] h-4 bg-indigo-500/40"></div>
                 </div>
 
-                {/* 3. LEVEL 2: Grandchildren */}
-                <div className="flex justify-between w-full gap-8">
-                  
-                  {/* Left Side Grandchildren */}
-                  <div className="flex justify-around w-1/2 gap-4">
-                    <GenealogyNode 
-                      member={leftChild ? leftLeftChild : null} 
-                      title="Left-Left" 
-                      onAddClick={onOpenNewDistributorModal}
-                      onFocusClick={setFocusedRootMember}
-                      onProfileClick={setSelectedMemberProfile}
-                    />
-                    <GenealogyNode 
-                      member={leftChild ? leftRightChild : null} 
-                      title="Left-Right" 
-                      onAddClick={onOpenNewDistributorModal}
-                      onFocusClick={setFocusedRootMember}
-                      onProfileClick={setSelectedMemberProfile}
-                    />
-                  </div>
+                {/* DYNAMIC MULTI-LEG REPRESENTATION (Supports 1, 2, 3, 4, 5, or more legs properly) */}
+                {(() => {
+                  // Ensure we show all direct children (legs)
+                  // If there are 0 children, show 2 empty slots to add partner
+                  // If there is 1 child, show that child and 1 empty slot
+                  // If there are N children, show all of them and 1 extra empty slot at the end
+                  const level1Slots = rootChildren.map((child, idx) => ({
+                    type: 'member' as const,
+                    data: child,
+                    index: idx
+                  }));
 
-                  {/* Right Side Grandchildren */}
-                  <div className="flex justify-around w-1/2 gap-4">
-                    <GenealogyNode 
-                      member={rightChild ? rightLeftChild : null} 
-                      title="Right-Left" 
-                      onAddClick={onOpenNewDistributorModal}
-                      onFocusClick={setFocusedRootMember}
-                      onProfileClick={setSelectedMemberProfile}
-                    />
-                    <GenealogyNode 
-                      member={rightChild ? rightRightChild : null} 
-                      title="Right-Right" 
-                      onAddClick={onOpenNewDistributorModal}
-                      onFocusClick={setFocusedRootMember}
-                      onProfileClick={setSelectedMemberProfile}
-                    />
-                  </div>
+                  const totalSlotsNeeded = Math.max(2, level1Slots.length + 1);
+                  const filledCount = level1Slots.length;
+                  const emptySlotsCount = totalSlotsNeeded - filledCount;
 
-                </div>
+                  const level1SlotsWithPlaceholders: Array<{ type: 'member' | 'empty'; data: DownlineMember | null; index: number }> = [
+                    ...level1Slots
+                  ];
+                  for (let i = 0; i < emptySlotsCount; i++) {
+                    level1SlotsWithPlaceholders.push({
+                      type: 'empty',
+                      data: null,
+                      index: filledCount + i
+                    });
+                  }
+
+                  return (
+                    <div className="flex flex-col items-center w-full">
+                      
+                      {/* Connection horizontal line for Level 1 legs */}
+                      <div className="w-full relative flex flex-col items-center mb-6">
+                        {/* Horizontal connecting line spanning between all children */}
+                        <div className="absolute top-0 h-[3px] bg-indigo-500/30 rounded-full" style={{
+                          width: `${Math.max(40, Math.min(92, (level1SlotsWithPlaceholders.length - 1) * 20))}%`
+                        }}></div>
+                      </div>
+
+                      {/* Level 1 Legs Grid Row */}
+                      <div className="flex justify-center items-start gap-12 w-full px-4">
+                        {level1SlotsWithPlaceholders.map((slot, sIdx) => {
+                          if (slot.type === 'empty') {
+                            return (
+                              <div key={`empty-l1-${sIdx}`} className="flex flex-col items-center">
+                                {/* Vertical line down to the empty slot */}
+                                <div className="w-[3px] h-4 bg-indigo-500/30 -mt-6 mb-2"></div>
+                                <GenealogyNode 
+                                  member={null} 
+                                  title={`Leg ${sIdx + 1}`} 
+                                  onAddClick={onOpenNewDistributorModal}
+                                />
+                              </div>
+                            );
+                          }
+
+                          const child = slot.data!;
+                          // Fetch children of this child (Level 2 Grandchildren)
+                          const grandchildren = downlines.filter(m => m.referrer_id === child.id);
+
+                          // Create sub-slots (grandchildren)
+                          const subSlots = grandchildren.map((sub, idx) => ({
+                            type: 'member' as const,
+                            data: sub,
+                            index: idx
+                          }));
+
+                          // Ensure at least 1 empty partner slot or 1 empty slot after existing grandchildren
+                          const subSlotsWithPlaceholders: Array<{ type: 'member' | 'empty'; data: DownlineMember | null; index: number }> = [
+                            ...subSlots
+                          ];
+                          if (subSlotsWithPlaceholders.length === 0) {
+                            subSlotsWithPlaceholders.push({
+                              type: 'empty',
+                              data: null,
+                              index: 0
+                            });
+                          } else {
+                            subSlotsWithPlaceholders.push({
+                              type: 'empty',
+                              data: null,
+                              index: subSlotsWithPlaceholders.length
+                            });
+                          }
+
+                          return (
+                            <div key={`member-l1-${child.id}`} className="flex flex-col items-center">
+                              {/* Vertical line down to this leg node */}
+                              <div className="w-[3px] h-4 bg-indigo-500/30 -mt-6 mb-2"></div>
+                              
+                              <div className="flex flex-col items-center bg-slate-500/5 dark:bg-slate-950/10 p-4 rounded-3xl border border-indigo-500/10 shadow-2xs">
+                                <GenealogyNode 
+                                  member={child} 
+                                  title={`Leg ${sIdx + 1}`} 
+                                  onAddClick={onOpenNewDistributorModal}
+                                  onFocusClick={setFocusedRootMember}
+                                  onProfileClick={setSelectedMemberProfile}
+                                />
+
+                                {/* Visual connecting line for grandchildren */}
+                                <div className="flex flex-col items-center w-full mt-4">
+                                  {/* Center line drop from the parent card */}
+                                  <div className="w-[3px] h-4 bg-emerald-500/30"></div>
+                                  
+                                  {/* Horizontal shoulder connecting grandchildren */}
+                                  <div className="h-[2px] bg-emerald-500/30 rounded-full" style={{
+                                    width: `${Math.max(30, Math.min(80, (subSlotsWithPlaceholders.length - 1) * 35))}%`
+                                  }}></div>
+                                </div>
+
+                                {/* Level 2 Grid under this Leg */}
+                                <div className="flex justify-center items-start gap-4 mt-4">
+                                  {subSlotsWithPlaceholders.map((subSlot, subIdx) => {
+                                    if (subSlot.type === 'empty') {
+                                      return (
+                                        <div key={`empty-l2-${child.id}-${subIdx}`} className="flex flex-col items-center">
+                                          {/* Mini drop line to grandchild slot */}
+                                          <div className="w-[2px] h-3 bg-emerald-500/30 mb-1"></div>
+                                          <GenealogyNode 
+                                            member={null} 
+                                            title="Add Partner" 
+                                            onAddClick={onOpenNewDistributorModal}
+                                          />
+                                        </div>
+                                      );
+                                    }
+
+                                    return (
+                                      <div key={`member-l2-${subSlot.data.id}`} className="flex flex-col items-center">
+                                        {/* Mini drop line to grandchild slot */}
+                                        <div className="w-[2px] h-3 bg-emerald-500/30 mb-1"></div>
+                                        <GenealogyNode 
+                                          member={subSlot.data} 
+                                          title="Partner" 
+                                          onAddClick={onOpenNewDistributorModal}
+                                          onFocusClick={setFocusedRootMember}
+                                          onProfileClick={setSelectedMemberProfile}
+                                        />
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                    </div>
+                  );
+                })()}
 
               </div>
             </div>

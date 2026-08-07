@@ -27,7 +27,7 @@ export default function Header({ user, onLogout, isImpersonating, currentView, s
   }
 
   return (
-    <header id="app-header" className="bg-gradient-to-r from-emerald-50/95 via-teal-50/90 to-emerald-50/95 backdrop-blur-md border-b border-emerald-200/80 sticky top-0 z-40 shadow-sm">
+    <header id="app-header" className="bg-[#111c2e] border-b border-slate-800 sticky top-0 z-40 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           
@@ -37,7 +37,7 @@ export default function Header({ user, onLogout, isImpersonating, currentView, s
               <button
                 type="button"
                 onClick={onMenuClick}
-                className="p-2.5 rounded-xl text-slate-700 hover:text-slate-950 hover:bg-slate-100 transition-all border border-slate-200 cursor-pointer flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-amber-500/25"
+                className="p-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800 transition-all border border-slate-800 cursor-pointer flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-amber-500/25"
                 title="Open Navigation Menu"
               >
                 <Menu className="w-5 h-5" />
@@ -49,10 +49,10 @@ export default function Header({ user, onLogout, isImpersonating, currentView, s
                 ☀️
               </div>
               <div className="text-left">
-                <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-tight">
+                <h1 className="text-base sm:text-lg font-black text-white tracking-tight leading-tight">
                   SuccessIndia
                 </h1>
-                <span className="text-[10px] text-emerald-700 font-extrabold tracking-wider uppercase block -mt-0.5">
+                <span className="text-[10px] text-emerald-400 font-extrabold tracking-wider uppercase block -mt-0.5">
                   Solar Energy & EV Charger Complete Setup Solutions
                 </span>
               </div>
@@ -64,13 +64,13 @@ export default function Header({ user, onLogout, isImpersonating, currentView, s
             <div className="flex items-center gap-3">
               {/* Quick Navigation - Only show if Admin to let them easily toggle */}
               {user.role === 'admin' && (
-                <div className="hidden md:flex bg-slate-100 p-1 rounded-xl gap-1 text-xs border border-slate-200">
+                <div className="hidden md:flex bg-slate-900 p-1 rounded-xl gap-1 text-xs border border-slate-800">
                   <button
                     onClick={() => setView('dashboard')}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                       currentView === 'dashboard'
                         ? 'bg-emerald-600 text-white shadow-sm'
-                        : 'text-slate-700 hover:text-slate-950'
+                        : 'text-slate-300 hover:text-white'
                     }`}
                   >
                     <LayoutDashboard className="w-3.5 h-3.5" />
@@ -81,7 +81,7 @@ export default function Header({ user, onLogout, isImpersonating, currentView, s
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                       currentView === 'admin'
                         ? 'bg-amber-400 text-slate-950 font-black shadow-sm'
-                        : 'text-slate-700 hover:text-slate-950'
+                        : 'text-slate-300 hover:text-white'
                     }`}
                   >
                     <Shield className="w-3.5 h-3.5" />
@@ -94,7 +94,7 @@ export default function Header({ user, onLogout, isImpersonating, currentView, s
               <button
                 type="button"
                 onClick={onEditProfileClick}
-                className="hidden sm:flex items-center gap-2 bg-amber-50 hover:bg-amber-100/90 border border-amber-200/90 px-3 py-1.5 rounded-xl shadow-xs transition-all cursor-pointer group"
+                className="hidden sm:flex items-center gap-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 px-3 py-1.5 rounded-xl shadow-xs transition-all cursor-pointer group"
                 title="Edit Profile Info"
               >
                 {headerPhoto ? (
@@ -109,8 +109,8 @@ export default function Header({ user, onLogout, isImpersonating, currentView, s
                     {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon className="w-3 text-slate-950" />}
                   </div>
                 )}
-                <span className="text-xs font-black text-slate-900 group-hover:text-amber-900 transition-colors">{user.name}</span>
-                <span className="text-[10px] text-amber-700 bg-amber-200/60 font-extrabold px-1.5 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
+                <span className="text-xs font-black text-white group-hover:text-amber-400 transition-colors">{user.name}</span>
+                <span className="text-[10px] text-amber-400 bg-amber-950/60 font-extrabold px-1.5 py-0.5 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">
                   Edit
                 </span>
               </button>
@@ -121,11 +121,11 @@ export default function Header({ user, onLogout, isImpersonating, currentView, s
                 className={`inline-flex items-center gap-1.5 px-3.5 py-2 border rounded-xl text-xs font-extrabold transition-all shadow-sm cursor-pointer ${
                   isImpersonating 
                     ? 'bg-amber-400 border-amber-300 text-slate-950 hover:bg-amber-300' 
-                    : 'border-slate-200 hover:border-slate-300 text-slate-700 bg-slate-100 hover:bg-slate-200'
+                    : 'border-slate-800 hover:border-slate-700 text-slate-300 bg-slate-900 hover:bg-slate-800'
                 }`}
                 title={isImpersonating ? "Return to Admin ID & Admin Panel" : "Log out"}
               >
-                <LogOut className={`w-3.5 h-3.5 ${isImpersonating ? 'text-slate-950' : 'text-slate-600'}`} />
+                <LogOut className={`w-3.5 h-3.5 ${isImpersonating ? 'text-slate-950' : 'text-slate-400'}`} />
                 <span>{isImpersonating ? 'Return to Admin ID' : 'Logout'}</span>
               </button>
             </div>

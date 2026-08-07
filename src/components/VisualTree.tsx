@@ -32,7 +32,7 @@ function TreeNode({ node, initiallyExpanded = true }: TreeNodeProps) {
         {hasChildren ? (
           <button
             onClick={toggleExpand}
-            className="mt-1 w-5 h-5 rounded bg-purple-900/30 hover:bg-purple-800/40 text-purple-300 flex items-center justify-center transition-colors cursor-pointer border border-purple-800/30"
+            className="mt-1 w-5 h-5 rounded bg-indigo-900/30 hover:bg-indigo-800/40 text-indigo-300 flex items-center justify-center transition-colors cursor-pointer border border-indigo-800/30"
           >
             {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
           </button>
@@ -44,23 +44,23 @@ function TreeNode({ node, initiallyExpanded = true }: TreeNodeProps) {
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          whileHover={{ scale: 1.02, y: -2, boxShadow: "0 8px 16px -6px rgba(168,85,247,0.3)" }}
+          whileHover={{ scale: 1.02, y: -2, boxShadow: "0 8px 16px -6px rgba(79,70,229,0.35)" }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
           className={`p-3.5 rounded-xl border transition-all text-left max-w-xs sm:max-w-md ${
             node.level === 0 
-              ? 'bg-gradient-to-br from-purple-900 to-indigo-950 border-purple-500/50 shadow-md text-white' 
+              ? 'bg-gradient-to-br from-indigo-600 to-indigo-850 border-indigo-400 shadow-md text-white' 
               : node.status === 'active'
-                ? 'bg-gradient-to-br from-purple-950 via-indigo-950 to-purple-900 border-purple-500/30 text-white hover:border-purple-400'
-                : 'bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 border border-purple-900/20 text-slate-200'
+                ? 'bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 border-indigo-500/30 text-white hover:border-indigo-400'
+                : 'bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 border border-indigo-900/20 text-slate-200'
           }`}
         >
           <div className="flex items-center gap-2.5">
             {/* Status indicator icon */}
             <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
               node.level === 0
-                ? 'bg-purple-600 text-white'
+                ? 'bg-indigo-600 text-white border border-indigo-400'
                 : node.status === 'active'
-                  ? 'bg-purple-900/50 text-purple-200 border border-purple-700/50'
+                  ? 'bg-indigo-900/50 text-indigo-200 border border-indigo-700/50'
                   : 'bg-slate-800 text-slate-400'
             }`}>
               <User className="w-4 h-4" />
@@ -73,24 +73,24 @@ function TreeNode({ node, initiallyExpanded = true }: TreeNodeProps) {
                 {/* Level Tag */}
                 <span className={`text-[10px] px-1.5 py-0.2 rounded font-semibold shrink-0 uppercase ${
                   node.level === 0
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-purple-900/40 text-purple-300 border border-purple-800/30'
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-indigo-900/40 text-indigo-300 border border-indigo-800/30'
                 }`}>
                   {node.level === 0 ? 'Root' : `Level ${node.level}`}
                 </span>
               </div>
               
-              <div className="text-[11px] text-purple-300 font-semibold mt-0.5 font-mono select-all">
+              <div className="text-[11px] text-indigo-300 font-semibold mt-0.5 font-mono select-all">
                 Distributor ID: {node.phone}
               </div>
             </div>
           </div>
 
           {/* Contact Details */}
-          <div className="mt-2.5 pt-2 border-t border-purple-900/30 text-[11px] space-y-1 text-slate-300">
+          <div className="mt-2.5 pt-2 border-t border-indigo-900/30 text-[11px] space-y-1 text-slate-300">
             <div>Email: <span className="font-semibold text-slate-200">{node.email}</span></div>
             <div>Phone: <span className="font-semibold text-slate-200">{node.phone}</span></div>
-            <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-purple-900/30">
+            <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-indigo-900/30">
               <span className="text-slate-400">Status:</span>
               {node.status === 'active' ? (
                 <span className="inline-flex items-center gap-0.5 font-bold text-emerald-400">
