@@ -403,35 +403,65 @@ export default function ProfileEditModal({ isOpen, onClose, user, onProfileUpdat
           </button>
           <button
             type="button"
+            disabled={user.status !== 'active' && !isAdminMode}
             onClick={() => setActiveTab('personal')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'personal' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-200/60'
+            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              activeTab === 'personal' 
+                ? 'bg-indigo-600 text-white shadow-sm' 
+                : (user.status !== 'active' && !isAdminMode)
+                  ? 'text-slate-400 bg-slate-100/50 cursor-not-allowed opacity-60'
+                  : 'text-slate-600 hover:bg-slate-200/60 cursor-pointer'
             }`}
+            title={user.status !== 'active' && !isAdminMode ? "Locked until Distributor ID is approved by Administrator" : "Personal & Nominee details"}
           >
+            {user.status !== 'active' && !isAdminMode && <Lock className="w-3 h-3 text-slate-400 shrink-0" />}
             Personal & Nominee
           </button>
           <button
             type="button"
+            disabled={user.status !== 'active' && !isAdminMode}
             onClick={() => setActiveTab('address')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'address' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-200/60'
+            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              activeTab === 'address' 
+                ? 'bg-indigo-600 text-white shadow-sm' 
+                : (user.status !== 'active' && !isAdminMode)
+                  ? 'text-slate-400 bg-slate-100/50 cursor-not-allowed opacity-60'
+                  : 'text-slate-600 hover:bg-slate-200/60 cursor-pointer'
             }`}
+            title={user.status !== 'active' && !isAdminMode ? "Locked until Distributor ID is approved by Administrator" : "Address details"}
           >
+            {user.status !== 'active' && !isAdminMode && <Lock className="w-3 h-3 text-slate-400 shrink-0" />}
             Addresses
           </button>
           <button
             type="button"
+            disabled={user.status !== 'active' && !isAdminMode}
             onClick={() => setActiveTab('documents')}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'documents' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-200/60'
+            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              activeTab === 'documents' 
+                ? 'bg-indigo-600 text-white shadow-sm' 
+                : (user.status !== 'active' && !isAdminMode)
+                  ? 'text-slate-400 bg-slate-100/50 cursor-not-allowed opacity-60'
+                  : 'text-slate-600 hover:bg-slate-200/60 cursor-pointer'
             }`}
+            title={user.status !== 'active' && !isAdminMode ? "Locked until Distributor ID is approved by Administrator" : "ID Scan and photos"}
           >
+            {user.status !== 'active' && !isAdminMode && <Lock className="w-3 h-3 text-slate-400 shrink-0" />}
             ID & Document Scans
           </button>
         </div>
 
         {/* Scrollable Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
+          
+          {user.status !== 'active' && !isAdminMode && (
+            <div className="bg-amber-50/80 border border-amber-200 rounded-xl p-3.5 flex gap-2.5 text-amber-900 text-xs leading-relaxed font-semibold">
+              <span className="text-sm">🔒</span>
+              <div>
+                Your Distributor ID is currently <span className="text-amber-700 font-bold">Pending Admin Approval</span>. You can edit your basic Account Credentials now. Once approved and activated by the administrator, you can update your Personal, Nominee, Address, and Document details.
+              </div>
+            </div>
+          )}
           
           {error && (
             <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex gap-3 text-rose-700 text-xs">

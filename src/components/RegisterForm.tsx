@@ -479,6 +479,14 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initial
     setPermanentDist(presentDist);
   };
 
+  const getFormattedDate = () => {
+    const d = new Date();
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   return (
     <div id="register-form-container" className="w-full mx-auto p-1 sm:p-2">
       <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden">
@@ -486,85 +494,16 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initial
         {/* Success India Form Header */}
         <div className="bg-indigo-600 px-6 py-6 text-white text-center relative">
           <div className="absolute top-4 left-4 text-[10px] uppercase font-bold text-indigo-200 tracking-wider">
-            Form No: <span className="text-white">SI-{Math.floor(100000 + Math.random() * 900000)}</span>
+            Form No: <span className="text-white font-black font-mono">SI-{Math.floor(100000 + Math.random() * 900000)}</span>
           </div>
-          <div className="absolute top-4 right-4 text-[10px] uppercase font-bold text-indigo-200 tracking-wider">
-            Date: <span className="text-white">{new Date().toLocaleDateString('en-US')}</span>
+          <div className="absolute top-4 right-4 text-[10px] uppercase font-bold text-indigo-200 tracking-wider font-mono">
+            Date: <span className="text-white font-black">{getFormattedDate()}</span>
           </div>
           
           <div className="inline-flex w-12 h-12 rounded-xl bg-white/10 items-center justify-center mb-2 mt-4">
             <UserPlus className="w-6 h-6 text-indigo-100" />
           </div>
-          <h2 className="text-2xl font-black tracking-tight">SUCCESS INDIA</h2>
-          <p className="text-xs text-indigo-200 uppercase font-bold tracking-widest mt-0.5">Applicant Admission Form</p>
-          <div className="h-0.5 w-16 bg-white/30 mx-auto my-3 rounded-full"></div>
-          <p className="text-xs text-indigo-100 font-medium max-w-md mx-auto leading-relaxed">
-            Please fill out this official multi-level network joining application with precise details.
-          </p>
-        </div>
-
-        {/* Step Progress Indicators */}
-        <div className="bg-slate-50 border-b border-slate-100 px-6 py-4 flex items-center justify-between overflow-x-auto gap-4">
-          <button 
-            type="button"
-            onClick={() => validateStep(1) && setCurrentStep(1)}
-            className={`flex items-center gap-2 text-xs font-bold transition-all ${
-              currentStep === 1 ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] border ${
-              currentStep === 1 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white border-slate-300'
-            }`}>1</span>
-            Account Info
-          </button>
-          
-          <div className="h-px bg-slate-200 flex-1 hidden sm:block"></div>
-
-          <button 
-            type="button"
-            onClick={() => validateStep(1) && setCurrentStep(2)}
-            disabled={!name || !phone || !email}
-            className={`flex items-center gap-2 text-xs font-bold transition-all disabled:opacity-50 ${
-              currentStep === 2 ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] border ${
-              currentStep === 2 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white border-slate-300'
-            }`}>2</span>
-            Personal & Family
-          </button>
-
-          <div className="h-px bg-slate-200 flex-1 hidden sm:block"></div>
-
-          <button 
-            type="button"
-            onClick={() => validateStep(1) && setCurrentStep(3)}
-            disabled={!name || !phone || !email}
-            className={`flex items-center gap-2 text-xs font-bold transition-all disabled:opacity-50 ${
-              currentStep === 3 ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] border ${
-              currentStep === 3 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white border-slate-300'
-            }`}>3</span>
-            Addresses
-          </button>
-
-          <div className="h-px bg-slate-200 flex-1 hidden sm:block"></div>
-
-          <button 
-            type="button"
-            onClick={() => validateStep(1) && setCurrentStep(4)}
-            disabled={!name || !phone || !email}
-            className={`flex items-center gap-2 text-xs font-bold transition-all disabled:opacity-50 ${
-              currentStep === 4 ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'
-            }`}
-          >
-            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] border ${
-              currentStep === 4 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white border-slate-300'
-            }`}>4</span>
-            Docs & References
-          </button>
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight uppercase">SUCCESS INDIA DISTRIBUTOR REGISTRATIONS</h2>
         </div>
 
         <div className="p-6 sm:p-8">
@@ -606,15 +545,8 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initial
               <form onSubmit={handleSubmit} className="space-y-6">
                 
                 {/* STEP 1: ACCOUNT & SPONSOR INFO */}
-                {currentStep === 1 && (
-                  <div className="space-y-4 animate-fade-in">
-                    <div className="border-b border-slate-100 pb-2 mb-4">
-                      <h3 className="text-sm font-bold text-indigo-600 uppercase tracking-wider flex items-center gap-1.5">
-                        <Award className="w-4 h-4" /> 1. Referral & Core Account
-                      </h3>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-4 animate-fade-in">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Passport Size Photo Box with Auto Compression */}
                       <div className="md:col-span-2 bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-center gap-5">
                         <div className="w-32 h-40 bg-slate-100 border-2 border-dashed border-slate-300 rounded-xl flex flex-col items-center justify-center overflow-hidden shrink-0 relative group">
@@ -960,7 +892,33 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initial
                       </div>
                     </div>
                   </div>
-                )}
+
+                  {/* Terms notice */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-[11px] text-slate-600 leading-normal font-medium mt-4">
+                    <span className="font-bold text-amber-800 block mb-1">⚠️ Applicant Declarations:</span>
+                    I hereby declare that all information filled in this "Success India" distributor registrations form is correct, true, and complete. I understand that any false declaration will lead to immediate cancellation of my network membership.
+                  </div>
+
+                  {/* Submit Action Button */}
+                  <div className="mt-6 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-all shadow-md hover:shadow-lg cursor-pointer active:scale-95"
+                    >
+                      {loading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          <span>Submitting Form...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-4 h-4" />
+                          <span>Submit Registration</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
 
                 {/* STEP 2: PERSONAL & FAMILY DETAILS */}
                 {currentStep === 2 && (
@@ -1543,44 +1501,6 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initial
 
                   </div>
                 )}
-
-                {/* Form Navigation Actions - Sticky Bottom for high user-friendliness */}
-                <div className="sticky bottom-2 sm:static z-20 mt-6 bg-white/95 backdrop-blur-md p-3 sm:p-0 rounded-2xl border sm:border-0 border-slate-200/80 shadow-lg sm:shadow-none flex justify-between items-center transition-all">
-                  <div className="text-[11px] font-semibold text-slate-500">
-                    Step <span className="font-bold text-indigo-600">{currentStep}</span> of 4
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {currentStep > 1 && (
-                      <button
-                        type="button"
-                        onClick={handlePrev}
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 border border-slate-300 hover:border-slate-400 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-all cursor-pointer shadow-xs"
-                      >
-                        <ArrowLeft className="w-3.5 h-3.5" /> Previous
-                      </button>
-                    )}
-
-                    {currentStep < 4 ? (
-                      <button
-                        type="button"
-                        onClick={handleNext}
-                        className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg cursor-pointer"
-                      >
-                        Next Step <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                    ) : (
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg cursor-pointer"
-                      >
-                        {loading ? 'Submitting Form...' : 'Submit Application'}
-                        <CheckCircle className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
 
               </form>
 
