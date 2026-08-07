@@ -218,36 +218,26 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
       };
     };
 
+    if (ratioData.totalBV === 0) {
+      return [
+        computeRow('Current Total', 0, 0)
+      ];
+    }
+
     if (timePeriod === 'daily') {
       return [
-        computeRow('09:00 AM', 2500, 2000),
-        computeRow('12:00 PM', 4800, 4500),
-        computeRow('03:00 PM', 7200, 6800),
-        computeRow('06:00 PM', 9500, 9100),
-        computeRow('09:00 PM', ratioData.leftBV, ratioData.rightBV),
+        computeRow('Today Live', ratioData.leftBV, ratioData.rightBV),
       ];
     } else if (timePeriod === 'weekly') {
       return [
-        computeRow('Mon', 8000, 7500),
-        computeRow('Tue', 12000, 11000),
-        computeRow('Wed', 16500, 15800),
-        computeRow('Thu', 22000, 21500),
-        computeRow('Fri', 28000, 27000),
-        computeRow('Sat', 34000, 33000),
-        computeRow('Sun', ratioData.leftBV, ratioData.rightBV),
+        computeRow('This Week Live', ratioData.leftBV, ratioData.rightBV),
       ];
     } else if (timePeriod === 'monthly') {
       return [
-        computeRow('Week 1', 28000, 26000),
-        computeRow('Week 2', 56000, 54000),
-        computeRow('Week 3', 88000, 85000),
-        computeRow('Week 4', ratioData.leftBV, ratioData.rightBV),
+        computeRow('This Month Live', ratioData.leftBV, ratioData.rightBV),
       ];
     } else {
       return [
-        computeRow('Q1 2026', 45000, 42000),
-        computeRow('Q2 2026', 82000, 78000),
-        computeRow('Q3 2026', 105000, 100000),
         computeRow('Current Total', ratioData.leftBV, ratioData.rightBV),
       ];
     }
