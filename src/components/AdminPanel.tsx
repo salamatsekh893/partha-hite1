@@ -3,23 +3,40 @@ import {
   Users, CheckCircle2, XCircle, Search, RefreshCw, 
   Calendar, Shield, ShieldCheck, UserCheck, AlertCircle, Phone, Mail, Network, FileText, Trash2, Edit,
   Globe, Video, Image as ImageIcon, Plus, Eye, EyeOff, Sparkles, Upload, Play, Check, ExternalLink, Layers, X, LogIn,
-  ShoppingBag, DollarSign, ArrowUpRight, CheckSquare, Clock, Settings, AlertTriangle
+  ShoppingBag, DollarSign, ArrowUpRight, CheckSquare, Clock, Settings, AlertTriangle, Building2, Wallet, FileSpreadsheet, Printer, Filter,
+  Package, Tag, FolderPlus, Sliders, Percent, ToggleLeft, ToggleRight, Box, Sparkle, Award
 } from 'lucide-react';
-import { User, SystemStats, ReferralTreeNode, WebsiteContent, ProductOrder } from '../types.js';
+import { User, SystemStats, ReferralTreeNode, WebsiteContent, ProductOrder, CompanyFundLog, SolarProduct, ProductCategory, CustomLevelCommission, BusinessTargetConfig } from '../types.js';
+import { INITIAL_PRODUCTS, INITIAL_CATEGORIES } from '../data/products.js';
 import { getEmbedVideoUrl, getDirectImageUrl } from '../utils/mediaUtils.js';
+import { exportToCSV, printPDFReport } from '../utils/exportUtils.js';
 import VisualTree from './VisualTree.js';
 import ProfileEditModal from './ProfileEditModal.js';
 
 interface AdminPanelProps {
   adminUser: User;
-  initialTab?: 'members' | 'website' | 'orders';
+  initialTab?: 'members' | 'website' | 'orders' | 'company-fund' | 'products' | 'business-targets';
   onImpersonateUser?: (user: User) => void;
   orders?: ProductOrder[];
   onOrdersChange?: (orders: ProductOrder[]) => void;
+  products?: SolarProduct[];
+  onProductsChange?: (products: SolarProduct[]) => void;
+  categories?: ProductCategory[];
+  onCategoriesChange?: (categories: ProductCategory[]) => void;
 }
 
-export default function AdminPanel({ adminUser, initialTab = 'members', onImpersonateUser, orders: propOrders, onOrdersChange }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'members' | 'website' | 'orders'>(initialTab);
+export default function AdminPanel({ 
+  adminUser, 
+  initialTab = 'members', 
+  onImpersonateUser, 
+  orders: propOrders, 
+  onOrdersChange,
+  products: propProducts,
+  onProductsChange,
+  categories: propCategories,
+  onCategoriesChange
+}: AdminPanelProps) {
+  const [activeTab, setActiveTab] = useState<'members' | 'website' | 'orders' | 'company-fund' | 'products' | 'business-targets'>(initialTab);
   const [directLoginId, setDirectLoginId] = useState('');
 
   useEffect(() => {
@@ -41,6 +58,303 @@ export default function AdminPanel({ adminUser, initialTab = 'members', onImpers
   const [localOrders, setLocalOrders] = useState<ProductOrder[]>([]);
   const ordersList = propOrders !== undefined ? propOrders : localOrders;
   const [orderSearchTerm, setOrderSearchTerm] = useState('');
+
+  // --- PRODUCT & CATEGORY MANAGEMENT ENGINE STATE ---
+  const [localProducts, setLocalProducts] = useState<SolarProduct[]>(() => {
+    try {
+      const saved = localStorage.getItem('mlm_solar_products');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return INITIAL_PRODUCTS;
+  });
+  const products = propProducts !== undefined ? propProducts : localProducts;
+
+  const updateProductsState = (newProducts: SolarProduct[]) => {
+    setLocalProducts(newProducts);
+    if (onProductsChange) {
+      onProductsChange(newProducts);
+    }
+    localStorage.setItem('mlm_solar_products', JSON.stringify(newProducts));
+  };
+
+  const [localCategories, setLocalCategories] = useState<ProductCategory[]>(() => {
+    try {
+      const saved = localStorage.getItem('mlm_product_categories');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return INITIAL_CATEGORIES;
+  });
+  const categories = propCategories !== undefined ? propCategories : localCategories;
+
+  const updateCategoriesState = (newCategories: ProductCategory[]) => {
+    setLocalCategories(newCategories);
+    if (onCategoriesChange) {
+      onCategoriesChange(newCategories);
+    }
+    localStorage.setItem('mlm_product_categories', JSON.stringify(newCategories));
+  };
+
+  // Product Modals & Filters
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<SolarProduct | null>(null);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+
+  // Filters
+  const [prodSearchTerm, setProdSearchTerm] = useState('');
+  const [prodCategoryFilter, setProdCategoryFilter] = useState('all');
+  const [prodStockFilter, setProdStockFilter] = useState<'all' | 'in_stock' | 'out_of_stock' | 'sold_out'>('all');
+  const [prodOfferFilter, setProdOfferFilter] = useState<'all' | 'offer_only'>('all');
+
+  // Product Form State
+  const [pName, setPName] = useState('');
+  const [pCategory, setPCategory] = useState('Solar Panels');
+  const [pSubCategory, setPSubCategory] = useState('');
+  const [pBrand, setPBrand] = useState('');
+  const [pSku, setPSku] = useState('');
+  const [pMrp, setPMrp] = useState<number>(0);
+  const [pDistributorPrice, setPDistributorPrice] = useState<number>(0);
+  const [pBusinessValue, setPBusinessValue] = useState<number>(0);
+  const [pPointValue, setPPointValue] = useState<number>(0);
+  const [pStock, setPStock] = useState<number>(50);
+  const [pStockStatus, setPStockStatus] = useState<'in_stock' | 'out_of_stock' | 'sold_out'>('in_stock');
+  const [pImage, setPImage] = useState('');
+  const [pIsUpcoming, setPIsUpcoming] = useState(false);
+  const [pDescription, setPDescription] = useState('');
+  const [pPaymentType, setPPaymentType] = useState<'both' | 'cod_only' | 'online_only'>('both');
+  const [pAdvancePaymentRequired, setPAdvancePaymentRequired] = useState(false);
+  const [pAdvancePaymentNote, setPAdvancePaymentNote] = useState('');
+
+  // Custom Level Commission State inside Form
+  const [pUseCustomCommission, setPUseCustomCommission] = useState(false);
+  const [pCustomCommissionLevels, setPCustomCommissionLevels] = useState<CustomLevelCommission[]>([
+    { level: 1, percentage: 30 },
+    { level: 2, percentage: 20 },
+    { level: 3, percentage: 15 },
+    { level: 4, percentage: 10 },
+    { level: 5, percentage: 5 }
+  ]);
+
+  // Offer State inside Form
+  const [pIsOfferActive, setPIsOfferActive] = useState(false);
+  const [pOfferPrice, setPOfferPrice] = useState<number>(0);
+  const [pDiscountPercent, setPDiscountPercent] = useState<number>(0);
+  const [pFlatDiscount, setPFlatDiscount] = useState<number>(0);
+  const [pCouponOffer, setPCouponOffer] = useState('');
+  const [pOfferStartDate, setPOfferStartDate] = useState('');
+  const [pOfferEndDate, setPOfferEndDate] = useState('');
+  const [pOfferStartTime, setPOfferStartTime] = useState('00:00');
+  const [pOfferEndTime, setPOfferEndTime] = useState('23:59');
+
+  // New Category Form State
+  const [newCatName, setNewCatName] = useState('');
+  const [selectedCatIdForSub, setSelectedCatIdForSub] = useState<string | null>(null);
+  const [newSubCatName, setNewSubCatName] = useState('');
+
+  // Handlers for Product Form Reset & Load
+  const handleOpenAddProductModal = () => {
+    setEditingProduct(null);
+    setPName('');
+    setPCategory(categories[0]?.name || 'Solar Panels');
+    setPSubCategory(categories[0]?.subCategories[0] || '');
+    setPBrand('');
+    setPSku(`SP-${Math.floor(1000 + Math.random() * 9000)}`);
+    setPMrp(10000);
+    setPDistributorPrice(8000);
+    setPBusinessValue(5000);
+    setPPointValue(50);
+    setPStock(50);
+    setPStockStatus('in_stock');
+    setPImage('https://images.unsplash.com/photo-1509391365360-2e959784a276?w=600&auto=format&fit=crop&q=80');
+    setPIsUpcoming(false);
+    setPDescription('Premium high performance solar system designed for commercial & residential rooftops.');
+    setPPaymentType('both');
+    setPAdvancePaymentRequired(false);
+    setPAdvancePaymentNote('');
+    setPUseCustomCommission(false);
+    setPCustomCommissionLevels([
+      { level: 1, percentage: 30 },
+      { level: 2, percentage: 20 },
+      { level: 3, percentage: 15 },
+      { level: 4, percentage: 10 },
+      { level: 5, percentage: 5 }
+    ]);
+    setPIsOfferActive(false);
+    setPOfferPrice(0);
+    setPDiscountPercent(0);
+    setPFlatDiscount(0);
+    setPCouponOffer('');
+    setPOfferStartDate('');
+    setPOfferEndDate('');
+    setPOfferStartTime('00:00');
+    setPOfferEndTime('23:59');
+    setIsProductModalOpen(true);
+  };
+
+  const handleOpenEditProductModal = (prod: SolarProduct) => {
+    setEditingProduct(prod);
+    setPName(prod.name);
+    setPCategory(prod.category);
+    setPSubCategory(prod.subCategory || '');
+    setPBrand(prod.brand || '');
+    setPSku(prod.sku || `SP-${prod.id}`);
+    setPMrp(prod.mrp);
+    setPDistributorPrice(prod.distributorPrice);
+    setPBusinessValue(prod.businessValue);
+    setPPointValue(prod.pointValue);
+    setPStock(prod.stock !== undefined ? prod.stock : 50);
+    setPStockStatus(prod.stockStatus || 'in_stock');
+    setPImage(prod.image);
+    setPIsUpcoming(prod.isUpcoming || false);
+    setPDescription(prod.description);
+    setPPaymentType(prod.paymentType || 'both');
+    setPAdvancePaymentRequired(prod.advancePaymentRequired || false);
+    setPAdvancePaymentNote(prod.advancePaymentNote || '');
+    setPUseCustomCommission(prod.useCustomCommission || false);
+    setPCustomCommissionLevels(prod.customCommissionLevels && prod.customCommissionLevels.length > 0 ? prod.customCommissionLevels : [
+      { level: 1, percentage: 30 },
+      { level: 2, percentage: 20 },
+      { level: 3, percentage: 15 },
+      { level: 4, percentage: 10 },
+      { level: 5, percentage: 5 }
+    ]);
+    setPIsOfferActive(prod.isOfferActive || false);
+    setPOfferPrice(prod.offerPrice || 0);
+    setPDiscountPercent(prod.discountPercent || 0);
+    setPFlatDiscount(prod.flatDiscount || 0);
+    setPCouponOffer(prod.couponOffer || '');
+    setPOfferStartDate(prod.offerStartDate || '');
+    setPOfferEndDate(prod.offerEndDate || '');
+    setPOfferStartTime(prod.offerStartTime || '00:00');
+    setPOfferEndTime(prod.offerEndTime || '23:59');
+    setIsProductModalOpen(true);
+  };
+
+  const handleSaveProductSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pName.trim()) {
+      alert('প্রোডাক্টের নাম লিখুন (Product Name is required)');
+      return;
+    }
+    if (pMrp <= 0 || pDistributorPrice <= 0) {
+      alert('সঠিক MRP এবং Selling Price নির্ধারণ করুন');
+      return;
+    }
+
+    const updatedProd: SolarProduct = {
+      id: editingProduct ? editingProduct.id : Date.now(),
+      name: pName.trim(),
+      category: pCategory,
+      subCategory: pSubCategory.trim(),
+      brand: pBrand.trim(),
+      sku: pSku.trim(),
+      mrp: Number(pMrp),
+      distributorPrice: Number(pDistributorPrice),
+      businessValue: Number(pBusinessValue),
+      pointValue: Number(pPointValue),
+      stock: Number(pStock),
+      stockStatus: pStockStatus,
+      image: pImage.trim() || 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=600&auto=format&fit=crop&q=80',
+      isUpcoming: pIsUpcoming,
+      description: pDescription.trim(),
+      paymentType: pPaymentType,
+      advancePaymentRequired: pAdvancePaymentRequired,
+      advancePaymentNote: pAdvancePaymentNote.trim(),
+      useCustomCommission: pUseCustomCommission,
+      customCommissionLevels: pUseCustomCommission ? pCustomCommissionLevels : [],
+      isOfferActive: pIsOfferActive,
+      offerPrice: pIsOfferActive ? Number(pOfferPrice) : undefined,
+      discountPercent: pIsOfferActive ? Number(pDiscountPercent) : undefined,
+      flatDiscount: pIsOfferActive ? Number(pFlatDiscount) : undefined,
+      couponOffer: pIsOfferActive ? pCouponOffer.trim() : undefined,
+      offerStartDate: pIsOfferActive ? pOfferStartDate : undefined,
+      offerEndDate: pIsOfferActive ? pOfferEndDate : undefined,
+      offerStartTime: pIsOfferActive ? pOfferStartTime : undefined,
+      offerEndTime: pIsOfferActive ? pOfferEndTime : undefined,
+    };
+
+    let newProds: SolarProduct[] = [];
+    if (editingProduct) {
+      newProds = products.map(p => p.id === editingProduct.id ? updatedProd : p);
+    } else {
+      newProds = [updatedProd, ...products];
+    }
+
+    updateProductsState(newProds);
+    setIsProductModalOpen(false);
+    setSuccessMsg(editingProduct ? 'প্রোডাক্ট সফলভাবে আপডেট করা হয়েছে!' : 'নতুন প্রোডাক্ট সফলভাবে যুক্ত করা হয়েছে!');
+    setTimeout(() => setSuccessMsg(null), 4000);
+  };
+
+  const handleDeleteProduct = (prodId: number, prodName: string) => {
+    if (confirm(`আপনি কি নিশ্চিত যে "${prodName}" প্রোডাক্টটি সম্পূর্ণ মুছে ফেলতে চান?`)) {
+      const newProds = products.filter(p => p.id !== prodId);
+      updateProductsState(newProds);
+      setSuccessMsg(`"${prodName}" প্রোডাক্টটি সফলভাবে মুছে ফেলা হয়েছে।`);
+      setTimeout(() => setSuccessMsg(null), 4000);
+    }
+  };
+
+  const handleToggleProductStock = (prodId: number) => {
+    const newProds = products.map(p => {
+      if (p.id === prodId) {
+        const nextStatus = p.stockStatus === 'sold_out' || p.stockStatus === 'out_of_stock' ? 'in_stock' : 'sold_out';
+        return {
+          ...p,
+          stockStatus: nextStatus as 'in_stock' | 'out_of_stock' | 'sold_out'
+        };
+      }
+      return p;
+    });
+    updateProductsState(newProds);
+  };
+
+  // Category & SubCategory Handlers
+  const handleAddCategorySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCatName.trim()) return;
+    const catId = `cat-${Date.now()}`;
+    const newCat: ProductCategory = {
+      id: catId,
+      name: newCatName.trim(),
+      subCategories: []
+    };
+    updateCategoriesState([...categories, newCat]);
+    setNewCatName('');
+  };
+
+  const handleAddSubCategorySubmit = (catId: string) => {
+    if (!newSubCatName.trim()) return;
+    const newCats = categories.map(c => {
+      if (c.id === catId) {
+        if (!c.subCategories.includes(newSubCatName.trim())) {
+          return { ...c, subCategories: [...c.subCategories, newSubCatName.trim()] };
+        }
+      }
+      return c;
+    });
+    updateCategoriesState(newCats);
+    setNewSubCatName('');
+  };
+
+  const handleDeleteSubCategory = (catId: string, subName: string) => {
+    const newCats = categories.map(c => {
+      if (c.id === catId) {
+        return { ...c, subCategories: c.subCategories.filter(s => s !== subName) };
+      }
+      return c;
+    });
+    updateCategoriesState(newCats);
+  };
+
+  const handleDeleteCategory = (catId: string, catName: string) => {
+    if (confirm(`আপনি কি "${catName}" ক্যাটাগরি এবং এর সকল সাব-ক্যাটাগরি মুছে ফেলতে চান?`)) {
+      updateCategoriesState(categories.filter(c => c.id !== catId));
+    }
+  };
   const [orderStatusTab, setOrderStatusTab] = useState<'all' | 'Pending' | 'Approved' | 'Rejected'>('Pending');
 
   // Level Incentive Engine Settings
@@ -60,6 +374,118 @@ export default function AdminPanel({ adminUser, initialTab = 'members', onImpers
     11: 2, 12: 2, 13: 2, 14: 2, 15: 2
   });
 
+  // Company Fund History & Audit Log State
+  const [fundSearchTerm, setFundSearchTerm] = useState('');
+  const [fundLevelFilter, setFundLevelFilter] = useState<string>('all');
+  const [fundDateFilter, setFundDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
+
+  const [companyFundLogs, setCompanyFundLogs] = useState<CompanyFundLog[]>(() => {
+    try {
+      const saved = localStorage.getItem('mlm_company_fund_logs');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return [
+      {
+        id: "CFL-ORD-849201-L3",
+        orderId: "ORD-849201",
+        memberId: 104,
+        memberName: "Rahul Roy",
+        level: 3,
+        levelName: "Level 3",
+        amount: 1125,
+        percentage: 15,
+        timestamp: "06 Aug 2026, 02:30:15 PM",
+        dateOnly: "2026-08-06",
+        reason: "নির্ধারিত লেভেল ৩-এ কোনো যোগ্য আপলাইন সদস্য না থাকা (Unclaimed Upline Level Reversion)",
+        productName: "5kW Grid-Tied Solar System",
+        totalBV: 25000
+      },
+      {
+        id: "CFL-ORD-849201-L4",
+        orderId: "ORD-849201",
+        memberId: 104,
+        memberName: "Rahul Roy",
+        level: 4,
+        levelName: "Level 4",
+        amount: 750,
+        percentage: 10,
+        timestamp: "06 Aug 2026, 02:30:15 PM",
+        dateOnly: "2026-08-06",
+        reason: "নির্ধারিত লেভেল ৪-এ কোনো যোগ্য আপলাইন সদস্য না থাকা (Unclaimed Upline Level Reversion)",
+        productName: "5kW Grid-Tied Solar System",
+        totalBV: 25000
+      },
+      {
+        id: "CFL-ORD-849201-L5",
+        orderId: "ORD-849201",
+        memberId: 104,
+        memberName: "Rahul Roy",
+        level: 5,
+        levelName: "Level 5",
+        amount: 375,
+        percentage: 5,
+        timestamp: "06 Aug 2026, 02:30:15 PM",
+        dateOnly: "2026-08-06",
+        reason: "নির্ধারিত লেভেল ৫-এ কোনো যোগ্য আপলাইন সদস্য না থাকা (Unclaimed Upline Level Reversion)",
+        productName: "5kW Grid-Tied Solar System",
+        totalBV: 25000
+      },
+      {
+        id: "CFL-ORD-739102-L2",
+        orderId: "ORD-739102",
+        memberId: 108,
+        memberName: "Ananya Ghosh",
+        level: 2,
+        levelName: "Level 2",
+        amount: 1080,
+        percentage: 20,
+        timestamp: "05 Aug 2026, 11:15:40 AM",
+        dateOnly: "2026-08-05",
+        reason: "নির্ধারিত লেভেল ২-এ কোনো যোগ্য আপলাইন সদস্য না থাকা (Unclaimed Upline Level Reversion)",
+        productName: "3kW Solar Inverter",
+        totalBV: 18000
+      }
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('mlm_company_fund_logs', JSON.stringify(companyFundLogs));
+  }, [companyFundLogs]);
+
+  // Business Target & 50:50 Ratio Configuration State
+  const [targetConfig, setTargetConfig] = useState<BusinessTargetConfig>(() => {
+    try {
+      const saved = localStorage.getItem('mlm_business_target_config');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Error parsing business target config:', e);
+    }
+    return {
+      id: 'TARGET-2026-01',
+      title: 'Executive Star Royalty & Business Target 2026',
+      description: 'ডাইরেক্ট বিজনেস ও টিম বিজনেসের জন্য ৫০:৫০ রেশিও অনুযায়ী BV ও PV টার্গেট নির্ধারণ মডিউল',
+      directBvTarget: 10000,
+      directPvTarget: 500,
+      teamBvTarget: 50000,
+      teamPvTarget: 2500,
+      ratioRuleEnabled: true,
+      strongLegMaxRatio: 50,
+      otherLegsMinRatio: 50,
+      startDate: '2026-08-01',
+      endDate: '2026-12-31',
+      isActive: true,
+      rewardTitle: 'Executive Star Rank & Royalty Pool Qualification'
+    };
+  });
+
+  const [targetSearchTerm, setTargetSearchTerm] = useState('');
+  const [targetStatusFilter, setTargetStatusFilter] = useState<'all' | 'achieved' | 'in_progress'>('all');
+
+  useEffect(() => {
+    localStorage.setItem('mlm_business_target_config', JSON.stringify(targetConfig));
+    window.dispatchEvent(new CustomEvent('business-target-updated', { detail: targetConfig }));
+  }, [targetConfig]);
+
   // Commission & Company Reverted Funds Audit Ledger
   const [auditLogs, setAuditLogs] = useState<Array<{
     orderId: string;
@@ -75,34 +501,14 @@ export default function AdminPanel({ adminUser, initialTab = 'members', onImpers
     companyRevertedAmount: number;
     revertedLevels: string;
     approvalDate: string;
-  }>>([
-    {
-      orderId: 'ORD-198234',
-      productName: '3KW On-Grid Solar Inverter & Module Kit',
-      buyerName: 'System Test Member',
-      buyerId: 2,
-      totalAmount: 145000,
-      totalBV: 110000,
-      totalCommissionPool: 16500,
-      buyerIncentive: 0,
-      uplinePaidTotal: 10725,
-      uplineBreakdown: [
-        { level: 1, amount: 4950 },
-        { level: 2, amount: 3300 },
-        { level: 3, amount: 2475 }
-      ],
-      companyRevertedAmount: 5775,
-      revertedLevels: 'Level 4 to Level 10 (No Uplines Exist)',
-      approvalDate: new Date().toISOString().split('T')[0]
-    }
-  ]);
+  }>>([]);
 
   // --- ORDER APPROVAL & LEVEL INCENTIVE ENGINE ---
   const handleApproveOrder = (order: ProductOrder) => {
     // 1. Calculate Total Commission Pool for this order
     const totalPool = Math.round((order.totalBV || 0) * (commissionPoolPercent / 100));
 
-    // 2. Buyer gets 0 direct incentive (per user explicit rule: "ja kincha sa kono insentiv pabe na oi product ar upor")
+    // 2. Buyer gets 0 direct incentive (per user explicit rule)
     const buyerIncentive = 0;
 
     // 3. Find Buyer Name and Upline Chain
@@ -128,6 +534,12 @@ export default function AdminPanel({ adminUser, initialTab = 'members', onImpers
     // 4. Calculate Upline Level Distribution & Company Reverted Funds
     let uplinePaidTotal = 0;
     const uplineBreakdown: Array<{ level: number; amount: number }> = [];
+    const newFundLogs: CompanyFundLog[] = [];
+    const nowFormatted = new Date().toLocaleString('en-IN', {
+      year: 'numeric', month: 'short', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+    });
+    const dateOnly = new Date().toISOString().split('T')[0];
 
     for (let l = 1; l <= maxIncentiveLevels; l++) {
       const levelPct = levelPercentages[l] || 0;
@@ -137,7 +549,30 @@ export default function AdminPanel({ adminUser, initialTab = 'members', onImpers
       if (hasUpline) {
         uplinePaidTotal += levelAmount;
         uplineBreakdown.push({ level: l, amount: levelAmount });
+      } else {
+        // Record Company Fund Reversion Audit Entry
+        if (levelAmount > 0) {
+          newFundLogs.push({
+            id: `CFL-${order.id}-L${l}`,
+            orderId: order.id,
+            memberId: order.userId || 1,
+            memberName: buyerName,
+            level: l,
+            levelName: `Level ${l}`,
+            amount: levelAmount,
+            percentage: levelPct,
+            timestamp: nowFormatted,
+            dateOnly,
+            reason: `নির্ধারিত লেভেল ${l}-এ কোনো যোগ্য আপলাইন সদস্য না থাকা (Unclaimed Upline Level Reversion)`,
+            productName: order.productName,
+            totalBV: order.totalBV || 0
+          });
+        }
       }
+    }
+
+    if (newFundLogs.length > 0) {
+      setCompanyFundLogs(prev => [...newFundLogs, ...prev]);
     }
 
     const companyRevertedAmount = totalPool - uplinePaidTotal;
@@ -751,6 +1186,45 @@ export default function AdminPanel({ adminUser, initialTab = 'members', onImpers
             }
             return null;
           })()}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('company-fund')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl transition-all cursor-pointer ${
+            activeTab === 'company-fund'
+              ? 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-md shadow-emerald-600/20 font-black'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 font-bold'
+          }`}
+        >
+          <Building2 className="w-4 h-4 text-emerald-300" />
+          <span>Company Fund History (কোম্পানি ফান্ড)</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('products')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl transition-all cursor-pointer ${
+            activeTab === 'products'
+              ? 'bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-md shadow-blue-600/20 font-black'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 font-bold'
+          }`}
+        >
+          <Package className="w-4 h-4 text-blue-300" />
+          <span>Product Management (প্রোডাক্ট ম্যানেজমেন্ট)</span>
+          <span className="text-[10px] bg-blue-500/30 text-white font-extrabold px-2 py-0.5 rounded-full border border-blue-400/30">
+            {products.length}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('business-targets')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl transition-all cursor-pointer ${
+            activeTab === 'business-targets'
+              ? 'bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white shadow-md shadow-amber-600/20 font-black'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 font-bold'
+          }`}
+        >
+          <Sliders className="w-4 h-4 text-amber-300" />
+          <span>Business Targets (বিজনেস টার্গেট ৫০:৫০)</span>
         </button>
 
         <button
@@ -2388,6 +2862,1282 @@ export default function AdminPanel({ adminUser, initialTab = 'members', onImpers
         </div>
       )}
 
+      {/* 5. COMPANY FUND HISTORY (কোম্পানি ফান্ড হিস্ট্রি) TAB */}
+      {(() => {
+        if (activeTab !== 'company-fund') return null;
+
+        const filteredCompanyFundLogs = companyFundLogs.filter(log => {
+          // 1. Search Query
+          const searchLower = fundSearchTerm.toLowerCase();
+          const matchesSearch = !fundSearchTerm || 
+            log.id.toLowerCase().includes(searchLower) ||
+            log.orderId.toLowerCase().includes(searchLower) ||
+            log.memberName.toLowerCase().includes(searchLower) ||
+            String(log.memberId).includes(searchLower) ||
+            log.productName.toLowerCase().includes(searchLower) ||
+            log.reason.toLowerCase().includes(searchLower);
+
+          // 2. Level Filter
+          const matchesLevel = fundLevelFilter === 'all' || 
+            (fundLevelFilter === '1' && log.level === 1) ||
+            (fundLevelFilter === '2' && log.level === 2) ||
+            (fundLevelFilter === '3' && log.level === 3) ||
+            (fundLevelFilter === '4' && log.level === 4) ||
+            (fundLevelFilter === '5' && log.level === 5) ||
+            (fundLevelFilter === '6+' && log.level >= 6);
+
+          // 3. Date Filter
+          let matchesDate = true;
+          const logDate = new Date(log.dateOnly);
+          const now = new Date();
+          if (fundDateFilter === 'today') {
+            matchesDate = log.dateOnly === now.toISOString().split('T')[0];
+          } else if (fundDateFilter === 'week') {
+            const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            matchesDate = logDate >= sevenDaysAgo;
+          } else if (fundDateFilter === 'month') {
+            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            matchesDate = logDate >= thirtyDaysAgo;
+          }
+
+          return matchesSearch && matchesLevel && matchesDate;
+        });
+
+        const handlePrintCompanyFundReport = () => {
+          const headers = ["Log ID", "Date & Time", "Member Name & ID", "Order ID & Product", "Unclaimed Level", "Amount (₹)", "Reason"];
+          const rows = filteredCompanyFundLogs.map(l => [
+            l.id,
+            l.timestamp,
+            `${l.memberName} (#${l.memberId})`,
+            `${l.orderId} (${l.productName})`,
+            `Level ${l.level} (${l.percentage}%)`,
+            `₹${l.amount.toLocaleString('en-IN')}`,
+            l.reason
+          ]);
+          const totalReverted = filteredCompanyFundLogs.reduce((s, l) => s + l.amount, 0);
+          printPDFReport(
+            "Company Fund Reversion Audit Report (কোম্পানি ফান্ড অডিট রিপোর্ট)",
+            `Total Unclaimed Level Reversion Deposited: ₹${totalReverted.toLocaleString('en-IN')} across ${filteredCompanyFundLogs.length} Entries`,
+            headers,
+            rows,
+            { name: adminUser.name, phone: adminUser.phone }
+          );
+        };
+
+        const handleExportCompanyFundCSV = () => {
+          const headers = ["Log ID", "Date Time", "Member ID", "Member Name", "Order ID", "Product Name", "Unclaimed Level", "Percentage", "Reverted Amount INR", "Reason"];
+          const rows = filteredCompanyFundLogs.map(l => [
+            l.id,
+            l.timestamp,
+            l.memberId,
+            l.memberName,
+            l.orderId,
+            l.productName,
+            `Level ${l.level}`,
+            `${l.percentage}%`,
+            l.amount,
+            l.reason
+          ]);
+          exportToCSV("company_fund_reversion_history", headers, rows);
+        };
+
+        return (
+          <div className="space-y-6">
+            
+            {/* Header Banner */}
+            <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white rounded-3xl p-6 border border-slate-700/60 shadow-xl relative overflow-hidden">
+              <div className="absolute right-0 top-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+              <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-2xl shrink-0">
+                    <Building2 className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase border border-emerald-500/30">
+                        কোম্পানি ফান্ড ট্র্যাজারি লেজার
+                      </span>
+                      <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-indigo-500/30">
+                        Unlimited Levels Supported
+                      </span>
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-black text-white mt-1">Company Fund History (কোম্পানি ফান্ড হিস্ট্রি)</h2>
+                    <p className="text-xs text-slate-300 max-w-2xl mt-0.5">
+                      অ্যাডমিন সেট করা লেভেল ডিসবার্সমেন্টে যোগ্য আপলাইন সদস্য না থাকলে সেই কমিশন স্বয়ংক্রিয়ভাবে কোম্পানি ফান্ডে জমা হয়। প্রতিটি জমার সম্পূর্ণ অডিট রেকর্ড নিচে সংরক্ষিত আছে।
+                    </p>
+                  </div>
+                </div>
+
+                {/* Quick Level Limit Config Box */}
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 p-3.5 rounded-2xl flex items-center gap-3 shrink-0">
+                  <div className="text-left">
+                    <span className="text-[10px] font-bold text-slate-300 block uppercase">কমিশন লেভেল সীমা (Level Limit)</span>
+                    <div className="text-xs font-bold text-amber-300">অ্যাডমিন কন্ট্রোল সেটআপ</div>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-slate-950/60 p-1.5 rounded-xl border border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => setMaxIncentiveLevels(prev => Math.max(1, prev - 1))}
+                      className="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-black text-xs cursor-pointer"
+                    >
+                      -
+                    </button>
+                    <span className="font-mono font-black text-sm px-2 text-emerald-400">{maxIncentiveLevels} Levels</span>
+                    <button
+                      type="button"
+                      onClick={() => setMaxIncentiveLevels(prev => Math.min(100, prev + 1))}
+                      className="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-black text-xs cursor-pointer"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Stat Metrics Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              
+              <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center gap-3.5">
+                <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0 border border-emerald-100">
+                  <Wallet className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase block">কোম্পানি ফান্ড মোট জমা</span>
+                  <div className="text-lg font-black font-mono text-emerald-700">
+                    ₹{filteredCompanyFundLogs.reduce((s, l) => s + l.amount, 0).toLocaleString('en-IN')}
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400 block">Unclaimed Commission Pool</span>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center gap-3.5">
+                <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl shrink-0 border border-indigo-100">
+                  <FileText className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase block">মোট ফান্ড জমা এন্ট্রি</span>
+                  <div className="text-lg font-black font-mono text-indigo-950">
+                    {filteredCompanyFundLogs.length} টি
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400 block">Reversion Audit Records</span>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center gap-3.5">
+                <div className="p-3 bg-amber-50 text-amber-600 rounded-xl shrink-0 border border-amber-100">
+                  <Layers className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase block">চলতি কমিশন লেভেল সীমা</span>
+                  <div className="text-lg font-black font-mono text-amber-600">
+                    Level 1 to {maxIncentiveLevels}
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400 block">Unlimited Depth Allowed</span>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex items-center gap-3.5">
+                <div className="p-3 bg-rose-50 text-rose-600 rounded-xl shrink-0 border border-rose-100">
+                  <Clock className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="text-[11px] font-bold text-slate-500 uppercase block">সর্বশেষ ফান্ড জমা</span>
+                  <div className="text-xs font-black text-slate-900 truncate max-w-[140px]">
+                    {companyFundLogs[0]?.timestamp ? companyFundLogs[0].timestamp.split(',')[0] : 'No Record'}
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400 block">Real-time DB Sync</span>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Search, Filter & Report Action Controls */}
+            <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+                
+                {/* Search Bar */}
+                <div className="relative flex-1 w-full">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="খুঁজুন (সদস্যের নাম, আইডি, অর্ডার নম্বর, প্রোডাক্ট বা কারণ)..."
+                    value={fundSearchTerm}
+                    onChange={(e) => setFundSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+                  />
+                  {fundSearchTerm && (
+                    <button onClick={() => setFundSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {/* Filter Dropdowns & Export Buttons */}
+                <div className="flex items-center gap-2 flex-wrap w-full md:w-auto justify-end">
+                  
+                  {/* Level Filter */}
+                  <select
+                    value={fundLevelFilter}
+                    onChange={(e) => setFundLevelFilter(e.target.value)}
+                    className="py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-hidden"
+                  >
+                    <option value="all">সকল লেভেল (All Levels)</option>
+                    <option value="1">Level 1</option>
+                    <option value="2">Level 2</option>
+                    <option value="3">Level 3</option>
+                    <option value="4">Level 4</option>
+                    <option value="5">Level 5</option>
+                    <option value="6+">Level 6+</option>
+                  </select>
+
+                  {/* Date Filter */}
+                  <select
+                    value={fundDateFilter}
+                    onChange={(e) => setFundDateFilter(e.target.value as any)}
+                    className="py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-hidden"
+                  >
+                    <option value="all">সকল তারিখ (All Time)</option>
+                    <option value="today">আজ (Today)</option>
+                    <option value="week">গত ৭ দিন (7 Days)</option>
+                    <option value="month">এই মাস (This Month)</option>
+                  </select>
+
+                  {/* Report Print PDF */}
+                  <button
+                    type="button"
+                    onClick={handlePrintCompanyFundReport}
+                    className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+                    title="Print Printable PDF Audit Report"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-amber-400" />
+                    <span>প্রিন্ট অডিট রিপোর্ট</span>
+                  </button>
+
+                  {/* CSV Export */}
+                  <button
+                    type="button"
+                    onClick={handleExportCompanyFundCSV}
+                    className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-sm active:scale-95 cursor-pointer"
+                    title="Export Data to Excel CSV File"
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5" />
+                    <span>এক্সেল এক্সপোর্ট</span>
+                  </button>
+
+                </div>
+
+              </div>
+            </div>
+
+            {/* Audit History Table */}
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl font-black text-xs">
+                    📋
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900">কোম্পানি ফান্ড জমাকৃত ট্র্যানজ্যাকশন অডিট লেজার</h3>
+                    <p className="text-[11px] text-slate-500 font-medium">প্রতিটি অর্ডারের কারণে নির্দিষ্ট লেভেলে সদস্য না থাকায় যে অর্থ কোম্পানি ফান্ডে জমা হয়েছে</p>
+                  </div>
+                </div>
+                <span className="text-xs font-black bg-emerald-50 text-emerald-800 px-3 py-1 rounded-full border border-emerald-200">
+                  {filteredCompanyFundLogs.length} Records Found
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-900 text-slate-200 uppercase font-extrabold text-[10px] tracking-wider border-b border-slate-800">
+                      <th className="p-3.5">Log ID & Date/Time</th>
+                      <th className="p-3.5">Member Details (সদস্য)</th>
+                      <th className="p-3.5">Order & Product (অর্ডার ও পণ্য)</th>
+                      <th className="p-3.5 text-center">Unclaimed Level</th>
+                      <th className="p-3.5 text-right">Reverted Amount (টাকা)</th>
+                      <th className="p-3.5">Audit Reason (জমার কারণ)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200/80 font-medium">
+                    {filteredCompanyFundLogs.length > 0 ? (
+                      filteredCompanyFundLogs.map((log) => (
+                        <tr key={log.id} className="hover:bg-indigo-50/40 transition-colors">
+                          
+                          {/* Log ID & Timestamp */}
+                          <td className="p-3.5 space-y-0.5">
+                            <span className="font-mono font-bold text-slate-900 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md text-[11px] inline-block">
+                              {log.id}
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-400 block font-mono">
+                              {log.timestamp}
+                            </span>
+                          </td>
+
+                          {/* Member Details */}
+                          <td className="p-3.5 space-y-0.5">
+                            <div className="font-black text-slate-900">{log.memberName}</div>
+                            <div className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded inline-block border border-indigo-100">
+                              User ID: #{log.memberId}
+                            </div>
+                          </td>
+
+                          {/* Order & Product */}
+                          <td className="p-3.5 space-y-0.5">
+                            <div className="font-bold text-slate-800">{log.productName}</div>
+                            <div className="text-[10px] font-mono text-slate-500 font-semibold">
+                              Order ID: <span className="font-bold text-amber-600">{log.orderId}</span> ({log.totalBV?.toLocaleString('en-IN')} BV)
+                            </div>
+                          </td>
+
+                          {/* Unclaimed Level */}
+                          <td className="p-3.5 text-center">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300">
+                              Level {log.level} ({log.percentage}%)
+                            </span>
+                          </td>
+
+                          {/* Reverted Amount */}
+                          <td className="p-3.5 text-right space-y-0.5">
+                            <div className="font-black text-emerald-700 text-sm font-mono">
+                              +₹{log.amount.toLocaleString('en-IN')}
+                            </div>
+                            <span className="text-[10px] text-emerald-600 font-bold block">Fund Deposited</span>
+                          </td>
+
+                          {/* Audit Reason */}
+                          <td className="p-3.5">
+                            <span className="text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg block leading-tight">
+                              {log.reason}
+                            </span>
+                          </td>
+
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="p-12 text-center text-slate-400 font-semibold">
+                          <Building2 className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                          <p className="text-sm font-bold text-slate-600">কোনো কোম্পানি ফান্ড হিস্ট্রি রেকর্ড পাওয়া যায়নি</p>
+                          <p className="text-xs text-slate-400 mt-1">ফিল্টার পরিবর্তন করে চেষ্টা করুন অথবা নতুন অর্ডার অ্যাপ্রুভ করুন।</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+
+          </div>
+        );
+      })()}
+
+      {/* 5. BUSINESS TARGET & 50:50 RATIO SETUP TAB */}
+      {activeTab === 'business-targets' && (() => {
+        // Calculate user business progress report list
+        const userTargetProgressList = users.map(u => {
+          // Downline users & direct referrals
+          const directDownlines = users.filter(d => d.referrer_id === u.id);
+          const directOrders = ordersList.filter(o => directDownlines.some(d => d.id === o.userId) && o.status === 'Approved');
+          
+          // Direct Business BV & PV
+          const directBv = directOrders.reduce((sum, o) => sum + (o.totalBV || 0), 0);
+          const directPv = directOrders.reduce((sum, o) => sum + (o.totalPV || 0), 0);
+
+          // Team Business BV & PV (All orders from downline network)
+          const teamBv = ordersList
+            .filter(o => o.userId !== u.id && o.status === 'Approved')
+            .reduce((sum, o) => sum + (o.totalBV || 0), 0);
+          const teamPv = ordersList
+            .filter(o => o.userId !== u.id && o.status === 'Approved')
+            .reduce((sum, o) => sum + (o.totalPV || 0), 0);
+
+          // Progress percentages
+          const directBvPercent = targetConfig.directBvTarget > 0 ? Math.min(100, Math.round((directBv / targetConfig.directBvTarget) * 100)) : 100;
+          const directPvPercent = targetConfig.directPvTarget > 0 ? Math.min(100, Math.round((directPv / targetConfig.directPvTarget) * 100)) : 100;
+          const teamBvPercent = targetConfig.teamBvTarget > 0 ? Math.min(100, Math.round((teamBv / targetConfig.teamBvTarget) * 100)) : 100;
+          const teamPvPercent = targetConfig.teamPvTarget > 0 ? Math.min(100, Math.round((teamPv / targetConfig.teamPvTarget) * 100)) : 100;
+
+          // 50:50 Ratio Matching
+          const maxLeg = Math.max(directBv, teamBv);
+          const minLeg = Math.min(directBv, teamBv);
+          const ratioPercent = maxLeg > 0 ? Math.min(100, Math.round((minLeg / maxLeg) * 100)) : 0;
+
+          // Target Achieved Status Check
+          const isDirectBvMet = directBv >= targetConfig.directBvTarget;
+          const isDirectPvMet = directPv >= targetConfig.directPvTarget;
+          const isTeamBvMet = teamBv >= targetConfig.teamBvTarget;
+          const isTeamPvMet = teamPv >= targetConfig.teamPvTarget;
+          const isRatioMet = !targetConfig.ratioRuleEnabled || ratioPercent >= 100 || (minLeg >= maxLeg * (targetConfig.otherLegsMinRatio / targetConfig.strongLegMaxRatio));
+
+          const isAchieved = isDirectBvMet && isDirectPvMet && isTeamBvMet && isTeamPvMet && isRatioMet;
+
+          const overallCompletion = Math.min(100, Math.round((directBvPercent + directPvPercent + teamBvPercent + teamPvPercent) / 4));
+
+          return {
+            user: u,
+            directBv,
+            directPv,
+            teamBv,
+            teamPv,
+            directBvPercent,
+            directPvPercent,
+            teamBvPercent,
+            teamPvPercent,
+            ratioPercent,
+            isAchieved,
+            overallCompletion
+          };
+        });
+
+        // Filter progress report
+        const filteredTargetList = userTargetProgressList.filter(item => {
+          const matchesSearch = targetSearchTerm === '' ||
+            item.user.name.toLowerCase().includes(targetSearchTerm.toLowerCase()) ||
+            item.user.phone.includes(targetSearchTerm) ||
+            String(item.user.id).includes(targetSearchTerm);
+
+          const matchesStatus = targetStatusFilter === 'all' ||
+            (targetStatusFilter === 'achieved' && item.isAchieved) ||
+            (targetStatusFilter === 'in_progress' && !item.isAchieved);
+
+          return matchesSearch && matchesStatus;
+        });
+
+        const totalAchievedCount = userTargetProgressList.filter(i => i.isAchieved).length;
+
+        const handlePrintTargetReport = () => {
+          const rows = filteredTargetList.map(item => [
+            `#${item.user.id} - ${item.user.name} (${item.user.phone})`,
+            `${item.directBv.toLocaleString('en-IN')} BV / ${item.directPv} PV (${item.directBvPercent}%)`,
+            `${item.teamBv.toLocaleString('en-IN')} BV / ${item.teamPv} PV (${item.teamBvPercent}%)`,
+            `${item.ratioPercent}% Ratio Balance`,
+            item.isAchieved ? "ACHIEVED (সম্পন্ন)" : `In Progress (${item.overallCompletion}%)`
+          ]);
+
+          printPDFReport(
+            "Business Target & 50:50 Ratio Achievement Report (বিজনেস টার্গেট রিপোর্ট)",
+            `Target: ${targetConfig.title} | Achieved Members: ${totalAchievedCount} / ${users.length}`,
+            ["Member Details", "Direct Business (BV/PV)", "Team Business (BV/PV)", "50:50 Ratio", "Target Status"],
+            rows
+          );
+        };
+
+        const handleExportTargetCSV = () => {
+          const headers = ["User ID", "Member Name", "Phone", "Direct BV", "Direct PV", "Team BV", "Team PV", "Ratio Balance %", "Overall Completion %", "Status"];
+          const rows = filteredTargetList.map(item => [
+            item.user.id,
+            item.user.name,
+            item.user.phone,
+            item.directBv,
+            item.directPv,
+            item.teamBv,
+            item.teamPv,
+            `${item.ratioPercent}%`,
+            `${item.overallCompletion}%`,
+            item.isAchieved ? "ACHIEVED" : "IN_PROGRESS"
+          ]);
+
+          exportToCSV("business_target_50_50_achievements", headers, rows);
+        };
+
+        return (
+          <div className="space-y-6 animate-fade-in">
+            {/* Header Banner */}
+            <div className="bg-gradient-to-r from-slate-900 via-amber-950 to-orange-950 text-white rounded-3xl p-6 border border-amber-800/40 shadow-xl relative overflow-hidden">
+              <div className="absolute right-0 top-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+              <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-2xl shrink-0">
+                    <Sliders className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase border border-amber-500/30">
+                        অ্যাডমিন রেশিও মডিউল
+                      </span>
+                      <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                        50:50 Business Target System Active
+                      </span>
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-black text-white mt-1">বিজনেস টার্গেট ও ৫০:৫০ রেশিও সেটআপ</h2>
+                    <p className="text-xs text-amber-200/90 max-w-2xl mt-0.5">
+                      অ্যাডমিন প্যানেল থেকে Direct Business & Team Business-এর জন্য BV এবং PV অনুযায়ী ৫০:৫০ রেশিও ভিত্তিক টার্গেট কনফিগার করুন।
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/15">
+                  <Award className="w-5 h-5 text-amber-400" />
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider text-amber-200 block font-bold">Target Achievers</span>
+                    <span className="text-lg font-black text-white">{totalAchievedCount} / {users.length} Members</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Target Setup Form Card */}
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-amber-100 text-amber-800 rounded-xl font-bold">
+                    ⚙️
+                  </div>
+                  <div>
+                    <h3 className="font-black text-slate-900 text-lg">টার্গেট ও ৫০:৫০ রেশিও কনফিগারেশন</h3>
+                    <p className="text-xs text-slate-500">অ্যাডমিন নির্ধারিত মান অনুযায়ী সরাসরি সমস্ত সদস্যের ড্যাশবোর্ডে আপডেট হবে</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-black text-slate-700">ক্যাম্পেইন স্ট্যাটাস:</label>
+                  <button
+                    type="button"
+                    onClick={() => setTargetConfig(prev => ({ ...prev, isActive: !prev.isActive }))}
+                    className={`px-3 py-1 rounded-full text-xs font-black transition-all cursor-pointer ${
+                      targetConfig.isActive
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        : 'bg-rose-100 text-rose-800 border border-rose-300'
+                    }`}
+                  >
+                    {targetConfig.isActive ? 'ACTIVE (সক্রিয়)' : 'INACTIVE (বন্ধ)'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                {/* Direct Business Target Box */}
+                <div className="bg-amber-50/50 p-5 rounded-2xl border border-amber-200/80 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-black text-amber-950 text-sm flex items-center gap-2">
+                      <span className="p-1 bg-amber-200 text-amber-900 rounded-md text-xs">01</span>
+                      <span>ডাইরেক্ট বিজনেস টার্গেট (Direct Target)</span>
+                    </h4>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Direct Business Value (BV) Target *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        value={targetConfig.directBvTarget}
+                        onChange={(e) => setTargetConfig(prev => ({ ...prev, directBvTarget: Number(e.target.value) }))}
+                        className="w-full p-2.5 pl-3 bg-white border border-amber-300 rounded-xl font-mono text-sm font-bold text-amber-950 focus:ring-2 focus:ring-amber-500/20"
+                      />
+                      <span className="absolute right-3 top-2.5 text-xs font-black text-amber-600">BV</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Direct Point Value (PV) Target *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        value={targetConfig.directPvTarget}
+                        onChange={(e) => setTargetConfig(prev => ({ ...prev, directPvTarget: Number(e.target.value) }))}
+                        className="w-full p-2.5 pl-3 bg-white border border-amber-300 rounded-xl font-mono text-sm font-bold text-amber-950 focus:ring-2 focus:ring-amber-500/20"
+                      />
+                      <span className="absolute right-3 top-2.5 text-xs font-black text-amber-600">PV</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Team Business Target Box */}
+                <div className="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-200/80 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-black text-indigo-950 text-sm flex items-center gap-2">
+                      <span className="p-1 bg-indigo-200 text-indigo-900 rounded-md text-xs">02</span>
+                      <span>টিম বিজনেস টার্গেট (Team Target)</span>
+                    </h4>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Team Business Value (BV) Target *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        value={targetConfig.teamBvTarget}
+                        onChange={(e) => setTargetConfig(prev => ({ ...prev, teamBvTarget: Number(e.target.value) }))}
+                        className="w-full p-2.5 pl-3 bg-white border border-indigo-300 rounded-xl font-mono text-sm font-bold text-indigo-950 focus:ring-2 focus:ring-indigo-500/20"
+                      />
+                      <span className="absolute right-3 top-2.5 text-xs font-black text-indigo-600">BV</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Team Point Value (PV) Target *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        value={targetConfig.teamPvTarget}
+                        onChange={(e) => setTargetConfig(prev => ({ ...prev, teamPvTarget: Number(e.target.value) }))}
+                        className="w-full p-2.5 pl-3 bg-white border border-indigo-300 rounded-xl font-mono text-sm font-bold text-indigo-950 focus:ring-2 focus:ring-indigo-500/20"
+                      />
+                      <span className="absolute right-3 top-2.5 text-xs font-black text-indigo-600">PV</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 50:50 Business Ratio Configuration Box */}
+                <div className="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-200/80 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-black text-emerald-950 text-sm flex items-center gap-2">
+                      <span className="p-1 bg-emerald-200 text-emerald-900 rounded-md text-xs">03</span>
+                      <span>৫০:৫০ বিজনেস রেশিও সেটিংস</span>
+                    </h4>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-emerald-200">
+                    <label htmlFor="ratioRuleCheck" className="text-xs font-black text-emerald-950 cursor-pointer">
+                      ৫০:৫০ রেশিও নিয়ম প্রয়োগ করুন
+                    </label>
+                    <input
+                      type="checkbox"
+                      id="ratioRuleCheck"
+                      checked={targetConfig.ratioRuleEnabled}
+                      onChange={(e) => setTargetConfig(prev => ({ ...prev, ratioRuleEnabled: e.target.checked }))}
+                      className="w-4 h-4 text-emerald-600 rounded cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                        Strong Leg Max %
+                      </label>
+                      <input
+                        type="number"
+                        value={targetConfig.strongLegMaxRatio}
+                        onChange={(e) => setTargetConfig(prev => ({ ...prev, strongLegMaxRatio: Number(e.target.value) }))}
+                        className="w-full p-2 bg-white border border-emerald-300 rounded-xl font-mono text-xs font-bold text-emerald-950"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                        Other Legs Min %
+                      </label>
+                      <input
+                        type="number"
+                        value={targetConfig.otherLegsMinRatio}
+                        onChange={(e) => setTargetConfig(prev => ({ ...prev, otherLegsMinRatio: Number(e.target.value) }))}
+                        className="w-full p-2 bg-white border border-emerald-300 rounded-xl font-mono text-xs font-bold text-emerald-950"
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-emerald-800 font-medium bg-emerald-100/60 p-2.5 rounded-xl border border-emerald-200 leading-snug">
+                    💡 ৫০:৫০ বিজনেস রেশিও অনুযায়ী স্ট্রং লেগ থেকে সর্বোচ্চ ৫০% এবং আদার্স লেগ থেকে সর্বনিম্ন ৫০% সাপেক্ষে টার্গেট কাউন্ট হবে।
+                  </p>
+                </div>
+
+              </div>
+
+              {/* Campaign Title & Dates Row */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    টার্গেট ক্যাম্পেইন শিরোনাম (Campaign Title)
+                  </label>
+                  <input
+                    type="text"
+                    value={targetConfig.title}
+                    onChange={(e) => setTargetConfig(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    পুরস্কার / র‍্যাংক নাম (Reward Title)
+                  </label>
+                  <input
+                    type="text"
+                    value={targetConfig.rewardTitle || ''}
+                    onChange={(e) => setTargetConfig(prev => ({ ...prev, rewardTitle: e.target.value }))}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">শুরুর তারিখ</label>
+                    <input
+                      type="date"
+                      value={targetConfig.startDate}
+                      onChange={(e) => setTargetConfig(prev => ({ ...prev, startDate: e.target.value }))}
+                      className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">শেষের তারিখ</label>
+                    <input
+                      type="date"
+                      value={targetConfig.endDate}
+                      onChange={(e) => setTargetConfig(prev => ({ ...prev, endDate: e.target.value }))}
+                      className="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Button Footer */}
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-xs text-emerald-600 font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  <span>পরিবর্তন করার সাথে সাথে রিয়েল-টাইমে সিস্টেম ও ড্যাশবোর্ডে আপডেট সংরক্ষিত হয়</span>
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.setItem('mlm_business_target_config', JSON.stringify(targetConfig));
+                    window.dispatchEvent(new CustomEvent('business-target-updated', { detail: targetConfig }));
+                    setSuccessMsg('বিজনেস টার্গেট ও ৫০:৫০ রেশিও সেটিংস সফলভাবে ব্যাকএন্ডে সংরক্ষিত হয়েছে!');
+                    setTimeout(() => setSuccessMsg(null), 3000);
+                  }}
+                  className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-700 hover:from-amber-700 hover:to-orange-800 text-white rounded-xl font-black text-xs transition-all shadow-md shadow-amber-600/20 active:scale-95 cursor-pointer flex items-center gap-2"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>টার্গেট সেটিংস আপডেট করুন (Save Settings)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Members Target Progress Audit Report Table */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden space-y-4 p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-black text-slate-900 text-lg flex items-center gap-2">
+                    <span>সদস্যদের বিজনেস টার্গেট ও ৫০:৫০ রেশিও অগ্রগতি রিপোর্ট</span>
+                    <span className="bg-amber-100 text-amber-900 text-xs font-black px-2.5 py-0.5 rounded-full">
+                      {filteredTargetList.length} Records
+                    </span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">প্রতিটি ইউজারের ডাইরেক্ট ও টিম বিজনেস BV/PV অগ্রগতি এবং ৫০:৫০ রেশিও ট্র্যাকিং</p>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handlePrintTargetReport}
+                    className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-amber-300" />
+                    <span>প্রিন্ট/PDF রিপোর্ট</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleExportTargetCSV}
+                    className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-200" />
+                    <span>CSV এক্সপোর্ট</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Filters Bar */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                <div className="relative w-full sm:w-80">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    placeholder="সদস্যের নাম, মোবাইল নম্বর বা ID লিখুন..."
+                    value={targetSearchTerm}
+                    onChange={(e) => setTargetSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Filter className="w-4 h-4 text-slate-500" />
+                  <select
+                    value={targetStatusFilter}
+                    onChange={(e) => setTargetStatusFilter(e.target.value as any)}
+                    className="p-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800"
+                  >
+                    <option value="all">সব সদস্য (All Members)</option>
+                    <option value="achieved">🎉 Achieved (টার্গেট সম্পন্ন)</option>
+                    <option value="in_progress">⏳ In Progress (চলমান)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Ledger Table */}
+              <div className="overflow-x-auto rounded-2xl border border-slate-200">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="bg-slate-900 text-slate-200 font-bold uppercase tracking-wider text-[10px]">
+                      <th className="p-3.5">Member Details (সদস্য বিবরণ)</th>
+                      <th className="p-3.5">Direct Business (BV & PV)</th>
+                      <th className="p-3.5">Team Business (BV & PV)</th>
+                      <th className="p-3.5 text-center">50:50 Ratio Balance</th>
+                      <th className="p-3.5 text-right">Target Status (অবস্থা)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200/80 font-medium">
+                    {filteredTargetList.length > 0 ? (
+                      filteredTargetList.map((item) => (
+                        <tr key={item.user.id} className="hover:bg-amber-50/30 transition-colors">
+                          <td className="p-3.5 space-y-0.5">
+                            <div className="font-black text-slate-900">{item.user.name}</div>
+                            <div className="text-[10px] text-slate-500 font-mono flex items-center gap-2">
+                              <span className="font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">
+                                ID: #{item.user.id}
+                              </span>
+                              <span>📞 {item.user.phone}</span>
+                            </div>
+                          </td>
+
+                          {/* Direct Business Progress */}
+                          <td className="p-3.5 space-y-1">
+                            <div className="flex items-center justify-between font-mono font-bold text-slate-800">
+                              <span>{item.directBv.toLocaleString('en-IN')} / {targetConfig.directBvTarget.toLocaleString('en-IN')} BV</span>
+                              <span className="text-[10px] text-amber-700 bg-amber-100 px-1.5 py-0.2 rounded">{item.directBvPercent}%</span>
+                            </div>
+                            <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className="bg-amber-500 h-1.5 rounded-full transition-all"
+                                style={{ width: `${item.directBvPercent}%` }}
+                              ></div>
+                            </div>
+                            <div className="text-[10px] font-mono text-slate-500">
+                              Direct PV: <strong className="text-slate-800">{item.directPv}</strong> / {targetConfig.directPvTarget} PV ({item.directPvPercent}%)
+                            </div>
+                          </td>
+
+                          {/* Team Business Progress */}
+                          <td className="p-3.5 space-y-1">
+                            <div className="flex items-center justify-between font-mono font-bold text-slate-800">
+                              <span>{item.teamBv.toLocaleString('en-IN')} / {targetConfig.teamBvTarget.toLocaleString('en-IN')} BV</span>
+                              <span className="text-[10px] text-indigo-700 bg-indigo-100 px-1.5 py-0.2 rounded">{item.teamBvPercent}%</span>
+                            </div>
+                            <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className="bg-indigo-600 h-1.5 rounded-full transition-all"
+                                style={{ width: `${item.teamBvPercent}%` }}
+                              ></div>
+                            </div>
+                            <div className="text-[10px] font-mono text-slate-500">
+                              Team PV: <strong className="text-slate-800">{item.teamPv}</strong> / {targetConfig.teamPvTarget} PV ({item.teamPvPercent}%)
+                            </div>
+                          </td>
+
+                          {/* 50:50 Ratio Balance */}
+                          <td className="p-3.5 text-center">
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black ${
+                              item.ratioPercent >= 100
+                                ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                                : 'bg-amber-100 text-amber-900 border border-amber-300'
+                            }`}>
+                              ⚡ {item.ratioPercent}% Balanced
+                            </span>
+                          </td>
+
+                          {/* Status */}
+                          <td className="p-3.5 text-right space-y-1">
+                            {item.isAchieved ? (
+                              <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-600 text-white font-black text-xs rounded-full shadow-xs">
+                                🎉 ACHIEVED (সম্পন্ন)
+                              </span>
+                            ) : (
+                              <div className="space-y-0.5">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-100 text-amber-900 font-extrabold text-[11px] rounded-full border border-amber-300">
+                                  ⏳ In Progress ({item.overallCompletion}%)
+                                </span>
+                                <div className="text-[10px] text-slate-400 font-mono">
+                                  {100 - item.overallCompletion}% Remaining
+                                </div>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="p-8 text-center text-slate-400 font-bold">
+                          কোনো টার্গেট রেকর্ড পাওয়া যায়নি
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        );
+      })()}
+
+      {/* 5. PRODUCT CATALOG & OFFERS MANAGEMENT TAB */}
+      {activeTab === 'products' && (() => {
+        const filteredProds = products.filter(prod => {
+          const matchesSearch = prodSearchTerm === '' ||
+            prod.name.toLowerCase().includes(prodSearchTerm.toLowerCase()) ||
+            (prod.sku && prod.sku.toLowerCase().includes(prodSearchTerm.toLowerCase())) ||
+            (prod.brand && prod.brand.toLowerCase().includes(prodSearchTerm.toLowerCase()));
+
+          const matchesCategory = prodCategoryFilter === 'all' || prod.category === prodCategoryFilter;
+
+          const matchesStock = prodStockFilter === 'all' ||
+            (prodStockFilter === 'in_stock' && (!prod.stockStatus || prod.stockStatus === 'in_stock')) ||
+            (prodStockFilter === 'out_of_stock' && prod.stockStatus === 'out_of_stock') ||
+            (prodStockFilter === 'sold_out' && prod.stockStatus === 'sold_out');
+
+          const matchesOffer = prodOfferFilter === 'all' || (prodOfferFilter === 'offer_only' && prod.isOfferActive);
+
+          return matchesSearch && matchesCategory && matchesStock && matchesOffer;
+        });
+
+        const activeOffersCount = products.filter(p => p.isOfferActive).length;
+        const inStockCount = products.filter(p => !p.stockStatus || p.stockStatus === 'in_stock').length;
+        const soldOutCount = products.filter(p => p.stockStatus === 'sold_out' || p.stockStatus === 'out_of_stock').length;
+
+        return (
+          <div className="space-y-6 animate-fade-in">
+            {/* Header Banner */}
+            <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 text-white rounded-3xl p-6 border border-slate-700/60 shadow-xl relative overflow-hidden">
+              <div className="absolute right-0 top-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+              <div className="relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-2xl shrink-0">
+                    <Package className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase border border-amber-500/30">
+                        অ্যাডমিন প্রোডাক্ট মডিউল
+                      </span>
+                      <span className="bg-blue-500/20 text-blue-300 text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full border border-blue-500/30">
+                        Unlimited Products & Level Commission
+                      </span>
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-black text-white mt-1">প্রোডাক্ট ক্যাটাগরি, মূল্য, স্টক ও কমিশন ম্যানেজমেন্ট</h2>
+                    <p className="text-xs text-slate-300 max-w-2xl mt-0.5">
+                      এখানে যেকোনো ক্যাটাগরি, প্রোডাক্ট তৈরি, MRP/Selling Price, BV/PV, কাস্টম লেভেল কমিশন, COD/অনলাইন পেমেন্ট নিয়ম এবং অফার নিয়ন্ত্রণ করতে পারবেন।
+                    </p>
+                  </div>
+                </div>
+
+                {/* Top Actions */}
+                <div className="flex items-center gap-2.5 flex-wrap shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsCategoryModalOpen(true)}
+                    className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-md active:scale-95 cursor-pointer"
+                  >
+                    <FolderPlus className="w-4 h-4 text-indigo-300" />
+                    <span>ক্যাটাগরি মডিউল ({categories.length})</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleOpenAddProductModal}
+                    className="px-4 py-2.5 bg-amber-400 hover:bg-amber-500 text-slate-950 rounded-xl text-xs font-black transition-all flex items-center gap-2 shadow-lg shadow-amber-400/20 active:scale-95 cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4 text-slate-950" />
+                    <span>নতুন প্রোডাক্ট যোগ করুন</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Stats Row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-white rounded-2xl p-3.5 border border-slate-200 shadow-xs flex items-center gap-3">
+                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl shrink-0 font-bold">
+                  📦
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase block">মোট প্রোডাক্ট</span>
+                  <div className="text-base font-black font-mono text-slate-900">{products.length} টি</div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-3.5 border border-slate-200 shadow-xs flex items-center gap-3">
+                <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl shrink-0 font-bold">
+                  ✅
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase block">ইন স্টক (In Stock)</span>
+                  <div className="text-base font-black font-mono text-emerald-600">{inStockCount} টি</div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-3.5 border border-slate-200 shadow-xs flex items-center gap-3">
+                <div className="p-2.5 bg-rose-50 text-rose-600 rounded-xl shrink-0 font-bold">
+                  🛑
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase block">স্টক আউট / সোল্ড আউট</span>
+                  <div className="text-base font-black font-mono text-rose-600">{soldOutCount} টি</div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-3.5 border border-slate-200 shadow-xs flex items-center gap-3">
+                <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl shrink-0 font-bold">
+                  🔥
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase block">অফার ও ডিসকাউন্ট</span>
+                  <div className="text-base font-black font-mono text-amber-600">{activeOffersCount} টি</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Search & Filter Bar */}
+            <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-xs space-y-3">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-3">
+                <div className="relative flex-1 w-full">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="প্রোডাক্ট খুঁজুন (নাম, ব্র্যান্ড বা SKU দিয়ে)..."
+                    value={prodSearchTerm}
+                    onChange={(e) => setProdSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap w-full md:w-auto">
+                  <select
+                    value={prodCategoryFilter}
+                    onChange={(e) => setProdCategoryFilter(e.target.value)}
+                    className="py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700"
+                  >
+                    <option value="all">সকল ক্যাটাগরি (All Categories)</option>
+                    {categories.map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={prodStockFilter}
+                    onChange={(e) => setProdStockFilter(e.target.value as any)}
+                    className="py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700"
+                  >
+                    <option value="all">সকল স্টক স্ট্যাটাস</option>
+                    <option value="in_stock">In Stock (স্টকে আছে)</option>
+                    <option value="sold_out">Sold Out / Out of Stock</option>
+                  </select>
+
+                  <select
+                    value={prodOfferFilter}
+                    onChange={(e) => setProdOfferFilter(e.target.value as any)}
+                    className="py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700"
+                  >
+                    <option value="all">সকল প্রোডাক্ট</option>
+                    <option value="offer_only">🔥 অফার প্রোডাক্টসমূহ (Active Offers)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Product Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredProds.map((prod) => {
+                const isSoldOut = prod.stockStatus === 'sold_out' || prod.stockStatus === 'out_of_stock' || (prod.stock !== undefined && prod.stock <= 0);
+
+                return (
+                  <div key={prod.id} className={`bg-white rounded-2xl border transition-all hover:shadow-lg overflow-hidden flex flex-col justify-between ${
+                    isSoldOut ? 'border-rose-200 bg-rose-50/10' : 'border-slate-200'
+                  }`}>
+                    <div>
+                      {/* Image Thumbnail with Overlay Badges */}
+                      <div className="relative h-44 bg-slate-100 overflow-hidden group">
+                        <img
+                          src={prod.image}
+                          alt={prod.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent"></div>
+
+                        {/* Top Badges */}
+                        <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5 flex-wrap">
+                          <span className="bg-slate-900/90 backdrop-blur-md text-amber-300 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-amber-400/30">
+                            {prod.category}
+                          </span>
+                          {prod.subCategory && (
+                            <span className="bg-indigo-900/90 text-indigo-200 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                              {prod.subCategory}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Stock Badge */}
+                        <div className="absolute top-2.5 right-2.5">
+                          {isSoldOut ? (
+                            <span className="bg-rose-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md animate-pulse">
+                              🛑 Sold Out / স্টক আউট
+                            </span>
+                          ) : (
+                            <span className="bg-emerald-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md">
+                              ⚡ In Stock ({prod.stock || 50} Units)
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Bottom Overlay Title Info */}
+                        <div className="absolute bottom-2.5 left-2.5 right-2.5 text-white">
+                          <div className="text-[10px] font-mono text-slate-300 flex items-center gap-2">
+                            <span>SKU: {prod.sku || `SP-${prod.id}`}</span>
+                            {prod.brand && <span>• {prod.brand}</span>}
+                          </div>
+                          <h3 className="text-sm font-black text-white line-clamp-1">{prod.name}</h3>
+                        </div>
+                      </div>
+
+                      {/* Content Body */}
+                      <div className="p-4 space-y-3 text-xs">
+                        {/* Price Metrics Grid */}
+                        <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 font-mono">
+                          <div>
+                            <span className="text-[9px] font-bold text-slate-400 uppercase block">MRP (বাজার মূল্য)</span>
+                            <span className="text-xs line-through text-slate-400">₹{prod.mrp.toLocaleString('en-IN')}</span>
+                          </div>
+
+                          <div>
+                            <span className="text-[9px] font-bold text-indigo-600 uppercase block">Selling Price (DP)</span>
+                            <span className="text-sm font-black text-emerald-600">₹{prod.distributorPrice.toLocaleString('en-IN')}</span>
+                          </div>
+
+                          <div>
+                            <span className="text-[9px] font-bold text-amber-600 uppercase block">Business Value (BV)</span>
+                            <span className="text-xs font-black text-amber-600">{prod.businessValue.toLocaleString('en-IN')} BV</span>
+                          </div>
+
+                          <div>
+                            <span className="text-[9px] font-bold text-blue-600 uppercase block">Point Value (PV)</span>
+                            <span className="text-xs font-black text-blue-600">{prod.pointValue} PV</span>
+                          </div>
+                        </div>
+
+                        {/* Payment Method Badge */}
+                        <div className="flex items-center justify-between text-[10px] bg-slate-100/80 p-2 rounded-lg border border-slate-200/60 font-medium">
+                          <span className="text-slate-500 font-bold">পেমেন্ট সুবিধা:</span>
+                          {prod.paymentType === 'cod_only' ? (
+                            <span className="text-amber-800 bg-amber-100 font-bold px-2 py-0.5 rounded">Cash on Delivery Only</span>
+                          ) : prod.paymentType === 'online_only' ? (
+                            <span className="text-indigo-800 bg-indigo-100 font-bold px-2 py-0.5 rounded">Online / Advance Token Only</span>
+                          ) : (
+                            <span className="text-emerald-800 bg-emerald-100 font-bold px-2 py-0.5 rounded">COD & Online Both Available</span>
+                          )}
+                        </div>
+
+                        {/* Level Commission Breakdown Badge */}
+                        <div className="bg-indigo-50/70 border border-indigo-100 p-2 rounded-lg text-[10px]">
+                          <div className="flex items-center justify-between font-bold text-indigo-950 mb-1">
+                            <span>কমিশন স্ট্রাকচার:</span>
+                            {prod.useCustomCommission ? (
+                              <span className="bg-indigo-600 text-white text-[9px] px-1.5 py-0.5 rounded font-black">Custom Product Levels</span>
+                            ) : (
+                              <span className="bg-slate-200 text-slate-700 text-[9px] px-1.5 py-0.5 rounded font-bold">Global System Levels</span>
+                            )}
+                          </div>
+                          {prod.useCustomCommission && prod.customCommissionLevels && prod.customCommissionLevels.length > 0 ? (
+                            <div className="flex items-center gap-1.5 flex-wrap text-slate-600 font-mono font-bold">
+                              {prod.customCommissionLevels.map(c => (
+                                <span key={c.level} className="bg-white border border-indigo-200 px-1.5 py-0.5 rounded">
+                                  L{c.level}: {c.percentage ? `${c.percentage}%` : `₹${c.amount}`}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-slate-500">গ্লোবাল ডিসবার্সমেন্ট সেটিংস অনুসৃত হবে।</span>
+                          )}
+                        </div>
+
+                        {/* Active Offer Banner */}
+                        {prod.isOfferActive && (
+                          <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 p-2.5 rounded-xl font-bold shadow-xs space-y-1">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span>🔥 অফার প্রাইজ: ₹{prod.offerPrice?.toLocaleString('en-IN')}</span>
+                              {prod.discountPercent && <span className="bg-slate-950 text-amber-300 text-[9px] px-2 py-0.5 rounded-full font-black">{prod.discountPercent}% OFF</span>}
+                            </div>
+                            {prod.couponOffer && (
+                              <div className="text-[10px] font-mono bg-white/30 px-2 py-0.5 rounded text-slate-900 border border-slate-950/10">
+                                Coupon Code: <strong className="font-extrabold">{prod.couponOffer}</strong>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Card Footer Actions */}
+                    <div className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleProductStock(prod.id)}
+                        className={`px-3 py-1.5 rounded-lg text-[11px] font-black transition-all cursor-pointer border ${
+                          isSoldOut
+                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-500'
+                            : 'bg-rose-100 hover:bg-rose-200 text-rose-800 border-rose-300'
+                        }`}
+                      >
+                        {isSoldOut ? '⚡ Mark In Stock' : '🛑 Mark Sold Out'}
+                      </button>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditProductModal(prod)}
+                          className="p-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg transition-all cursor-pointer font-bold"
+                          title="Edit Product"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteProduct(prod.id, prod.name)}
+                          className="p-2 bg-rose-100 hover:bg-rose-200 text-rose-700 rounded-lg transition-all cursor-pointer font-bold"
+                          title="Delete Product"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+
+            {filteredProds.length === 0 && (
+              <div className="bg-white rounded-3xl p-12 text-center border border-slate-200">
+                <Package className="w-12 h-12 text-slate-300 mx-auto mb-2" />
+                <h3 className="text-base font-black text-slate-800">কোনো প্রোডাক্ট পাওয়া যায়নি</h3>
+                <p className="text-xs text-slate-500 mt-1">অনুগ্রহ করে ফিল্টার পরিবর্তন করুন অথবা নতুন প্রোডাক্ট তৈরি করুন।</p>
+                <button
+                  type="button"
+                  onClick={handleOpenAddProductModal}
+                  className="mt-4 px-4 py-2 bg-amber-400 text-slate-950 rounded-xl font-bold text-xs cursor-pointer"
+                >
+                  + Add Product
+                </button>
+              </div>
+            )}
+
+          </div>
+        );
+      })()}
+
       {/* Sweet Toast Notification Popup */}
       {sweetToast && (
         <div className="fixed top-5 right-5 z-[100] animate-bounce duration-300">
@@ -2463,6 +4213,695 @@ export default function AdminPanel({ adminUser, initialTab = 'members', onImpers
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* 6. PRODUCT ADD / EDIT MODAL */}
+      {isProductModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-3xl w-full my-8 shadow-2xl border border-slate-200 overflow-hidden">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-slate-900 to-indigo-950 p-5 text-white flex items-center justify-between border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-amber-400 text-slate-950 font-black rounded-xl">
+                  📦
+                </div>
+                <div>
+                  <h3 className="text-base font-black">
+                    {editingProduct ? 'প্রোডাক্ট তথ্য সম্পাদনা করুন (Edit Product)' : 'নতুন প্রোডাক্ট যুক্ত করুন (Add Product)'}
+                  </h3>
+                  <p className="text-xs text-slate-300">
+                    MRP, Selling Price, BV/PV, Stock, COD/Online, Custom Level Commission and Offers
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsProductModalOpen(false)}
+                className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveProductSubmit} className="p-6 space-y-6 text-xs max-h-[80vh] overflow-y-auto">
+              
+              {/* SECTION 1: BASIC INFORMATION */}
+              <div className="space-y-4">
+                <h4 className="font-extrabold text-indigo-950 uppercase tracking-wider text-[11px] bg-indigo-50 p-2 rounded-lg border border-indigo-100 flex items-center gap-2">
+                  <span>1. মৌলিক তথ্য (Basic Info & Identifiers)</span>
+                </h4>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      প্রোডাক্টের নাম *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. 535W Mono PERC High-Efficiency Solar Panel"
+                      value={pName}
+                      onChange={(e) => setPName(e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500 text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      ক্যাটাগরি *
+                    </label>
+                    <select
+                      value={pCategory}
+                      onChange={(e) => {
+                        const newCatName = e.target.value;
+                        setPCategory(newCatName);
+                        const matchedCat = categories.find(c => c.name === newCatName);
+                        if (matchedCat && matchedCat.subCategories.length > 0) {
+                          setPSubCategory(matchedCat.subCategories[0]);
+                        } else {
+                          setPSubCategory('');
+                        }
+                      }}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs"
+                    >
+                      {categories.map(c => (
+                        <option key={c.id} value={c.name}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      সাব-ক্যাটাগরি
+                    </label>
+                    {(() => {
+                      const activeCatObj = categories.find(c => c.name === pCategory);
+                      if (activeCatObj && activeCatObj.subCategories.length > 0) {
+                        return (
+                          <select
+                            value={pSubCategory}
+                            onChange={(e) => setPSubCategory(e.target.value)}
+                            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs"
+                          >
+                            <option value="">-- নির্বাচন করুন --</option>
+                            {activeCatObj.subCategories.map((sub, idx) => (
+                              <option key={idx} value={sub}>{sub}</option>
+                            ))}
+                          </select>
+                        );
+                      }
+                      return (
+                        <input
+                          type="text"
+                          placeholder="e.g. Mono PERC Modules"
+                          value={pSubCategory}
+                          onChange={(e) => setPSubCategory(e.target.value)}
+                          className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      );
+                    })()}
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      ব্র্যান্ড / প্রস্তুতকারক (Brand Name)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Waaree, Adani, Luminous, Havells"
+                      value={pBrand}
+                      onChange={(e) => setPBrand(e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      SKU কোড / আইডি
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. SP-535W-PERC"
+                      value={pSku}
+                      onChange={(e) => setPSku(e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      ছবি URL (Product Image)
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://images.unsplash.com/..."
+                      value={pImage}
+                      onChange={(e) => setPImage(e.target.value)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Preset Image Options */}
+                <div>
+                  <span className="text-[10px] font-bold text-slate-500 block mb-1">দ্রুত নমুনা ছবি বেছে নিন:</span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {[
+                      { name: 'Solar Panel', url: 'https://images.unsplash.com/photo-1509391365360-2e959784a276?w=600&auto=format&fit=crop&q=80' },
+                      { name: 'Inverter', url: 'https://images.unsplash.com/photo-1558441719-670b357021bc?w=600&auto=format&fit=crop&q=80' },
+                      { name: 'Solar Pump', url: 'https://images.unsplash.com/photo-1544725176-7c40e5a71c5e?w=600&auto=format&fit=crop&q=80' },
+                      { name: 'Lithium Battery', url: 'https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=600&auto=format&fit=crop&q=80' },
+                      { name: 'Street Light', url: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=600&auto=format&fit=crop&q=80' },
+                      { name: 'EV Charger', url: 'https://images.unsplash.com/photo-1563720223185-11003d516935?w=600&auto=format&fit=crop&q=80' }
+                    ].map((preset, idx) => (
+                      <button
+                        type="button"
+                        key={idx}
+                        onClick={() => setPImage(preset.url)}
+                        className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg text-[10px] font-bold text-slate-700 cursor-pointer"
+                      >
+                        📷 {preset.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    প্রোডাক্টের বিবরণ (Product Description)
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Provide details on capacity, warranty, efficiency, specifications..."
+                    value={pDescription}
+                    onChange={(e) => setPDescription(e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium"
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                  <input
+                    type="checkbox"
+                    id="isUpcoming"
+                    checked={pIsUpcoming}
+                    onChange={(e) => setPIsUpcoming(e.target.checked)}
+                    className="w-4 h-4 text-indigo-600 rounded"
+                  />
+                  <label htmlFor="isUpcoming" className="font-extrabold text-slate-800 cursor-pointer">
+                    Upcoming Product হিসেবে চিহ্নিত করুন (আসন্ন প্রোডাক্ট)
+                  </label>
+                </div>
+              </div>
+
+              {/* SECTION 2: PRICING, BV & PV */}
+              <div className="space-y-4">
+                <h4 className="font-extrabold text-indigo-950 uppercase tracking-wider text-[11px] bg-amber-50 p-2 rounded-lg border border-amber-200 flex items-center gap-2">
+                  <span>2. মূল্য, বিজনেস ভ্যালু (BV) এবং পয়েন্ট ভ্যালু (PV)</span>
+                </h4>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      MRP (বাজার মূল্য ₹) *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      value={pMrp}
+                      onChange={(e) => setPMrp(Number(e.target.value))}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      Selling Price (DP ₹) *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      value={pDistributorPrice}
+                      onChange={(e) => setPDistributorPrice(Number(e.target.value))}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono font-black text-emerald-700 text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      Business Value (BV) *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      value={pBusinessValue}
+                      onChange={(e) => setPBusinessValue(Number(e.target.value))}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono font-black text-amber-600 text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      Point Value (PV) *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      value={pPointValue}
+                      onChange={(e) => setPPointValue(Number(e.target.value))}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono font-black text-blue-600 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 3: STOCK & PAYMENT METHODS */}
+              <div className="space-y-4">
+                <h4 className="font-extrabold text-indigo-950 uppercase tracking-wider text-[11px] bg-slate-100 p-2 rounded-lg border border-slate-200 flex items-center gap-2">
+                  <span>3. ইনভেন্টরি, স্টক ও পেমেন্ট সুবিধা (COD/Advance Payment)</span>
+                </h4>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      স্টক সংখ্যা (Stock Count)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={pStock}
+                      onChange={(e) => setPStock(Number(e.target.value))}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      স্টক স্ট্যাটাস (Stock Status)
+                    </label>
+                    <select
+                      value={pStockStatus}
+                      onChange={(e) => setPStockStatus(e.target.value as any)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs"
+                    >
+                      <option value="in_stock">⚡ In Stock (স্টকে আছে)</option>
+                      <option value="out_of_stock">⚠️ Out of Stock (স্টক সাময়িক শেষ)</option>
+                      <option value="sold_out">🛑 Sold Out (সম্পূর্ণ সোল্ড আউট)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1">
+                      পেমেন্ট টাইপ সুবিধা (Allowed Payment)
+                    </label>
+                    <select
+                      value={pPaymentType}
+                      onChange={(e) => setPPaymentType(e.target.value as any)}
+                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-xs"
+                    >
+                      <option value="both">✅ COD & Online Payment (উভয় প্রযোজ্য)</option>
+                      <option value="cod_only">💵 Only Cash on Delivery (শুধুমাত্র সিওডি)</option>
+                      <option value="online_only">💳 Online / Advance Payment Only (শুধুমাত্র অনলাইন/অগ্রিম)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="bg-amber-50/80 p-3 rounded-2xl border border-amber-200 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="advancePayReq"
+                      checked={pAdvancePaymentRequired}
+                      onChange={(e) => setPAdvancePaymentRequired(e.target.checked)}
+                      className="w-4 h-4 text-amber-600 rounded"
+                    />
+                    <label htmlFor="advancePayReq" className="font-black text-amber-950 cursor-pointer">
+                      অগ্রিম টোকেন পেমেন্ট আবশ্যক (Advance Payment Required for High-Value Delivery)
+                    </label>
+                  </div>
+
+                  {pAdvancePaymentRequired && (
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px]">
+                        অগ্রিম পেমেন্ট নির্দেশনা / নোট (e.g. "20% token payment required before dispatch")
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. requires 20% Advance Token Payment for High Value Inverter Freight"
+                        value={pAdvancePaymentNote}
+                        onChange={(e) => setPAdvancePaymentNote(e.target.value)}
+                        className="w-full p-2 bg-white border border-amber-300 rounded-xl text-xs font-bold"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* SECTION 4: CUSTOM LEVEL COMMISSION PER PRODUCT */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between bg-indigo-900 text-white p-3 rounded-2xl border border-indigo-800">
+                  <div>
+                    <h4 className="font-extrabold text-xs">4. কাস্টম লেভেল কমিশন সেটিংস (Custom Product Commission)</h4>
+                    <p className="text-[10px] text-indigo-200">এই নির্দিষ্ট প্রোডাক্টের জন্য লেভেলভিত্তিক কাস্টম শতাংশ বা টাকা সেট করুন</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="useCustomComm"
+                      checked={pUseCustomCommission}
+                      onChange={(e) => setPUseCustomCommission(e.target.checked)}
+                      className="w-5 h-5 text-amber-400 rounded cursor-pointer"
+                    />
+                    <label htmlFor="useCustomComm" className="font-black text-amber-300 text-xs cursor-pointer">
+                      {pUseCustomCommission ? 'কাস্টম কমিশন সক্রিয় ✅' : 'গ্লোবাল সিস্টেম কমিশন ⚙️'}
+                    </label>
+                  </div>
+                </div>
+
+                {pUseCustomCommission && (
+                  <div className="bg-indigo-50/80 p-4 rounded-2xl border border-indigo-200 space-y-3">
+                    <div className="flex items-center justify-between text-indigo-950 font-extrabold text-xs">
+                      <span>কাস্টম লেভেল কমিশন তালিকা:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const nextLevel = pCustomCommissionLevels.length + 1;
+                          setPCustomCommissionLevels([...pCustomCommissionLevels, { level: nextLevel, percentage: 5 }]);
+                        }}
+                        className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-[10px] font-bold cursor-pointer"
+                      >
+                        + লেভেল যোগ করুন
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 font-mono">
+                      {pCustomCommissionLevels.map((lvlItem, idx) => (
+                        <div key={idx} className="bg-white p-2 rounded-xl border border-indigo-200 shadow-xs space-y-1">
+                          <span className="text-[10px] font-black text-indigo-900 block">Level {lvlItem.level}</span>
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              value={lvlItem.percentage !== undefined ? lvlItem.percentage : 0}
+                              onChange={(e) => {
+                                const newPct = Number(e.target.value);
+                                const newArr = [...pCustomCommissionLevels];
+                                newArr[idx].percentage = newPct;
+                                setPCustomCommissionLevels(newArr);
+                              }}
+                              className="w-full p-1 bg-slate-50 border border-slate-200 rounded font-bold text-xs"
+                            />
+                            <span className="font-black text-indigo-700">%</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* SECTION 5: OFFERS & DISCOUNTS */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between bg-amber-500 text-slate-950 p-3 rounded-2xl border border-amber-600 shadow-sm">
+                  <div>
+                    <h4 className="font-extrabold text-xs">5. প্রমোশনাল অফার ও কুপন ডিসকাউন্ট (Offers & Coupons)</h4>
+                    <p className="text-[10px] text-slate-900 font-medium">নির্দিষ্ট সময়সীমাভিত্তিক অফার ও স্পেশাল কুপন সেট করুন</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="isOfferActive"
+                      checked={pIsOfferActive}
+                      onChange={(e) => setPIsOfferActive(e.target.checked)}
+                      className="w-5 h-5 text-slate-950 rounded cursor-pointer"
+                    />
+                    <label htmlFor="isOfferActive" className="font-black text-slate-950 text-xs cursor-pointer">
+                      {pIsOfferActive ? 'অফার চালুকৃত 🔥' : 'অফার বন্ধ ⚪'}
+                    </label>
+                  </div>
+                </div>
+
+                {pIsOfferActive && (
+                  <div className="bg-amber-50/80 p-4 rounded-2xl border border-amber-300 space-y-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">
+                          অফার প্রাইস (Offer Price ₹)
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={pOfferPrice}
+                          onChange={(e) => setPOfferPrice(Number(e.target.value))}
+                          className="w-full p-2 bg-white border border-amber-300 rounded-xl font-mono font-black text-amber-700 text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">
+                          ডিসকাউন্ট শতাংশ (%)
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={pDiscountPercent}
+                          onChange={(e) => setPDiscountPercent(Number(e.target.value))}
+                          className="w-full p-2 bg-white border border-amber-300 rounded-xl font-mono font-bold text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">
+                          কুপন কোড (Coupon Code)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. SOLAR300"
+                          value={pCouponOffer}
+                          onChange={(e) => setPCouponOffer(e.target.value)}
+                          className="w-full p-2 bg-white border border-amber-300 rounded-xl font-mono font-black text-indigo-900 text-xs uppercase"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">
+                          ফ্ল্যাট ছাড় (Flat Discount ₹)
+                        </label>
+                        <input
+                          type="number"
+                          min={0}
+                          value={pFlatDiscount}
+                          onChange={(e) => setPFlatDiscount(Number(e.target.value))}
+                          className="w-full p-2 bg-white border border-amber-300 rounded-xl font-mono text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">
+                          শুরুর তারিখ (Start Date)
+                        </label>
+                        <input
+                          type="date"
+                          value={pOfferStartDate}
+                          onChange={(e) => setPOfferStartDate(e.target.value)}
+                          className="w-full p-2 bg-white border border-amber-300 rounded-xl text-xs font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">
+                          শেষের তারিখ (End Date)
+                        </label>
+                        <input
+                          type="date"
+                          value={pOfferEndDate}
+                          onChange={(e) => setPOfferEndDate(e.target.value)}
+                          className="w-full p-2 bg-white border border-amber-300 rounded-xl text-xs font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">
+                          শুরুর সময় (Start Time)
+                        </label>
+                        <input
+                          type="time"
+                          value={pOfferStartTime}
+                          onChange={(e) => setPOfferStartTime(e.target.value)}
+                          className="w-full p-2 bg-white border border-amber-300 rounded-xl text-xs font-mono"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">
+                          শেষের সময় (End Time)
+                        </label>
+                        <input
+                          type="time"
+                          value={pOfferEndTime}
+                          onChange={(e) => setPOfferEndTime(e.target.value)}
+                          className="w-full p-2 bg-white border border-amber-300 rounded-xl text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Submit / Cancel Footer Buttons */}
+              <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsProductModalOpen(false)}
+                  className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl font-bold text-xs transition-all cursor-pointer"
+                >
+                  বাতিল করুন (Cancel)
+                </button>
+
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl font-black text-xs transition-all shadow-md shadow-emerald-600/20 active:scale-95 cursor-pointer flex items-center gap-2"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{editingProduct ? 'পরিবর্তন সংরক্ষণ করুন' : 'প্রোডাক্ট সংরক্ষণ করুন'}</span>
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 7. CATEGORY MANAGEMENT MODAL */}
+      {isCategoryModalOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-2xl w-full my-8 shadow-2xl border border-slate-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-indigo-950 to-slate-900 p-5 text-white flex items-center justify-between border-b border-indigo-900">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-indigo-600 text-white font-black rounded-xl">
+                  📁
+                </div>
+                <div>
+                  <h3 className="text-base font-black">প্রোডাক্ট ক্যাটাগরি ও সাব-ক্যাটাগরি ম্যানেজমেন্ট</h3>
+                  <p className="text-xs text-indigo-200">Create, rename, or delete categories and subcategories</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6 text-xs max-h-[75vh] overflow-y-auto">
+              {/* Form to Add Category */}
+              <form onSubmit={handleAddCategorySubmit} className="bg-indigo-50/80 p-4 rounded-2xl border border-indigo-200 space-y-3">
+                <h4 className="font-extrabold text-indigo-950 text-xs">নতুন ক্যাটাগরি তৈরি করুন</h4>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Solar Water Heaters"
+                    value={newCatName}
+                    onChange={(e) => setNewCatName(e.target.value)}
+                    className="flex-1 p-2.5 bg-white border border-indigo-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500"
+                  />
+                  <button
+                    type="submit"
+                    className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold rounded-xl text-xs cursor-pointer shrink-0"
+                  >
+                    + ক্যাটাগরি যোগ করুন
+                  </button>
+                </div>
+              </form>
+
+              {/* List of Existing Categories */}
+              <div className="space-y-4">
+                <h4 className="font-extrabold text-slate-900 text-xs">বর্তমান ক্যাটাগরি ও সাব-ক্যাটাগরি সমূহ ({categories.length}):</h4>
+
+                <div className="space-y-3">
+                  {categories.map((cat) => (
+                    <div key={cat.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-slate-900 text-sm">{cat.name}</span>
+                          <span className="text-[10px] font-bold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full">
+                            {cat.subCategories.length} Subcategories
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                          className="p-1.5 text-rose-600 hover:bg-rose-100 rounded-lg cursor-pointer"
+                          title="Delete Category"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* SubCategories Badge List */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {cat.subCategories.map((sub, sIdx) => (
+                          <span key={sIdx} className="inline-flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-slate-200 font-bold text-slate-700 text-[11px]">
+                            <span>{sub}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteSubCategory(cat.id, sub)}
+                              className="text-slate-400 hover:text-rose-600 font-black"
+                            >
+                              ✕
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Add SubCategory Inline Form */}
+                      <div className="pt-2 border-t border-slate-200/80 flex items-center gap-2">
+                        <input
+                          type="text"
+                          placeholder="নতুন সাব-ক্যাটাগরি লিখুন..."
+                          value={selectedCatIdForSub === cat.id ? newSubCatName : ''}
+                          onChange={(e) => {
+                            setSelectedCatIdForSub(cat.id);
+                            setNewSubCatName(e.target.value);
+                          }}
+                          className="flex-1 p-2 bg-white border border-slate-300 rounded-xl text-xs font-bold"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleAddSubCategorySubmit(cat.id)}
+                          className="px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-[11px] font-bold cursor-pointer"
+                        >
+                          + সাব-ক্যাটাগরি
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-200 text-right">
+              <button
+                type="button"
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="px-5 py-2 bg-slate-800 text-white font-bold rounded-xl text-xs cursor-pointer"
+              >
+                বন্ধ করুন (Close)
+              </button>
+            </div>
           </div>
         </div>
       )}

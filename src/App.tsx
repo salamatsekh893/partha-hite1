@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User as UserIcon, Shield, Users, Sun, X, ArrowLeft, ExternalLink } from 'lucide-react';
-import { User, ProductOrder } from './types.js';
+import { User, ProductOrder, SolarProduct, ProductCategory } from './types.js';
+import { INITIAL_PRODUCTS, INITIAL_CATEGORIES } from './data/products.js';
 import Header from './components/Header.js';
 import Sidebar from './components/Sidebar.js';
 import LoginForm from './components/LoginForm.js';
@@ -13,7 +14,7 @@ import SolarLanding from './components/SolarLanding.js';
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [currentView, setView] = useState<'dashboard' | 'admin' | 'solar' | 'auth'>('solar');
-  const [adminTab, setAdminTab] = useState<'members' | 'website' | 'orders'>('members');
+  const [adminTab, setAdminTab] = useState<'members' | 'website' | 'orders' | 'company-fund' | 'products' | 'business-targets'>('members');
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [initializing, setInitializing] = useState(true);
@@ -21,6 +22,36 @@ export default function App() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const [userTab, setUserTab] = useState<'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports'>('dashboard');
+
+  // Central Products State across System
+  const [products, setProducts] = useState<SolarProduct[]>(() => {
+    try {
+      const saved = localStorage.getItem('mlm_solar_products');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return INITIAL_PRODUCTS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('mlm_solar_products', JSON.stringify(products));
+  }, [products]);
+
+  // Central Categories State across System
+  const [categories, setCategories] = useState<ProductCategory[]>(() => {
+    try {
+      const saved = localStorage.getItem('mlm_product_categories');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return INITIAL_CATEGORIES;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('mlm_product_categories', JSON.stringify(categories));
+  }, [categories]);
 
   // Central Product Orders State across System
   const [orders, setOrders] = useState<ProductOrder[]>(() => {
@@ -30,34 +61,7 @@ export default function App() {
     } catch (e) {
       console.error(e);
     }
-    return [
-      {
-        id: 'ORD-387718',
-        userId: 1,
-        productId: 1,
-        productName: '5HP Submersible Solar Water Pump System',
-        qty: 1,
-        totalAmount: 115000,
-        totalBV: 85000,
-        totalPV: 850,
-        orderDate: new Date().toISOString().split('T')[0],
-        status: 'Pending',
-        shippingAddress: 'Kolkata Central Solar Hub (Paid via Razorpay)'
-      },
-      {
-        id: 'ORD-198234',
-        userId: 2,
-        productId: 2,
-        productName: '3KW On-Grid Solar Inverter & Module Kit',
-        qty: 1,
-        totalAmount: 145000,
-        totalBV: 110000,
-        totalPV: 1100,
-        orderDate: new Date().toISOString().split('T')[0],
-        status: 'Approved',
-        shippingAddress: 'Burdwan Depot (Cash on Delivery)'
-      }
-    ];
+    return [];
   });
 
   useEffect(() => {
@@ -99,7 +103,7 @@ export default function App() {
   const handleSetView = (
     view: 'dashboard' | 'admin' | 'solar' | 'auth', 
     uTab?: 'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports',
-    aTab?: 'members' | 'website'
+    aTab?: 'members' | 'website' | 'orders' | 'company-fund' | 'products' | 'business-targets'
   ) => {
     setView(view);
     if (uTab) {
@@ -265,6 +269,10 @@ export default function App() {
               onImpersonateUser={handleImpersonateUser}
               orders={orders}
               onOrdersChange={setOrders}
+              products={products}
+              onProductsChange={setProducts}
+              categories={categories}
+              onCategoriesChange={setCategories}
             />
           ) : (
             <UserDashboard 
@@ -278,6 +286,8 @@ export default function App() {
               }} 
               orders={orders}
               onOrdersChange={setOrders}
+              products={products}
+              categories={categories}
             />
           )
         ) : (

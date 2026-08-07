@@ -61,17 +61,54 @@ export interface WebsiteContent {
   created_at: string;
 }
 
+export interface CustomLevelCommission {
+  level: number;
+  percentage?: number;
+  amount?: number;
+}
+
+export interface ProductCategory {
+  id: string;
+  name: string;
+  subCategories: string[];
+}
+
 export interface SolarProduct {
   id: number;
   name: string;
   category: string;
+  subCategory?: string;
+  sku?: string;
+  brand?: string;
   mrp: number; // Maximum Retail Price ₹
-  distributorPrice: number; // DP ₹
+  distributorPrice: number; // DP / Selling Price ₹
   businessValue: number; // BV
   pointValue: number; // PV
+  stock?: number;
+  stockStatus?: 'in_stock' | 'out_of_stock' | 'sold_out';
   image: string;
   isUpcoming: boolean;
   description: string;
+
+  // Payment Options
+  paymentType?: 'both' | 'cod_only' | 'online_only';
+  advancePaymentRequired?: boolean;
+  advancePaymentNote?: string;
+
+  // Custom Level Commission Settings
+  useCustomCommission?: boolean;
+  customCommissionLevels?: CustomLevelCommission[];
+
+  // Offers & Discounts
+  isOfferActive?: boolean;
+  offerPrice?: number;
+  discountPercent?: number;
+  flatDiscount?: number;
+  couponOffer?: string;
+  offerStartDate?: string;
+  offerEndDate?: string;
+  offerStartTime?: string;
+  offerEndTime?: string;
 }
 
 export interface ProductOrder {
@@ -98,3 +135,37 @@ export interface OfferItem {
   progressPercent: number;
   category: string;
 }
+
+export interface CompanyFundLog {
+  id: string;
+  orderId: string;
+  memberId: number;
+  memberName: string;
+  level: number;
+  levelName: string;
+  amount: number;
+  percentage: number;
+  timestamp: string;
+  dateOnly: string;
+  reason: string;
+  productName: string;
+  totalBV: number;
+}
+
+export interface BusinessTargetConfig {
+  id: string;
+  title: string;
+  description: string;
+  directBvTarget: number;
+  directPvTarget: number;
+  teamBvTarget: number;
+  teamPvTarget: number;
+  ratioRuleEnabled: boolean;
+  strongLegMaxRatio: number; // e.g. 50%
+  otherLegsMinRatio: number; // e.g. 50%
+  startDate: string;
+  endDate: string;
+  isActive: boolean;
+  rewardTitle?: string;
+}
+

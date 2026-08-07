@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { 
   TrendingUp, DollarSign, Calendar, Building2, Users, ShoppingBag, 
   Download, Printer, Percent, Sparkles, ArrowUpRight, BarChart2,
-  CheckCircle2, Clock, MapPin, Scale
+  CheckCircle2, Clock, MapPin, Scale, Layers
 } from 'lucide-react';
 import { 
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, 
@@ -26,9 +26,9 @@ export default function BusinessModule({ user, downlines, isDarkMode = false }: 
   const activeDirectCount = downlines.filter(m => m.level === 1 && m.status === 'active').length;
   const activeTeamCount = downlines.filter(m => m.level > 1 && m.status === 'active').length;
 
-  // Real Business calculations from database downline
+  // Real Business calculations from database downline (100% Upline Propagation Rule)
   const directBV = activeDirectCount * 25000;
-  const teamBV = activeTeamCount * 18000;
+  const teamBV = activeTeamCount * 25000;
   const totalBV = directBV + teamBV;
   const totalBusinessINR = Math.round(totalBV * 1.25);
 
@@ -112,6 +112,31 @@ export default function BusinessModule({ user, downlines, isDarkMode = false }: 
             <Printer className="w-3.5 h-3.5" />
             <span>Print Report PDF</span>
           </button>
+        </div>
+      </div>
+
+      {/* 1.5. Real Upline Business Counting Rule Banner */}
+      <div className={`p-3.5 rounded-xl border flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs ${
+        isDarkMode ? 'bg-indigo-950/40 border-indigo-800/40 text-indigo-200' : 'bg-indigo-50/80 border-indigo-200/80 text-indigo-950'
+      }`}>
+        <div className="flex items-start gap-2.5">
+          <div className="p-1.5 bg-indigo-600 text-white rounded-lg mt-0.5 shrink-0">
+            <Layers className="w-4 h-4" />
+          </div>
+          <div className="space-y-0.5">
+            <div className="font-bold flex items-center gap-2">
+              <span>Upline Business Count Rules (রিয়েল-টাইম আপলাইন বিজনেস গণনাক্রম)</span>
+              <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-extrabold text-[10px] rounded-full uppercase">100% Active</span>
+            </div>
+            <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">
+              যে ID-এর মাধ্যমে নতুন Business/Register হবে, সেই Business স্বয়ংক্রিয়ভাবে সেই ID-এর সম্পূর্ণ <strong>Upline Chain</strong>-এর (Direct Sponsor, Grand Sponsor, up to Root Top ID) সকল যোগ্য সদস্যের Business Count-এ যুক্ত হবে।
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
+          <span className="text-[10px] font-mono font-bold bg-white dark:bg-slate-900 px-2.5 py-1 rounded-md border border-indigo-300 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400">
+            Real-time DB Sync
+          </span>
         </div>
       </div>
 

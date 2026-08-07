@@ -57,7 +57,7 @@ export default function DownlineModule({ user, downlines, isDarkMode = false, on
     current.count += 1;
     if (m.status === 'active') {
       current.active += 1;
-      current.bv += (lvl === 1 ? 25000 : 18000);
+      current.bv += 25000;
     }
     levelStatsMap.set(lvl, current);
   });

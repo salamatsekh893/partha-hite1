@@ -14,7 +14,7 @@ interface SidebarProps {
   isImpersonating?: boolean;
   currentView: 'dashboard' | 'admin' | 'auth';
   currentTab?: 'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports';
-  setView: (view: 'dashboard' | 'admin', userTab?: 'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports', adminTab?: 'members' | 'website') => void;
+  setView: (view: 'dashboard' | 'admin', userTab?: 'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports', adminTab?: 'members' | 'website' | 'orders' | 'company-fund' | 'products' | 'business-targets') => void;
   onEditProfileClick: () => void;
 }
 

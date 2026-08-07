@@ -4,14 +4,16 @@ import {
   Tag, CreditCard, Sparkles, CheckCircle2, AlertCircle, ArrowUpRight,
   ChevronRight, Eye, RefreshCw, Truck, HelpCircle, Key, Wallet, Building2, Check, ExternalLink, Sun
 } from 'lucide-react';
-import { User, SolarProduct, ProductOrder } from '../types.js';
-import { INITIAL_PRODUCTS } from '../data/products.js';
+import { User, SolarProduct, ProductOrder, ProductCategory } from '../types.js';
+import { INITIAL_PRODUCTS, INITIAL_CATEGORIES } from '../data/products.js';
 
 interface ProductModuleProps {
   user: User;
   orders: ProductOrder[];
   onOrderPlaced?: (newOrder: ProductOrder) => void;
   isDarkMode?: boolean;
+  products?: SolarProduct[];
+  categories?: ProductCategory[];
 }
 
 // Helper component for reliable image rendering with fallback icon
@@ -34,7 +36,7 @@ function ProductImage({ src, alt, className = "w-12 h-12 rounded-xl object-cover
   );
 }
 
-export default function ProductModule({ user, orders, onOrderPlaced, isDarkMode = false }: ProductModuleProps) {
+export default function ProductModule({ user, orders, onOrderPlaced, isDarkMode = false, products: propProducts, categories: propCategories }: ProductModuleProps) {
   const [activeTab, setActiveTab] = useState<'catalog' | 'upcoming' | 'orders' | 'transactions'>('catalog');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,16 +54,17 @@ export default function ProductModule({ user, orders, onOrderPlaced, isDarkMode 
   const [orderSuccessMsg, setOrderSuccessMsg] = useState<string>('');
   const [showGuide, setShowGuide] = useState<boolean>(false);
 
-  const categories = ['all', 'Solar Panels', 'Inverters', 'Batteries', 'Solar Pumps', 'Street Lights', 'EV Chargers'];
+  const productList = propProducts || INITIAL_PRODUCTS;
+  const categoryNames = ['all', ...(propCategories ? propCategories.map(c => c.name) : INITIAL_CATEGORIES.map(c => c.name))];
 
   // Filter products
-  const activeProducts = INITIAL_PRODUCTS.filter(p => !p.isUpcoming).filter(p => {
+  const activeProducts = productList.filter(p => !p.isUpcoming).filter(p => {
     const matchesCat = selectedCategory === 'all' || p.category === selectedCategory;
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.category.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesCat && matchesSearch;
   });
 
-  const upcomingProducts = INITIAL_PRODUCTS.filter(p => p.isUpcoming);
+  const upcomingProducts = productList.filter(p => p.isUpcoming);
 
   // Helper to load Razorpay Checkout script dynamically
   const loadRazorpayScript = (): Promise<boolean> => {
@@ -389,7 +392,7 @@ export default function ProductModule({ user, orders, onOrderPlaced, isDarkMode 
 
             {/* Category Pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1 md:pb-0">
-              {categories.map((cat) => (
+              {categoryNames.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
@@ -516,62 +519,81 @@ export default function ProductModule({ user, orders, onOrderPlaced, isDarkMode 
 
       {/* 5. PRODUCT ORDERS HISTORY */}
       {activeTab === 'orders' && (
-        <div className={`border rounded-3xl overflow-hidden shadow-sm ${
-          isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
-        }`}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className={`border-b font-extrabold uppercase text-[11px] ${
-                  isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-700 border-slate-200'
-                }`}>
-                  <th className="p-4">Order ID</th>
-                  <th className="p-4">Order Date</th>
-                  <th className="p-4">Product Name</th>
-                  <th className="p-4">Qty</th>
-                  <th className="p-4">Total Amount</th>
-                  <th className="p-4">BV Earned</th>
-                  <th className="p-4">PV Earned</th>
-                  <th className="p-4 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200/50 font-medium">
-                {orders.length > 0 ? (
-                  orders.map((o) => (
-                    <tr key={o.id} className={isDarkMode ? 'hover:bg-slate-800/50' : 'hover:bg-indigo-50/40'}>
-                      <td className="p-4 font-mono font-bold text-amber-500">{o.id}</td>
-                      <td className="p-4 text-slate-400">{o.orderDate}</td>
-                      <td className="p-4 font-bold">{o.productName}</td>
-                      <td className="p-4 font-black">{o.qty}</td>
-                      <td className="p-4 font-mono font-black text-indigo-600 dark:text-indigo-400">₹{o.totalAmount.toLocaleString('en-IN')}</td>
-                      <td className="p-4 font-mono font-bold text-amber-500">+{o.totalBV} BV</td>
-                      <td className="p-4 font-mono font-bold text-emerald-500">+{o.totalPV} PV</td>
-                      <td className="p-4 text-center">
-                        {o.status === 'Pending' ? (
-                          <span className="bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800 px-2.5 py-1 rounded-xl text-[10px] font-black inline-flex items-center gap-1">
-                            ⏳ Pending Approval
-                          </span>
-                        ) : o.status === 'Approved' ? (
-                          <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 px-2.5 py-1 rounded-xl text-[10px] font-black inline-flex items-center gap-1">
-                            ✓ Approved
-                          </span>
-                        ) : (
-                          <span className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-1 rounded-xl text-[10px] font-black">
-                            {o.status}
-                          </span>
-                        )}
+        <div className="space-y-3">
+          {/* Privacy & Upline Business Rule Banner */}
+          <div className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 text-xs ${
+            isDarkMode ? 'bg-indigo-950/40 border-indigo-800/50 text-indigo-200' : 'bg-indigo-50 border-indigo-200 text-indigo-950'
+          }`}>
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-indigo-600 text-white rounded-xl shrink-0">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="font-bold block text-xs">🔒 Personal Purchase Privacy Rule (ক্রয় তথ্যের গোপনীয়তা)</span>
+                <p className="text-[11px] text-slate-500 dark:text-slate-300">
+                  আপনার পারচেজের সম্পূর্ণ বিবরণ (পণ্য, পরিমাণ, টাকা ও ইনভয়েস) শুধুমাত্র আপনার আইডি <strong>#{user.id}</strong>-তেই সংরক্ষিত থাকবে। আপলাইনদের কাছে কেবল রিয়েল-টাইম বিজনেস কাউন্ট (+১) ও বিজনেস ভলিউম (BV) যুক্ত হবে।
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className={`border rounded-3xl overflow-hidden shadow-sm ${
+            isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+          }`}>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className={`border-b font-extrabold uppercase text-[11px] ${
+                    isDarkMode ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-700 border-slate-200'
+                  }`}>
+                    <th className="p-4">Order ID</th>
+                    <th className="p-4">Order Date</th>
+                    <th className="p-4">Product Name</th>
+                    <th className="p-4">Qty</th>
+                    <th className="p-4">Total Amount</th>
+                    <th className="p-4">BV Earned</th>
+                    <th className="p-4">PV Earned</th>
+                    <th className="p-4 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200/50 font-medium">
+                  {orders.filter(o => !o.userId || o.userId === user.id).length > 0 ? (
+                    orders.filter(o => !o.userId || o.userId === user.id).map((o) => (
+                      <tr key={o.id} className={isDarkMode ? 'hover:bg-slate-800/50' : 'hover:bg-indigo-50/40'}>
+                        <td className="p-4 font-mono font-bold text-amber-500">{o.id}</td>
+                        <td className="p-4 text-slate-400">{o.orderDate}</td>
+                        <td className="p-4 font-bold">{o.productName}</td>
+                        <td className="p-4 font-black">{o.qty}</td>
+                        <td className="p-4 font-mono font-black text-indigo-600 dark:text-indigo-400">₹{o.totalAmount.toLocaleString('en-IN')}</td>
+                        <td className="p-4 font-mono font-bold text-amber-500">+{o.totalBV} BV</td>
+                        <td className="p-4 font-mono font-bold text-emerald-500">+{o.totalPV} PV</td>
+                        <td className="p-4 text-center">
+                          {o.status === 'Pending' ? (
+                            <span className="bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800 px-2.5 py-1 rounded-xl text-[10px] font-black inline-flex items-center gap-1">
+                              ⏳ Pending Approval
+                            </span>
+                          ) : o.status === 'Approved' ? (
+                            <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 px-2.5 py-1 rounded-xl text-[10px] font-black inline-flex items-center gap-1">
+                              ✓ Approved
+                            </span>
+                          ) : (
+                            <span className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-1 rounded-xl text-[10px] font-black">
+                              {o.status}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={8} className="p-8 text-center text-slate-400 font-medium">
+                        User ID #{user.id} এর অধীনে কোনো পারচেজ ইনভয়েস রেকর্ড নেই। সোলার প্রোডাক্ট ক্যাটালগ থেকে নতুন অর্ডার সাবমিট করুন।
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={8} className="p-8 text-center text-slate-400 font-medium">
-                      No order records found. Place an order from the Product Catalog to get started!
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

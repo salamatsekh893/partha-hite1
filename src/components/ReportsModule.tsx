@@ -67,7 +67,7 @@ export default function ReportsModule({ user, downlines, orders, isDarkMode = fa
   // 2. Team Business Report Data
   const teamBusinessData = teamDistributors.map(m => {
     const isActive = m.status === 'active';
-    const bv = isActive ? 18000 : 0;
+    const bv = isActive ? 25000 : 0;
     const businessInr = Math.round(bv * 1.25);
     const overrideCommission = Math.round(bv * 0.06);
     return {
@@ -92,7 +92,7 @@ export default function ReportsModule({ user, downlines, orders, isDarkMode = fa
   const distributorWiseData = downlines.map(m => {
     const isDirect = m.level === 1;
     const isActive = m.status === 'active';
-    const personalBV = isActive ? (isDirect ? 25000 : 18000) : 0;
+    const personalBV = isActive ? 25000 : 0;
     const teamBV = 0;
     const totalBV = personalBV + teamBV;
     return {
@@ -140,104 +140,35 @@ export default function ReportsModule({ user, downlines, orders, isDarkMode = fa
   }));
 
   // 9. Referral Link Clicks & Conversion Tracking Data
-  const referralClickLogsData = [
-    ...directDistributors.map((m, idx) => ({
-      clickId: `CLK-2026-10${idx + 1}`,
-      timestamp: new Date(m.created_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }),
-      channel: idx % 2 === 0 ? "WhatsApp Share" : "Direct Link",
-      device: idx % 3 === 0 ? "Mobile (Android) • Kolkata, IN" : "Mobile (iOS) • Mumbai, IN",
-      landingPage: `?ref=${user.phone}`,
-      status: "CONVERTED",
-      convertedName: m.name,
-      convertedPhone: m.phone,
-      activatedBV: "25,000 BV"
-    })),
-    {
-      clickId: "CLK-2026-098",
-      timestamp: "05/08/2026, 03:15 PM",
-      channel: "WhatsApp Share",
-      device: "Mobile (Android) • New Delhi, IN",
-      landingPage: `?ref=${user.phone}`,
-      status: "CONVERTED",
-      convertedName: "Rahul Verma",
-      convertedPhone: "9876543210",
-      activatedBV: "25,000 BV"
-    },
-    {
-      clickId: "CLK-2026-097",
-      timestamp: "05/08/2026, 02:40 PM",
-      channel: "Facebook Campaign",
-      device: "Desktop (Windows) • Bangalore, IN",
-      landingPage: `?ref=${user.phone}`,
-      status: "BROWSING",
-      convertedName: "Anonymous Visitor",
-      convertedPhone: "-",
-      activatedBV: "0 BV"
-    },
-    {
-      clickId: "CLK-2026-096",
-      timestamp: "05/08/2026, 01:22 PM",
-      channel: "WhatsApp Share",
-      device: "Mobile (Android) • Patna, IN",
-      landingPage: `?ref=${user.phone}`,
-      status: "OTP_PENDING",
-      convertedName: "Amit Kumar",
-      convertedPhone: "9812345678",
-      activatedBV: "Pending Verification"
-    },
-    {
-      clickId: "CLK-2026-095",
-      timestamp: "04/08/2026, 11:05 AM",
-      channel: "YouTube Video Link",
-      device: "Mobile (iOS) • Jaipur, IN",
-      landingPage: `?ref=${user.phone}`,
-      status: "BROWSING",
-      convertedName: "Anonymous Visitor",
-      convertedPhone: "-",
-      activatedBV: "0 BV"
-    },
-    {
-      clickId: "CLK-2026-094",
-      timestamp: "04/08/2026, 09:30 AM",
-      channel: "Direct URL Share",
-      device: "Mobile (Android) • Lucknow, IN",
-      landingPage: `?ref=${user.phone}`,
-      status: "CONVERTED",
-      convertedName: "Priya Sharma",
-      convertedPhone: "9834567890",
-      activatedBV: "25,000 BV"
-    },
-    {
-      clickId: "CLK-2026-093",
-      timestamp: "03/08/2026, 06:12 PM",
-      channel: "Instagram Bio",
-      device: "Mobile (iOS) • Hyderabad, IN",
-      landingPage: `?ref=${user.phone}`,
-      status: "BROWSING",
-      convertedName: "Anonymous Visitor",
-      convertedPhone: "-",
-      activatedBV: "0 BV"
-    }
-  ];
+  const referralClickLogsData = directDistributors.map((m, idx) => ({
+    clickId: `CLK-${new Date().getFullYear()}-${100 + idx + 1}`,
+    timestamp: new Date(m.created_at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' }),
+    channel: idx % 2 === 0 ? "WhatsApp Share" : "Direct Referral Link",
+    device: "Mobile • India",
+    landingPage: `?ref=${user.phone || user.id}`,
+    status: m.status === 'active' ? "CONVERTED" : "OTP_PENDING",
+    convertedName: m.name,
+    convertedPhone: m.phone,
+    activatedBV: m.status === 'active' ? "25,000 BV" : "0 BV"
+  }));
 
-  // Referral Clicks Summary Stats
-  const totalRefClicks = referralClickLogsData.length + 185;
-  const uniqueRefVisitors = Math.round(totalRefClicks * 0.76);
-  const totalConversions = directDistributors.length + 3;
-  const conversionRate = ((totalConversions / totalRefClicks) * 100).toFixed(1);
+  // Referral Clicks Summary Stats derived strictly from real member activity
+  const totalRefClicks = referralClickLogsData.length;
+  const uniqueRefVisitors = totalRefClicks;
+  const totalConversions = directDistributors.filter(m => m.status === 'active').length;
+  const conversionRate = totalRefClicks > 0 ? ((totalConversions / totalRefClicks) * 100).toFixed(1) : "0.0";
   const convertedBvTotal = totalConversions * 25000;
 
-  // Daily Referral Clicks & Conversion Trends Chart Data
-  const dailyReferralTrendsData = [
-    { date: '29 Jul', clicks: 18, uniqueVisitors: 14, conversions: 0, conversionRate: 0.0 },
-    { date: '30 Jul', clicks: 24, uniqueVisitors: 19, conversions: 1, conversionRate: 4.2 },
-    { date: '31 Jul', clicks: 31, uniqueVisitors: 23, conversions: 1, conversionRate: 3.2 },
-    { date: '01 Aug', clicks: 28, uniqueVisitors: 21, conversions: 0, conversionRate: 0.0 },
-    { date: '02 Aug', clicks: 42, uniqueVisitors: 32, conversions: 2, conversionRate: 4.8 },
-    { date: '03 Aug', clicks: 50, uniqueVisitors: 38, conversions: 2, conversionRate: 4.0 },
-    { date: '04 Aug', clicks: 62, uniqueVisitors: 46, conversions: 3, conversionRate: 4.8 },
-    { date: '05 Aug', clicks: 48, uniqueVisitors: 36, conversions: 2, conversionRate: 4.2 },
-  ];
+  // Daily Referral Clicks & Conversion Trends Chart Data (Real data only)
+  const dailyReferralTrendsData = totalRefClicks > 0 ? [
+    { 
+      date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }), 
+      clicks: totalRefClicks, 
+      uniqueVisitors: uniqueRefVisitors, 
+      conversions: totalConversions, 
+      conversionRate: Number(conversionRate) 
+    }
+  ] : [];
 
   // Handle Export Excel (CSV)
   const handleExportCSV = () => {

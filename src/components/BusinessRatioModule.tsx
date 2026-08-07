@@ -8,7 +8,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend, 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area 
 } from 'recharts';
-import { User, DownlineMember } from '../types.js';
+import { User, DownlineMember, BusinessTargetConfig } from '../types.js';
 import { exportToCSV, printPDFReport } from '../utils/exportUtils.js';
 
 interface BusinessRatioModuleProps {
@@ -18,6 +18,40 @@ interface BusinessRatioModuleProps {
 }
 
 export default function BusinessRatioModule({ user, downlines = [], isDarkMode = false }: BusinessRatioModuleProps) {
+  // Target Config from Admin Panel
+  const [targetConfig, setTargetConfig] = useState<BusinessTargetConfig>(() => {
+    try {
+      const saved = localStorage.getItem('mlm_business_target_config');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      id: 'TARGET-2026-01',
+      title: 'Executive Star Royalty & Business Target 2026',
+      description: 'ডাইরেক্ট বিজনেস ও টিম বিজনেসের জন্য ৫০:৫০ রেশিও অনুযায়ী BV ও PV টার্গেট নির্ধারণ মডিউল',
+      directBvTarget: 10000,
+      directPvTarget: 500,
+      teamBvTarget: 50000,
+      teamPvTarget: 2500,
+      ratioRuleEnabled: true,
+      strongLegMaxRatio: 50,
+      otherLegsMinRatio: 50,
+      startDate: '2026-08-01',
+      endDate: '2026-12-31',
+      isActive: true,
+      rewardTitle: 'Executive Star Rank & Royalty Pool Qualification'
+    };
+  });
+
+  useEffect(() => {
+    const handleTargetUpdate = (e: any) => {
+      if (e.detail) {
+        setTargetConfig(e.detail);
+      }
+    };
+    window.addEventListener('business-target-updated', handleTargetUpdate);
+    return () => window.removeEventListener('business-target-updated', handleTargetUpdate);
+  }, []);
+
   // Filters & State
   const [timePeriod, setTimePeriod] = useState<'daily' | 'weekly' | 'monthly' | 'total'>('total');
   const [startDate, setStartDate] = useState<string>('2026-08-01');

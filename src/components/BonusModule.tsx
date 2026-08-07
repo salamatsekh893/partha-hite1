@@ -94,7 +94,9 @@ export default function BonusModule({ user, isDarkMode = false }: BonusModulePro
           isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
         }`}>
           <span className="text-[10px] font-black uppercase text-amber-500 tracking-wider">Direct Sponsor Income</span>
-          <div className="text-3xl font-black font-mono text-indigo-600 dark:text-indigo-400">₹6,000</div>
+          <div className="text-3xl font-black font-mono text-indigo-600 dark:text-indigo-400">
+            ₹{bonusHistory.filter(b => b.type?.includes("Direct")).reduce((s, b) => s + b.netPaid, 0).toLocaleString('en-IN')}
+          </div>
           <span className="text-[11px] text-slate-500 font-bold">12% Direct Signup Commission</span>
         </div>
 
@@ -102,7 +104,9 @@ export default function BonusModule({ user, isDarkMode = false }: BonusModulePro
           isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
         }`}>
           <span className="text-[10px] font-black uppercase text-violet-500 tracking-wider">Milestone & Royalty Bonus</span>
-          <div className="text-3xl font-black font-mono text-violet-500">₹20,500</div>
+          <div className="text-3xl font-black font-mono text-violet-500">
+            ₹{bonusHistory.filter(b => !b.type?.includes("Direct")).reduce((s, b) => s + b.netPaid, 0).toLocaleString('en-IN')}
+          </div>
           <span className="text-[11px] text-slate-500 font-bold">Executive Rank & Monthly Pool</span>
         </div>
       </div>

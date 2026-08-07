@@ -515,6 +515,40 @@ app.get('/api/user/upline', authenticateUser, async (req, res) => {
   }
 });
 
+// 5.6. Get Complete Upline Chain (Traces Direct Sponsor up to Root Top ID)
+app.get('/api/user/upline-chain', authenticateUser, async (req, res) => {
+  const currentUser = (req as any).user as User;
+  let targetUserId = currentUser.id;
+
+  if (req.query.userId && currentUser.role === 'admin') {
+    targetUserId = parseInt(req.query.userId as string, 10);
+  }
+
+  try {
+    const allUsers = await DB.getUsers();
+    const userMap = new Map<number, User>();
+    allUsers.forEach(u => userMap.set(u.id, u));
+
+    const chain: { level: number; user: Omit<User, 'password'> }[] = [];
+    let current = userMap.get(targetUserId);
+    let level = 1;
+
+    while (current && current.referrer_id && level <= 50) {
+      const parent = userMap.get(current.referrer_id);
+      if (!parent) break;
+      const { password, ...sanitized } = parent;
+      chain.push({ level, user: sanitized });
+      current = parent;
+      level++;
+    }
+
+    res.json({ targetUserId, chain, count: chain.length });
+  } catch (err) {
+    console.error('Fetch upline chain error:', err);
+    res.status(500).json({ error: 'Failed to compute upline chain.' });
+  }
+});
+
 // 6. Admin: List all registered users and global stats
 app.get('/api/admin/users', authenticateUser, requireAdmin, async (req, res) => {
   try {

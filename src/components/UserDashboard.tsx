@@ -11,7 +11,7 @@ import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, 
   BarChart, Bar, PieChart, Pie, Cell 
 } from 'recharts';
-import { User, DownlineMember, SolarProduct, ProductOrder, OfferItem } from '../types.js';
+import { User, DownlineMember, SolarProduct, ProductOrder, OfferItem, ProductCategory } from '../types.js';
 import ProfileEditModal from './ProfileEditModal.js';
 import RegisterForm from './RegisterForm.js';
 import ReportsModule from './ReportsModule.js';
@@ -30,9 +30,11 @@ interface UserDashboardProps {
   onImpersonateUser?: (targetUser: User) => void;
   orders?: ProductOrder[];
   onOrdersChange?: (orders: ProductOrder[]) => void;
+  products?: SolarProduct[];
+  categories?: ProductCategory[];
 }
 
-export default function UserDashboard({ user, onUserUpdated, activeMainTab: controlledTab, onTabChange, onImpersonateUser, orders: propOrders, onOrdersChange }: UserDashboardProps) {
+export default function UserDashboard({ user, onUserUpdated, activeMainTab: controlledTab, onTabChange, onImpersonateUser, orders: propOrders, onOrdersChange, products, categories }: UserDashboardProps) {
   // Main Navigation Tabs (7 Comprehensive MLM Modules)
   const [internalTab, setInternalTab] = useState<
     'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports'
@@ -157,7 +159,7 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
   const orderINR = approvedOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
   const directBV = (activeDirectDistributorsCount * 25000) + orderBV;
-  const teamBV = activeTeamDistributorsCount * 18000;
+  const teamBV = activeTeamDistributorsCount * 25000;
   const totalBusinessBV = directBV + teamBV;
   const totalBusinessINR = Math.round(totalBusinessBV * 1.25) + orderINR;
 
@@ -770,7 +772,7 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
 
       {/* D. PRODUCT MODULE */}
       {activeMainTab === 'products' && (
-        <ProductModule user={user} orders={orders} onOrderPlaced={handleOrderPlaced} isDarkMode={isDarkMode} />
+        <ProductModule user={user} orders={orders} onOrderPlaced={handleOrderPlaced} isDarkMode={isDarkMode} products={products} categories={categories} />
       )}
 
       {/* E. OFFER MODULE */}
