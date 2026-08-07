@@ -896,7 +896,7 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initial
                   {/* Terms notice */}
                   <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-[11px] text-slate-600 leading-normal font-medium mt-4">
                     <span className="font-bold text-amber-800 block mb-1">⚠️ Applicant Declarations:</span>
-                    I hereby declare that all information filled in this "Success India" distributor registrations form is correct, true, and complete. I understand that any false declaration will lead to immediate cancellation of my network membership.
+                    I hereby declare that all information filled in this "Success India" distributor registrations form is correct, true, and complete. I understand that any false declaration will lead to immediate cancellation of my registration.
                   </div>
 
                   {/* Submit Action Button */}
@@ -1496,7 +1496,7 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initial
                     {/* Terms notice */}
                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-[11px] text-slate-600 leading-normal font-medium">
                       <span className="font-bold text-amber-800 block mb-1">⚠️ Applicant Declarations:</span>
-                      I hereby declare that all information filled in this "Success India" admission applicant form is correct, true, and complete. I understand that any false declaration will lead to immediate cancellation of my network membership.
+                      I hereby declare that all information filled in this "Success India" admission applicant form is correct, true, and complete. I understand that any false declaration will lead to immediate cancellation of my registration.
                     </div>
 
                   </div>

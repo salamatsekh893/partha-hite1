@@ -280,7 +280,7 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
                 onClick={() => onOpenAuthModal('register')}
                 className="px-6 py-3 bg-white/20 hover:bg-white/30 text-white font-black text-xs sm:text-sm rounded-2xl border border-white/40 backdrop-blur-md transition-all cursor-pointer flex items-center gap-2 shadow-sm"
               >
-                <span>Partner Registration</span>
+                <span>Distributor Registration</span>
                 <ArrowRight className="w-4 h-4 text-amber-300" />
               </motion.button>
             </motion.div>
@@ -722,7 +722,7 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
           <div className="p-4 bg-white/90 backdrop-blur-md rounded-2xl border border-white space-y-2 shadow-md">
             <h4 className="font-black text-xs text-slate-900 flex items-center gap-1.5">
               <Award className="w-4 h-4 text-amber-600" />
-              Become a SuccessIndia Solar Partner
+              Become a SuccessIndia Solar Distributor
             </h4>
             <p className="text-[11px] text-slate-700 font-bold leading-relaxed">
               Earn attractive multi-level commission rewards when you refer solar projects or register customers in your downline network.

@@ -326,7 +326,7 @@ export default function App() {
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    New Partner Registration
+                    New Distributor Registration
                   </button>
                 </div>
               </div>
@@ -396,7 +396,7 @@ export default function App() {
                     onClick={() => handleOpenAuthModal('register')}
                     className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-lg text-xs transition-all cursor-pointer"
                   >
-                    Partner Sign Up
+                    Distributor Sign Up
                   </button>
                 </div>
               </div>

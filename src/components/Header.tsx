@@ -49,11 +49,11 @@ export default function Header({ user, onLogout, isImpersonating, currentView, s
                 ☀️
               </div>
               <div className="text-left">
-                <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-tight flex items-center gap-1.5">
-                  SuccessIndia <span className="text-slate-950 font-black text-xs bg-amber-400 border border-amber-300 px-2 py-0.5 rounded-md shadow-sm">SOLAR</span>
+                <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight leading-tight">
+                  SuccessIndia
                 </h1>
                 <span className="text-[10px] text-emerald-700 font-extrabold tracking-wider uppercase block -mt-0.5">
-                  Solar Energy & EV Charger
+                  Solar Energy & EV Charger Complete Setup Solutions
                 </span>
               </div>
             </div>
