@@ -234,7 +234,7 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
               className="inline-flex items-center gap-2 bg-amber-400 text-slate-950 px-3.5 py-1.5 rounded-full text-xs font-black tracking-wide shadow-lg border border-amber-300"
             >
               <Sun className="w-4 h-4 text-slate-950 animate-spin-slow" />
-              <span>SuccessIndia Solar Energy & Complete Setup Solutions</span>
+              <span>SuccessIndia Solar Energy & EV Charger</span>
             </motion.div>
 
             <motion.h1 
@@ -271,7 +271,7 @@ export default function SolarLanding({ onOpenAuthModal }: SolarLandingProps) {
                 className="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs sm:text-sm rounded-2xl shadow-xl shadow-amber-400/30 transition-all cursor-pointer flex items-center gap-2 border border-amber-200"
               >
                 <UserCheck className="w-4 h-4" />
-                <span>Member Login</span>
+                <span>Distributor Login</span>
               </motion.button>
 
               <motion.button

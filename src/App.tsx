@@ -207,7 +207,7 @@ export default function App() {
               👑 Admin Access
             </span>
             <span>
-              Viewing Account: <strong className="text-amber-200">{user.name}</strong> ({user.phone || user.email}) — Member ID #{user.id}
+              Viewing Account: <strong className="text-amber-200">{user.name}</strong> ({user.phone || user.email}) — Distributor ID #{user.id}
             </span>
           </div>
           <button
@@ -315,7 +315,7 @@ export default function App() {
                         : 'text-slate-600 hover:text-slate-900'
                     }`}
                   >
-                    Member Login
+                    Distributor Login
                   </button>
                   <button
                     type="button"
@@ -381,7 +381,7 @@ export default function App() {
 
               <div>
                 <strong className="block text-white font-extrabold mb-2 uppercase tracking-wider text-[11px] text-amber-400">
-                  Quick Member Access
+                  Quick Distributor Access
                 </strong>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -389,7 +389,7 @@ export default function App() {
                     onClick={() => handleOpenAuthModal('login')}
                     className="px-3 py-1.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-bold rounded-lg text-xs transition-all cursor-pointer"
                   >
-                    Member Login
+                    Distributor Login
                   </button>
                   <button
                     type="button"

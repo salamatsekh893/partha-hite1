@@ -374,10 +374,10 @@ export default function ProfileEditModal({ isOpen, onClose, user, onProfileUpdat
             </div>
             <div>
               <h3 className="text-base font-black tracking-tight">
-                {isAdminMode ? `Edit Member: ${user.name}` : 'Edit My Profile'}
+                {isAdminMode ? `Edit Distributor: ${user.name}` : 'Edit My Profile'}
               </h3>
               <p className="text-[10px] text-slate-300 font-bold uppercase tracking-wider">
-                {isAdminMode ? `ADMINISTRATIVE CONTROL • MEMBER ID #${user.id}` : 'ACCOUNT PROFILE CONTROL'}
+                {isAdminMode ? `ADMINISTRATIVE CONTROL • DISTRIBUTOR ID #${user.id}` : 'ACCOUNT PROFILE CONTROL'}
               </p>
             </div>
           </div>

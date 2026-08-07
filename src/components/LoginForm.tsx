@@ -218,14 +218,14 @@ export default function LoginForm({ onLoginSuccess, onToggleRegister }: LoginFor
     <div id="login-form-container" className="w-full max-w-[390px] mx-auto">
       <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl overflow-hidden backdrop-blur-sm transition-all">
         {/* Sleek Compact Header */}
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-5 py-5 text-white text-center relative overflow-hidden">
-          <div className="absolute right-0 top-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-xl pointer-events-none"></div>
+        <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-600 px-5 py-5 text-white text-center relative overflow-hidden">
+          <div className="absolute right-0 top-0 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
           
-          <div className="inline-flex w-10 h-10 rounded-full bg-indigo-600/30 border border-indigo-400/30 items-center justify-center mb-2 shadow-md shadow-indigo-600/20 text-indigo-300">
+          <div className="inline-flex w-10 h-10 rounded-full bg-white/20 border border-white/30 items-center justify-center mb-2 shadow-md shadow-indigo-600/20 text-white">
             <LogIn className="w-5 h-5" />
           </div>
-          <h2 className="text-xl font-extrabold tracking-tight text-white">Member Login</h2>
-          <p className="text-[11px] text-indigo-200/90 mt-0.5 font-medium">Access your referral dashboard</p>
+          <h2 className="text-xl font-extrabold tracking-tight text-white">Distributor Login</h2>
+          <p className="text-[11px] text-indigo-100 mt-0.5 font-medium">Access your dashboard</p>
         </div>
 
         {/* Login Mode Toggle Tabs (Phone / Email) */}
@@ -530,7 +530,7 @@ export default function LoginForm({ onLoginSuccess, onToggleRegister }: LoginFor
           {/* Toggle register */}
           <div className="pt-3 border-t border-slate-100 text-center">
             <p className="text-xs text-slate-600 font-medium">
-              Are you a new member?{' '}
+              Are you a new distributor?{' '}
               <button
                 type="button"
                 onClick={onToggleRegister}

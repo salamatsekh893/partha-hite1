@@ -53,7 +53,7 @@ export default function Header({ user, onLogout, isImpersonating, currentView, s
                   SuccessIndia <span className="text-slate-950 font-black text-xs bg-amber-400 border border-amber-300 px-2 py-0.5 rounded-md shadow-sm">SOLAR</span>
                 </h1>
                 <span className="text-[10px] text-emerald-700 font-extrabold tracking-wider uppercase block -mt-0.5">
-                  Solar Energy & Complete Setup Solutions
+                  Solar Energy & EV Charger
                 </span>
               </div>
             </div>
