@@ -587,7 +587,7 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
         }`}>
           <div className="flex items-center justify-between">
             <span className="text-xs font-black text-purple-600 dark:text-purple-400 uppercase tracking-wider">
-              ELIGIBLE BUSINESS (2X)
+              MATCHED VOLUME (2X)
             </span>
             <Zap className="w-4 h-4 text-purple-500" />
           </div>
@@ -595,7 +595,7 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
             {ratioData.eligibleBusiness.toLocaleString('en-IN')} BV
           </div>
           <p className="text-[11px] text-slate-500 font-medium">
-            Eligible = 2 × Min(Highest, Other Legs)
+            2 × Base (50% Stronger + 50% Weaker Matched)
           </p>
         </div>
 
