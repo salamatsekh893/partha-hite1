@@ -494,7 +494,7 @@ export default function RegisterForm({ onRegisterSuccess, onToggleLogin, initial
         {/* Success India Form Header */}
         <div className="bg-indigo-600 px-6 py-6 text-white text-center relative">
           <div className="absolute top-4 left-4 text-[10px] uppercase font-bold text-indigo-200 tracking-wider">
-            Form No: <span className="text-white font-black font-mono">SI-{Math.floor(100000 + Math.random() * 900000)}</span>
+            Form No: <span className="text-white font-black font-mono">{Math.floor(100000 + Math.random() * 900000)}</span>
           </div>
           <div className="absolute top-4 right-4 text-[10px] uppercase font-bold text-indigo-200 tracking-wider font-mono">
             Date: <span className="text-white font-black">{getFormattedDate()}</span>
