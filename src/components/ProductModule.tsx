@@ -93,7 +93,7 @@ export default function ProductModule({ user, orders, onOrderPlaced, isDarkMode 
         totalBV: totalBV,
         totalPV: totalPV,
         orderDate: new Date().toISOString().split('T')[0],
-        status: 'Approved',
+        status: 'Pending',
         shippingAddress: `${shippingAddress.trim()} (Paid via Razorpay Key: ${razorpayKeyId})`
       };
 
@@ -101,7 +101,7 @@ export default function ProductModule({ user, orders, onOrderPlaced, isDarkMode 
         onOrderPlaced(newOrderObj);
       }
 
-      setOrderSuccessMsg(`Payment Confirmed via Razorpay! Order #${newOrderObj.id} approved. +${totalBV} BV and +${totalPV} PV credited.`);
+      setOrderSuccessMsg(`Order #${newOrderObj.id} submitted successfully! Status: Pending Approval (অর্ডারটি অ্যাডমিন প্যানেলে অনুমোদনের জন্য পাঠানো হয়েছে)।`);
       setTimeout(() => {
         setOrderProduct(null);
         setOrderSuccessMsg('');
@@ -146,7 +146,7 @@ export default function ProductModule({ user, orders, onOrderPlaced, isDarkMode 
               totalBV: totalBV,
               totalPV: totalPV,
               orderDate: new Date().toISOString().split('T')[0],
-              status: 'Approved',
+              status: 'Pending',
               shippingAddress: `${shippingAddress.trim()} (Paid via Razorpay Live Payment ID: ${paymentId})`
             };
 
@@ -154,7 +154,7 @@ export default function ProductModule({ user, orders, onOrderPlaced, isDarkMode 
               onOrderPlaced(newOrderObj);
             }
 
-            setOrderSuccessMsg(`🎉 Payment Successful via Razorpay! Payment ID: ${paymentId}. Order #${newOrderObj.id} confirmed. +${totalBV} BV and +${totalPV} PV credited.`);
+            setOrderSuccessMsg(`🎉 Payment Received via Razorpay! Payment ID: ${paymentId}. Order #${newOrderObj.id} is now Pending Admin Approval.`);
             setTimeout(() => {
               setOrderProduct(null);
               setOrderSuccessMsg('');
@@ -205,7 +205,7 @@ export default function ProductModule({ user, orders, onOrderPlaced, isDarkMode 
         totalBV: totalBV,
         totalPV: totalPV,
         orderDate: new Date().toISOString().split('T')[0],
-        status: 'Approved',
+        status: 'Pending',
         shippingAddress: `${shippingAddress.trim()} (${paymentMethod === 'wallet' ? 'Paid via Wallet Balance' : 'Cash on Delivery'})`
       };
 
@@ -213,7 +213,7 @@ export default function ProductModule({ user, orders, onOrderPlaced, isDarkMode 
         onOrderPlaced(newOrderObj);
       }
 
-      setOrderSuccessMsg(`Order #${newOrderObj.id} placed successfully! ${totalBV} BV and ${totalPV} PV will be credited to your account.`);
+      setOrderSuccessMsg(`Order #${newOrderObj.id} submitted! Status: Pending Approval (অর্ডারটি অ্যাডমিন প্যানেলে অনুমোদনের জন্য পেন্ডিং রয়েছে)।`);
       setTimeout(() => {
         setOrderProduct(null);
         setOrderSuccessMsg('');
@@ -546,7 +546,21 @@ export default function ProductModule({ user, orders, onOrderPlaced, isDarkMode 
                       <td className="p-4 font-mono font-black text-indigo-600 dark:text-indigo-400">₹{o.totalAmount.toLocaleString('en-IN')}</td>
                       <td className="p-4 font-mono font-bold text-amber-500">+{o.totalBV} BV</td>
                       <td className="p-4 font-mono font-bold text-emerald-500">+{o.totalPV} PV</td>
-                      <td className="p-4 text-center"><span className="bg-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-xl text-[10px] font-black">{o.status}</span></td>
+                      <td className="p-4 text-center">
+                        {o.status === 'Pending' ? (
+                          <span className="bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 dark:border-amber-800 px-2.5 py-1 rounded-xl text-[10px] font-black inline-flex items-center gap-1">
+                            ⏳ Pending Approval
+                          </span>
+                        ) : o.status === 'Approved' ? (
+                          <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 px-2.5 py-1 rounded-xl text-[10px] font-black inline-flex items-center gap-1">
+                            ✓ Approved
+                          </span>
+                        ) : (
+                          <span className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300 px-2.5 py-1 rounded-xl text-[10px] font-black">
+                            {o.status}
+                          </span>
+                        )}
+                      </td>
                     </tr>
                   ))
                 ) : (

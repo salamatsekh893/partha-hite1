@@ -28,9 +28,11 @@ interface UserDashboardProps {
   activeMainTab?: 'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports';
   onTabChange?: (tab: 'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports') => void;
   onImpersonateUser?: (targetUser: User) => void;
+  orders?: ProductOrder[];
+  onOrdersChange?: (orders: ProductOrder[]) => void;
 }
 
-export default function UserDashboard({ user, onUserUpdated, activeMainTab: controlledTab, onTabChange, onImpersonateUser }: UserDashboardProps) {
+export default function UserDashboard({ user, onUserUpdated, activeMainTab: controlledTab, onTabChange, onImpersonateUser, orders: propOrders, onOrdersChange }: UserDashboardProps) {
   // Main Navigation Tabs (7 Comprehensive MLM Modules)
   const [internalTab, setInternalTab] = useState<
     'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports'
@@ -54,8 +56,9 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Orders State (Real user orders placed via catalog)
-  const [orders, setOrders] = useState<ProductOrder[]>([]);
+  // Orders State
+  const [localOrders, setLocalOrders] = useState<ProductOrder[]>([]);
+  const orders = propOrders !== undefined ? propOrders : localOrders;
 
   // UI state
   const [copiedLink, setCopiedLink] = useState(false);
@@ -133,7 +136,11 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
 
   // Handle New Order Placed
   const handleOrderPlaced = (newOrder: ProductOrder) => {
-    setOrders(prev => [newOrder, ...prev]);
+    if (onOrdersChange) {
+      onOrdersChange([newOrder, ...orders]);
+    } else {
+      setLocalOrders(prev => [newOrder, ...prev]);
+    }
   };
 
   // --- STATS CALCULATIONS REAL FROM DB ---
@@ -144,9 +151,10 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
   const activeTeamDistributorsCount = downlines.filter(m => m.level > 1 && m.status === 'active').length;
   const totalDownlineCount = downlines.length;
 
-  // Business Values calculated strictly from real active network and user orders
-  const orderBV = orders.reduce((sum, o) => sum + (o.totalBV || 0), 0);
-  const orderINR = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  // Business Values calculated strictly from real approved user orders
+  const approvedOrders = orders.filter(o => o.status === 'Approved');
+  const orderBV = approvedOrders.reduce((sum, o) => sum + (o.totalBV || 0), 0);
+  const orderINR = approvedOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
 
   const directBV = (activeDirectDistributorsCount * 25000) + orderBV;
   const teamBV = activeTeamDistributorsCount * 18000;

@@ -2,21 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { 
   Users, CheckCircle2, XCircle, Search, RefreshCw, 
   Calendar, Shield, ShieldCheck, UserCheck, AlertCircle, Phone, Mail, Network, FileText, Trash2, Edit,
-  Globe, Video, Image as ImageIcon, Plus, Eye, EyeOff, Sparkles, Upload, Play, Check, ExternalLink, Layers, X, LogIn
+  Globe, Video, Image as ImageIcon, Plus, Eye, EyeOff, Sparkles, Upload, Play, Check, ExternalLink, Layers, X, LogIn,
+  ShoppingBag, DollarSign, ArrowUpRight, CheckSquare, Clock, Settings, AlertTriangle
 } from 'lucide-react';
-import { User, SystemStats, ReferralTreeNode, WebsiteContent } from '../types.js';
+import { User, SystemStats, ReferralTreeNode, WebsiteContent, ProductOrder } from '../types.js';
 import { getEmbedVideoUrl, getDirectImageUrl } from '../utils/mediaUtils.js';
 import VisualTree from './VisualTree.js';
 import ProfileEditModal from './ProfileEditModal.js';
 
 interface AdminPanelProps {
   adminUser: User;
-  initialTab?: 'members' | 'website';
+  initialTab?: 'members' | 'website' | 'orders';
   onImpersonateUser?: (user: User) => void;
+  orders?: ProductOrder[];
+  onOrdersChange?: (orders: ProductOrder[]) => void;
 }
 
-export default function AdminPanel({ adminUser, initialTab = 'members', onImpersonateUser }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'members' | 'website'>(initialTab);
+export default function AdminPanel({ adminUser, initialTab = 'members', onImpersonateUser, orders: propOrders, onOrdersChange }: AdminPanelProps) {
+  const [activeTab, setActiveTab] = useState<'members' | 'website' | 'orders'>(initialTab);
   const [directLoginId, setDirectLoginId] = useState('');
 
   useEffect(() => {
@@ -33,6 +36,158 @@ export default function AdminPanel({ adminUser, initialTab = 'members', onImpers
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [actionLoading, setActionLoading] = useState<number | null>(null);
+
+  // Orders State
+  const [localOrders, setLocalOrders] = useState<ProductOrder[]>([]);
+  const ordersList = propOrders !== undefined ? propOrders : localOrders;
+  const [orderSearchTerm, setOrderSearchTerm] = useState('');
+  const [orderStatusTab, setOrderStatusTab] = useState<'all' | 'Pending' | 'Approved' | 'Rejected'>('Pending');
+
+  // Level Incentive Engine Settings
+  const [maxIncentiveLevels, setMaxIncentiveLevels] = useState<number>(10);
+  const [commissionPoolPercent, setCommissionPoolPercent] = useState<number>(15);
+  const [levelPercentages, setLevelPercentages] = useState<{ [level: number]: number }>({
+    1: 30, // Level 1 Upline gets 30% of commission pool
+    2: 20, // Level 2 Upline gets 20% of pool
+    3: 15, // Level 3 Upline gets 15% of pool
+    4: 10, // Level 4 Upline gets 10% of pool
+    5: 5,  // Level 5 Upline gets 5% of pool
+    6: 5,  // Level 6 Upline gets 5% of pool
+    7: 4,  // Level 7 Upline gets 4% of pool
+    8: 4,  // Level 8 Upline gets 4% of pool
+    9: 4,  // Level 9 Upline gets 4% of pool
+    10: 3, // Level 10 Upline gets 3% of pool
+    11: 2, 12: 2, 13: 2, 14: 2, 15: 2
+  });
+
+  // Commission & Company Reverted Funds Audit Ledger
+  const [auditLogs, setAuditLogs] = useState<Array<{
+    orderId: string;
+    productName: string;
+    buyerName: string;
+    buyerId: number;
+    totalAmount: number;
+    totalBV: number;
+    totalCommissionPool: number;
+    buyerIncentive: number;
+    uplinePaidTotal: number;
+    uplineBreakdown: Array<{ level: number; amount: number }>;
+    companyRevertedAmount: number;
+    revertedLevels: string;
+    approvalDate: string;
+  }>>([
+    {
+      orderId: 'ORD-198234',
+      productName: '3KW On-Grid Solar Inverter & Module Kit',
+      buyerName: 'System Test Member',
+      buyerId: 2,
+      totalAmount: 145000,
+      totalBV: 110000,
+      totalCommissionPool: 16500,
+      buyerIncentive: 0,
+      uplinePaidTotal: 10725,
+      uplineBreakdown: [
+        { level: 1, amount: 4950 },
+        { level: 2, amount: 3300 },
+        { level: 3, amount: 2475 }
+      ],
+      companyRevertedAmount: 5775,
+      revertedLevels: 'Level 4 to Level 10 (No Uplines Exist)',
+      approvalDate: new Date().toISOString().split('T')[0]
+    }
+  ]);
+
+  // --- ORDER APPROVAL & LEVEL INCENTIVE ENGINE ---
+  const handleApproveOrder = (order: ProductOrder) => {
+    // 1. Calculate Total Commission Pool for this order
+    const totalPool = Math.round((order.totalBV || 0) * (commissionPoolPercent / 100));
+
+    // 2. Buyer gets 0 direct incentive (per user explicit rule: "ja kincha sa kono insentiv pabe na oi product ar upor")
+    const buyerIncentive = 0;
+
+    // 3. Find Buyer Name and Upline Chain
+    const buyerUser = users.find(u => u.id === order.userId);
+    const buyerName = buyerUser ? buyerUser.name : (adminUser.name || `Distributor #${order.userId || 1}`);
+
+    // Trace Upline Sponsors
+    let currentRefId = buyerUser ? buyerUser.referrer_id : null;
+    const uplineChain: { level: number; userId: number; name: string }[] = [];
+    let level = 1;
+
+    while (currentRefId && level <= maxIncentiveLevels) {
+      const uplineUser = users.find(u => u.id === currentRefId);
+      if (uplineUser) {
+        uplineChain.push({ level, userId: uplineUser.id, name: uplineUser.name });
+        currentRefId = uplineUser.referrer_id;
+        level++;
+      } else {
+        break;
+      }
+    }
+
+    // 4. Calculate Upline Level Distribution & Company Reverted Funds
+    let uplinePaidTotal = 0;
+    const uplineBreakdown: Array<{ level: number; amount: number }> = [];
+
+    for (let l = 1; l <= maxIncentiveLevels; l++) {
+      const levelPct = levelPercentages[l] || 0;
+      const levelAmount = Math.round(totalPool * (levelPct / 100));
+      const hasUpline = uplineChain.some(u => u.level === l);
+
+      if (hasUpline) {
+        uplinePaidTotal += levelAmount;
+        uplineBreakdown.push({ level: l, amount: levelAmount });
+      }
+    }
+
+    const companyRevertedAmount = totalPool - uplinePaidTotal;
+    const missingStart = uplineChain.length + 1;
+    const revertedLevels = missingStart <= maxIncentiveLevels 
+      ? `Level ${missingStart} to Level ${maxIncentiveLevels} (No Uplines Exist - Returned to Company)`
+      : 'None (All Uplines Present)';
+
+    // Update order status in central state
+    const updated = ordersList.map(o => o.id === order.id ? { ...o, status: 'Approved' as const } : o);
+    if (onOrdersChange) {
+      onOrdersChange(updated);
+    } else {
+      setLocalOrders(updated);
+    }
+
+    // Append Audit Log
+    const newAudit = {
+      orderId: order.id,
+      productName: order.productName,
+      buyerName,
+      buyerId: order.userId || 1,
+      totalAmount: order.totalAmount,
+      totalBV: order.totalBV,
+      totalCommissionPool: totalPool,
+      buyerIncentive,
+      uplinePaidTotal,
+      uplineBreakdown,
+      companyRevertedAmount,
+      revertedLevels,
+      approvalDate: new Date().toISOString().split('T')[0]
+    };
+
+    setAuditLogs(prev => [newAudit, ...prev.filter(a => a.orderId !== order.id)]);
+
+    showSweetToast(
+      'success',
+      `Order #${order.id} Approved! Commission Pool: ₹${totalPool.toLocaleString('en-IN')} | Paid Uplines: ₹${uplinePaidTotal.toLocaleString('en-IN')} | Company Reverted: ₹${companyRevertedAmount.toLocaleString('en-IN')}`
+    );
+  };
+
+  const handleRejectOrder = (order: ProductOrder) => {
+    const updated = ordersList.map(o => o.id === order.id ? { ...o, status: 'Rejected' as const } : o);
+    if (onOrdersChange) {
+      onOrdersChange(updated);
+    } else {
+      setLocalOrders(updated);
+    }
+    showSweetToast('error', `Order #${order.id} rejected.`);
+  };
   
   // Website Content Management State
   const [websiteContents, setWebsiteContents] = useState<WebsiteContent[]>([]);
@@ -562,7 +717,7 @@ export default function AdminPanel({ adminUser, initialTab = 'members', onImpers
       </div>
 
       {/* Admin Navigation Tabs */}
-      <div className="flex bg-slate-200/80 p-1.5 rounded-2xl gap-2 font-bold text-xs sm:text-sm shadow-inner">
+      <div className="flex flex-col sm:flex-row bg-slate-200/80 p-1.5 rounded-2xl gap-2 font-bold text-xs sm:text-sm shadow-inner">
         <button
           onClick={() => setActiveTab('members')}
           className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl transition-all cursor-pointer ${
@@ -576,6 +731,29 @@ export default function AdminPanel({ adminUser, initialTab = 'members', onImpers
         </button>
 
         <button
+          onClick={() => setActiveTab('orders')}
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl transition-all cursor-pointer relative ${
+            activeTab === 'orders'
+              ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md shadow-amber-500/20 font-black'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/50 font-bold'
+          }`}
+        >
+          <ShoppingBag className="w-4 h-4 text-slate-950" />
+          <span>Product Orders & Level Incentive</span>
+          {(() => {
+            const pendingCount = ordersList.filter(o => o.status === 'Pending').length;
+            if (pendingCount > 0) {
+              return (
+                <span className="text-[10px] bg-rose-600 text-white px-2 py-0.5 rounded-full font-black animate-pulse shadow-xs">
+                  {pendingCount} Pending
+                </span>
+              );
+            }
+            return null;
+          })()}
+        </button>
+
+        <button
           onClick={() => setActiveTab('website')}
           className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl transition-all cursor-pointer ${
             activeTab === 'website'
@@ -585,9 +763,6 @@ export default function AdminPanel({ adminUser, initialTab = 'members', onImpers
         >
           <Globe className="w-4 h-4 text-amber-300" />
           <span>Manage Website</span>
-          <span className="text-[10px] bg-amber-400 text-slate-950 px-2 py-0.5 rounded-md font-black uppercase hidden sm:inline-block">
-            Upload Media
-          </span>
         </button>
       </div>
 
@@ -1765,6 +1940,451 @@ export default function AdminPanel({ adminUser, initialTab = 'members', onImpers
                 ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* --- ACTIVE TAB: ORDERS & LEVEL INCENTIVE APPROVAL --- */}
+      {activeTab === 'orders' && (
+        <div className="space-y-6 animate-fade-in">
+          
+          {/* Executive Header Callout */}
+          <div className="bg-gradient-to-r from-amber-900 via-amber-950 to-slate-950 text-white p-5 sm:p-6 rounded-3xl border border-amber-600/40 shadow-xl relative overflow-hidden">
+            <div className="absolute -right-10 -bottom-10 w-48 h-48 rounded-full bg-amber-500/10 blur-2xl pointer-events-none"></div>
+            
+            <div className="relative z-10 space-y-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="bg-amber-400 text-slate-950 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md shadow-xs">
+                  Central Order Control
+                </span>
+                <span className="bg-white/10 text-amber-200 text-xs font-bold px-3 py-0.5 rounded-full border border-white/10">
+                  15-Level Uplines Incentive Engine
+                </span>
+              </div>
+
+              <h2 className="text-xl sm:text-2xl font-black text-amber-100 flex items-center gap-2">
+                <ShoppingBag className="w-6 h-6 text-amber-400" />
+                <span>পণ্য অর্ডার অনুমোদন ও লেভেল ইনসেন্টিভ বণ্টন ব্যবস্থাপনা</span>
+              </h2>
+
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-4xl font-medium">
+                ডিজিটাল ক্যাটালগ থেকে যেকোনো অর্ডার সম্পন্ন হলে স্ট্যাটাস ডিফল্টভাবে <strong className="text-amber-300">Pending</strong> থাকবে। অ্যাডমিন অনুমোদন করলে: 
+                <br />
+                <span className="text-emerald-300 font-bold">১. ক্রেতা (Buyer) নিজস্ব ক্রয়ের ওপর ০% কমিশন পাবে।</span>
+                <br />
+                <span className="text-amber-300 font-bold">২. ক্রেতার উপরের ১ থেকে ১৫ লেভেল পর্যন্ত নিবন্ধিত আপলাইনরা নির্ধারিত % হারে লেভেল ইনসেন্টিভ পাবেন।</span>
+                <br />
+                <span className="text-rose-300 font-bold">৩. আপলাইন না থাকলে ওই লেভেলের আনক্লেমড ইনসেন্টিভ স্বয়ংক্রিয়ভাবে কোম্পানি ফান্ডে (Company Treasury Reverted Fund) ফেরত জমা হবে।</span>
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Metrics Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {/* Metric 1: Pending Orders */}
+            <div className="bg-white p-4 rounded-2xl border border-amber-200 shadow-sm space-y-1">
+              <div className="flex items-center justify-between text-amber-600">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">অপেক্ষমাণ অর্ডার</span>
+                <Clock className="w-4 h-4 text-amber-500" />
+              </div>
+              <div className="text-xl sm:text-2xl font-black text-slate-900">
+                {ordersList.filter(o => o.status === 'Pending').length} <span className="text-xs font-semibold text-slate-500">টি</span>
+              </div>
+              <p className="text-[10px] text-amber-700 font-bold">অ্যাডমিন অনুমোদনের অপেক্ষায়</p>
+            </div>
+
+            {/* Metric 2: Approved Orders */}
+            <div className="bg-white p-4 rounded-2xl border border-emerald-200 shadow-sm space-y-1">
+              <div className="flex items-center justify-between text-emerald-600">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">অনুমোদিত অর্ডার</span>
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              </div>
+              <div className="text-xl sm:text-2xl font-black text-slate-900">
+                {ordersList.filter(o => o.status === 'Approved').length} <span className="text-xs font-semibold text-slate-500">টি</span>
+              </div>
+              <p className="text-[10px] text-emerald-700 font-bold">লেভেল বোনাস বন্টিত</p>
+            </div>
+
+            {/* Metric 3: Total Allocated Incentive */}
+            <div className="bg-white p-4 rounded-2xl border border-indigo-200 shadow-sm space-y-1">
+              <div className="flex items-center justify-between text-indigo-600">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">মোট লেভেল ইনসেন্টিভ</span>
+                <DollarSign className="w-4 h-4 text-indigo-500" />
+              </div>
+              <div className="text-xl sm:text-2xl font-black text-slate-900">
+                ₹{auditLogs.reduce((s, a) => s + a.uplinePaidTotal, 0).toLocaleString('en-IN')}
+              </div>
+              <p className="text-[10px] text-indigo-700 font-bold">আপলাইনদের পেইড বোনাস</p>
+            </div>
+
+            {/* Metric 4: Company Reverted Unclaimed Fund */}
+            <div className="bg-white p-4 rounded-2xl border border-rose-200 shadow-sm space-y-1">
+              <div className="flex items-center justify-between text-rose-600">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">কোম্পানি ফেরত টাকা</span>
+                <ArrowUpRight className="w-4 h-4 text-rose-500" />
+              </div>
+              <div className="text-xl sm:text-2xl font-black text-rose-900">
+                ₹{auditLogs.reduce((s, a) => s + a.companyRevertedAmount, 0).toLocaleString('en-IN')}
+              </div>
+              <p className="text-[10px] text-rose-700 font-bold">অনুপস্থিত আপলাইন ফেরত টাকা</p>
+            </div>
+          </div>
+
+          {/* Level Incentive Settings Control Box */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                  <Settings className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">লেভেল ইনসেন্টিভ ও কোম্পানি ফান্ড কনফিগারেশন</h3>
+                  <p className="text-[11px] text-slate-500 font-medium">১ থেকে ১৫ লেভেল বোনাস বিতরণ এবং অনুপস্থিত লেভেল রিভার্শন সেটিংস</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                  <span className="text-xs font-extrabold text-slate-700">সর্বোচ্চ লেভেল গভীরতা:</span>
+                  <select
+                    value={maxIncentiveLevels}
+                    onChange={(e) => setMaxIncentiveLevels(Number(e.target.value))}
+                    className="bg-white border border-slate-300 rounded-lg text-xs font-black px-2 py-1 text-indigo-950 focus:outline-none"
+                  >
+                    {[5, 10, 12, 15].map(lvl => (
+                      <option key={lvl} value={lvl}>{lvl} লেভেল পর্যন্ত</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                  <span className="text-xs font-extrabold text-slate-700">কমিশন পুল (BV %):</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={commissionPoolPercent}
+                    onChange={(e) => setCommissionPoolPercent(Number(e.target.value))}
+                    className="w-16 bg-white border border-slate-300 rounded-lg text-xs font-black px-2 py-1 text-indigo-950 focus:outline-none text-center"
+                  />
+                  <span className="text-xs font-extrabold text-slate-500">%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Level Rate Distribution Breakdown Pill Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 md:grid-cols-10 gap-2 pt-1">
+              {Array.from({ length: maxIncentiveLevels }, (_, i) => i + 1).map(lvl => (
+                <div key={lvl} className="bg-slate-50 border border-slate-200 rounded-xl p-2 text-center space-y-0.5">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase block">L-{lvl}</span>
+                  <div className="text-xs font-black text-indigo-950">
+                    {levelPercentages[lvl] || 0}%
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Product Orders List & Filter Section */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
+            
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+              {/* Order Status Tabs */}
+              <div className="flex bg-slate-100 p-1 rounded-xl gap-1 text-xs font-bold">
+                <button
+                  onClick={() => setOrderStatusTab('Pending')}
+                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                    orderStatusTab === 'Pending'
+                      ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Pending ({ordersList.filter(o => o.status === 'Pending').length})</span>
+                </button>
+
+                <button
+                  onClick={() => setOrderStatusTab('Approved')}
+                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                    orderStatusTab === 'Approved'
+                      ? 'bg-emerald-600 text-white font-black shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Approved ({ordersList.filter(o => o.status === 'Approved').length})</span>
+                </button>
+
+                <button
+                  onClick={() => setOrderStatusTab('Rejected')}
+                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                    orderStatusTab === 'Rejected'
+                      ? 'bg-rose-600 text-white font-black shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <XCircle className="w-3.5 h-3.5" />
+                  <span>Rejected ({ordersList.filter(o => o.status === 'Rejected').length})</span>
+                </button>
+
+                <button
+                  onClick={() => setOrderStatusTab('all')}
+                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    orderStatusTab === 'all'
+                      ? 'bg-indigo-950 text-white font-black shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <span>All ({ordersList.length})</span>
+                </button>
+              </div>
+
+              {/* Order Search Box */}
+              <div className="relative w-full sm:w-64">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Order ID / Product Search..."
+                  value={orderSearchTerm}
+                  onChange={(e) => setOrderSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+            </div>
+
+            {/* Orders Table */}
+            {(() => {
+              const filteredOrders = ordersList.filter(o => {
+                const matchesTab = orderStatusTab === 'all' || o.status === orderStatusTab;
+                const matchesSearch = !orderSearchTerm || 
+                  o.id.toLowerCase().includes(orderSearchTerm.toLowerCase()) ||
+                  o.productName.toLowerCase().includes(orderSearchTerm.toLowerCase());
+                return matchesTab && matchesSearch;
+              });
+
+              if (filteredOrders.length === 0) {
+                return (
+                  <div className="p-12 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-2">
+                    <ShoppingBag className="w-10 h-10 text-slate-300 mx-auto" />
+                    <h4 className="text-sm font-bold text-slate-700">কোনো অর্ডার পাওয়া যায়নি</h4>
+                    <p className="text-xs text-slate-500">অন্য স্ট্যাটাস ফিল্টার সিলেক্ট করুন বা ডিজিটাল ক্যাটালগ থেকে নতুন অর্ডার দিন।</p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-xs">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="bg-slate-900 text-white font-black uppercase text-[10px] tracking-wider">
+                        <th className="p-3">Order ID & Date</th>
+                        <th className="p-3">Buyer & Product Name</th>
+                        <th className="p-3 text-right">Amount (₹)</th>
+                        <th className="p-3 text-right">BV & PV</th>
+                        <th className="p-3 text-center">Status</th>
+                        <th className="p-3 text-right">Admin Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                      {filteredOrders.map(order => {
+                        const buyerUser = users.find(u => u.id === order.userId);
+
+                        return (
+                          <tr key={order.id} className="hover:bg-slate-50/80 transition-colors">
+                            {/* Order ID & Date */}
+                            <td className="p-3 space-y-0.5">
+                              <span className="font-black text-indigo-950 font-mono text-xs block">{order.id}</span>
+                              <span className="text-[10px] text-slate-500 font-semibold">{order.orderDate}</span>
+                            </td>
+
+                            {/* Buyer & Product */}
+                            <td className="p-3 space-y-1">
+                              <div className="font-black text-slate-900">{order.productName}</div>
+                              <div className="text-[11px] text-slate-600 flex items-center gap-1">
+                                <span>Buyer:</span>
+                                <strong className="text-slate-950">{buyerUser ? buyerUser.name : (adminUser.name || 'Rayhan Sekh')}</strong>
+                                <span className="text-rose-600 font-bold bg-rose-50 px-1.5 py-0.2 rounded border border-rose-100 text-[10px]">
+                                  (Buyer Commission: ₹0)
+                                </span>
+                              </div>
+                              {order.shippingAddress && (
+                                <div className="text-[10px] text-slate-500 truncate max-w-xs">
+                                  📍 {order.shippingAddress}
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Amount */}
+                            <td className="p-3 text-right font-black text-slate-900 text-sm">
+                              ₹{order.totalAmount.toLocaleString('en-IN')}
+                            </td>
+
+                            {/* BV & PV */}
+                            <td className="p-3 text-right space-y-0.5">
+                              <span className="font-extrabold text-indigo-700 block text-xs">{order.totalBV?.toLocaleString('en-IN')} BV</span>
+                              <span className="text-[10px] font-bold text-amber-600 block">{order.totalPV} PV</span>
+                            </td>
+
+                            {/* Status Badge */}
+                            <td className="p-3 text-center">
+                              {order.status === 'Pending' ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 animate-pulse">
+                                  <Clock className="w-3 h-3 text-amber-700" />
+                                  <span>Pending Approval</span>
+                                </span>
+                              ) : order.status === 'Approved' ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
+                                  <CheckCircle2 className="w-3 h-3 text-emerald-700" />
+                                  <span>Approved</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-900 border border-rose-300">
+                                  <XCircle className="w-3 h-3 text-rose-700" />
+                                  <span>Rejected</span>
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Admin Action */}
+                            <td className="p-3 text-right">
+                              {order.status === 'Pending' ? (
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleApproveOrder(order)}
+                                    className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl transition-all shadow-xs active:scale-95 cursor-pointer flex items-center gap-1"
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                    <span>Approve & Bonus</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRejectOrder(order)}
+                                    className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-bold rounded-xl transition-all active:scale-95 cursor-pointer"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ) : order.status === 'Approved' ? (
+                                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                                  ✓ Bonus Distributed
+                                </span>
+                              ) : (
+                                <span className="text-[11px] font-bold text-slate-400">
+                                  Cancelled
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
+
+          </div>
+
+          {/* Level Commission & Company Reverted Funds Audit Ledger */}
+          <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                  <CheckSquare className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">লেভেল ইনসেন্টিভ ও কোম্পানি ফেরত ফান্ড অ্যাকাউন্টস লেজার</h3>
+                  <p className="text-[11px] text-slate-500 font-medium">অনুমোদিত প্রতিটি অর্ডারের নিখুঁত অডিট ট্রেইল ও আনক্লেমড ট্র্যাজারি রিভার্শন</p>
+                </div>
+              </div>
+
+              <span className="text-xs font-black bg-slate-100 text-slate-800 px-3 py-1 rounded-full border border-slate-200">
+                Audit Entries ({auditLogs.length})
+              </span>
+            </div>
+
+            {auditLogs.length === 0 ? (
+              <p className="text-xs text-slate-500 text-center py-6 font-semibold">কোনো অডিট হিসাব রেকর্ড নেই। অর্ডার অ্যাপ্রুভ করলে এখানে স্বয়ংক্রিয়ভাবে স্টেটমেন্ট জমা হবে।</p>
+            ) : (
+              <div className="space-y-3">
+                {auditLogs.map((log, index) => (
+                  <div key={index} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                    
+                    {/* Log Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/60 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-black text-xs bg-indigo-950 text-white px-2.5 py-0.5 rounded-md">
+                          {log.orderId}
+                        </span>
+                        <h4 className="font-black text-slate-900 text-xs sm:text-sm">{log.productName}</h4>
+                      </div>
+
+                      <div className="text-[11px] font-bold text-slate-500">
+                        Approval Date: <span className="text-slate-900 font-mono">{log.approvalDate}</span>
+                      </div>
+                    </div>
+
+                    {/* Log Details Grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
+                      
+                      {/* Buyer */}
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block">Buyer Name</span>
+                        <div className="font-black text-slate-900">{log.buyerName}</div>
+                        <span className="text-[10px] text-rose-600 font-bold block">Buyer Bonus: ₹0 (0%)</span>
+                      </div>
+
+                      {/* Total Pool */}
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block">Comm. Pool ({commissionPoolPercent}% BV)</span>
+                        <div className="font-black text-indigo-950 text-sm">₹{log.totalCommissionPool.toLocaleString('en-IN')}</div>
+                        <span className="text-[10px] font-bold text-slate-500 block">{log.totalBV?.toLocaleString('en-IN')} BV</span>
+                      </div>
+
+                      {/* Paid to Uplines */}
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-bold text-emerald-700 uppercase block">Paid to Uplines</span>
+                        <div className="font-black text-emerald-950 text-sm">₹{log.uplinePaidTotal.toLocaleString('en-IN')}</div>
+                        <span className="text-[10px] font-bold text-emerald-600 block">{log.uplineBreakdown.length} Uplines Paid</span>
+                      </div>
+
+                      {/* Company Reverted Fund */}
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] font-bold text-rose-700 uppercase block">Company Reverted Fund</span>
+                        <div className="font-black text-rose-950 text-sm">₹{log.companyRevertedAmount.toLocaleString('en-IN')}</div>
+                        <span className="text-[10px] font-bold text-rose-600 block">Auto-Returned to Treasury</span>
+                      </div>
+
+                      {/* Status */}
+                      <div className="space-y-0.5 md:text-right">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase block">Reversion Reason</span>
+                        <div className="text-[10px] font-extrabold text-rose-700 bg-rose-50 px-2 py-1 rounded-lg border border-rose-100 inline-block">
+                          {log.revertedLevels}
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* Upline Level Breakdown Sub-pills */}
+                    {log.uplineBreakdown.length > 0 && (
+                      <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-slate-200/50 text-[10px]">
+                        <span className="font-bold text-slate-500">Distributed Uplines:</span>
+                        {log.uplineBreakdown.map(ub => (
+                          <span key={ub.level} className="bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded-md font-bold">
+                            L{ub.level}: ₹{ub.amount.toLocaleString('en-IN')}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                  </div>
+                ))}
+              </div>
+            )}
+
+          </div>
+
         </div>
       )}
 

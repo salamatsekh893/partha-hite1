@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User as UserIcon, Shield, Users, Sun, X, ArrowLeft, ExternalLink } from 'lucide-react';
-import { User } from './types.js';
+import { User, ProductOrder } from './types.js';
 import Header from './components/Header.js';
 import Sidebar from './components/Sidebar.js';
 import LoginForm from './components/LoginForm.js';
@@ -13,7 +13,7 @@ import SolarLanding from './components/SolarLanding.js';
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [currentView, setView] = useState<'dashboard' | 'admin' | 'solar' | 'auth'>('solar');
-  const [adminTab, setAdminTab] = useState<'members' | 'website'>('members');
+  const [adminTab, setAdminTab] = useState<'members' | 'website' | 'orders'>('members');
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [initializing, setInitializing] = useState(true);
@@ -21,6 +21,48 @@ export default function App() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const [userTab, setUserTab] = useState<'dashboard' | 'downline' | 'business' | 'products' | 'offers' | 'bonuses' | 'reports'>('dashboard');
+
+  // Central Product Orders State across System
+  const [orders, setOrders] = useState<ProductOrder[]>(() => {
+    try {
+      const saved = localStorage.getItem('mlm_product_orders');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error(e);
+    }
+    return [
+      {
+        id: 'ORD-387718',
+        userId: 1,
+        productId: 1,
+        productName: '5HP Submersible Solar Water Pump System',
+        qty: 1,
+        totalAmount: 115000,
+        totalBV: 85000,
+        totalPV: 850,
+        orderDate: new Date().toISOString().split('T')[0],
+        status: 'Pending',
+        shippingAddress: 'Kolkata Central Solar Hub (Paid via Razorpay)'
+      },
+      {
+        id: 'ORD-198234',
+        userId: 2,
+        productId: 2,
+        productName: '3KW On-Grid Solar Inverter & Module Kit',
+        qty: 1,
+        totalAmount: 145000,
+        totalBV: 110000,
+        totalPV: 1100,
+        orderDate: new Date().toISOString().split('T')[0],
+        status: 'Approved',
+        shippingAddress: 'Burdwan Depot (Cash on Delivery)'
+      }
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('mlm_product_orders', JSON.stringify(orders));
+  }, [orders]);
 
   // Admin Impersonation state (allows admin to log into any member's account)
   const [adminImpersonator, setAdminImpersonator] = useState<User | null>(() => {
@@ -217,7 +259,13 @@ export default function App() {
         {user ? (
           /* LOGGED IN VIEWS */
           currentView === 'admin' && user.role === 'admin' ? (
-            <AdminPanel adminUser={user} initialTab={adminTab} onImpersonateUser={handleImpersonateUser} />
+            <AdminPanel 
+              adminUser={user} 
+              initialTab={adminTab} 
+              onImpersonateUser={handleImpersonateUser}
+              orders={orders}
+              onOrdersChange={setOrders}
+            />
           ) : (
             <UserDashboard 
               user={user} 
@@ -228,6 +276,8 @@ export default function App() {
                 setUser(updatedUser);
                 localStorage.setItem('mlm_user_session', JSON.stringify(updatedUser));
               }} 
+              orders={orders}
+              onOrdersChange={setOrders}
             />
           )
         ) : (
