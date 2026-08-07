@@ -28,6 +28,8 @@ export const INITIAL_PRODUCTS: SolarProduct[] = [
     description: "High-power monocrystalline PERC module designed for residential and commercial rooftop solar installations with 21.5% efficiency.",
     paymentType: 'both',
     advancePaymentRequired: false,
+    commissionType: 'percentage',
+    commissionValue: 12,
     useCustomCommission: true,
     customCommissionLevels: [
       { level: 1, percentage: 30 },
@@ -64,6 +66,8 @@ export const INITIAL_PRODUCTS: SolarProduct[] = [
     description: "Dual MPPT smart grid-tied inverter with built-in Wi-Fi monitoring and high surge protection for maximum energy output.",
     paymentType: 'both',
     advancePaymentRequired: false,
+    commissionType: 'percentage',
+    commissionValue: 10,
     useCustomCommission: false,
     isOfferActive: false
   },
@@ -86,6 +90,8 @@ export const INITIAL_PRODUCTS: SolarProduct[] = [
     paymentType: 'online_only',
     advancePaymentRequired: true,
     advancePaymentNote: "requires 20% Advance Token Payment for High Value Inverter Dispatch",
+    commissionType: 'fixed',
+    commissionValue: 3500,
     useCustomCommission: true,
     customCommissionLevels: [
       { level: 1, percentage: 35 },
@@ -114,6 +120,8 @@ export const INITIAL_PRODUCTS: SolarProduct[] = [
     paymentType: 'online_only',
     advancePaymentRequired: true,
     advancePaymentNote: "Require Advance Online Bank Transfer / Razorpay Payment for Pump Freight",
+    commissionType: 'fixed',
+    commissionValue: 5000,
     useCustomCommission: false
   },
   {
@@ -132,7 +140,9 @@ export const INITIAL_PRODUCTS: SolarProduct[] = [
     image: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=600&auto=format&fit=crop&q=80",
     isUpcoming: false,
     description: "Long lifespan LiFePO4 battery pack with 5000+ deep cycles and 10-year service life warranty.",
-    paymentType: 'both'
+    paymentType: 'both',
+    commissionType: 'percentage',
+    commissionValue: 15
   },
   {
     id: 6,
@@ -150,7 +160,9 @@ export const INITIAL_PRODUCTS: SolarProduct[] = [
     image: "https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=600&auto=format&fit=crop&q=80",
     isUpcoming: false,
     description: "Integrated solar lighting solution with automatic night sensor, PIR motion detection, and IP67 waterproof body.",
-    paymentType: 'cod_only'
+    paymentType: 'cod_only',
+    commissionType: 'fixed',
+    commissionValue: 400
   },
   {
     id: 7,

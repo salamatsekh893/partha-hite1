@@ -63,6 +63,7 @@ export interface WebsiteContent {
 
 export interface CustomLevelCommission {
   level: number;
+  type?: 'percentage' | 'fixed';
   percentage?: number;
   amount?: number;
 }
@@ -94,6 +95,10 @@ export interface SolarProduct {
   paymentType?: 'both' | 'cod_only' | 'online_only';
   advancePaymentRequired?: boolean;
   advancePaymentNote?: string;
+
+  // Product Commission Setup (Multiple Commission Type: % or ৳)
+  commissionType?: 'percentage' | 'fixed';
+  commissionValue?: number;
 
   // Custom Level Commission Settings
   useCustomCommission?: boolean;

@@ -128,14 +128,18 @@ export default function AdminPanel({
   const [pAdvancePaymentRequired, setPAdvancePaymentRequired] = useState(false);
   const [pAdvancePaymentNote, setPAdvancePaymentNote] = useState('');
 
+  // Custom Product Commission Setup (% or ৳)
+  const [pCommissionType, setPCommissionType] = useState<'percentage' | 'fixed'>('percentage');
+  const [pCommissionValue, setPCommissionValue] = useState<number>(10);
+
   // Custom Level Commission State inside Form
   const [pUseCustomCommission, setPUseCustomCommission] = useState(false);
   const [pCustomCommissionLevels, setPCustomCommissionLevels] = useState<CustomLevelCommission[]>([
-    { level: 1, percentage: 30 },
-    { level: 2, percentage: 20 },
-    { level: 3, percentage: 15 },
-    { level: 4, percentage: 10 },
-    { level: 5, percentage: 5 }
+    { level: 1, percentage: 30, type: 'percentage' },
+    { level: 2, percentage: 20, type: 'percentage' },
+    { level: 3, percentage: 15, type: 'percentage' },
+    { level: 4, percentage: 10, type: 'percentage' },
+    { level: 5, percentage: 5, type: 'percentage' }
   ]);
 
   // Offer State inside Form
@@ -174,13 +178,15 @@ export default function AdminPanel({
     setPPaymentType('both');
     setPAdvancePaymentRequired(false);
     setPAdvancePaymentNote('');
+    setPCommissionType('percentage');
+    setPCommissionValue(10);
     setPUseCustomCommission(false);
     setPCustomCommissionLevels([
-      { level: 1, percentage: 30 },
-      { level: 2, percentage: 20 },
-      { level: 3, percentage: 15 },
-      { level: 4, percentage: 10 },
-      { level: 5, percentage: 5 }
+      { level: 1, percentage: 30, type: 'percentage' },
+      { level: 2, percentage: 20, type: 'percentage' },
+      { level: 3, percentage: 15, type: 'percentage' },
+      { level: 4, percentage: 10, type: 'percentage' },
+      { level: 5, percentage: 5, type: 'percentage' }
     ]);
     setPIsOfferActive(false);
     setPOfferPrice(0);
@@ -213,13 +219,15 @@ export default function AdminPanel({
     setPPaymentType(prod.paymentType || 'both');
     setPAdvancePaymentRequired(prod.advancePaymentRequired || false);
     setPAdvancePaymentNote(prod.advancePaymentNote || '');
+    setPCommissionType(prod.commissionType || 'percentage');
+    setPCommissionValue(prod.commissionValue !== undefined ? prod.commissionValue : 10);
     setPUseCustomCommission(prod.useCustomCommission || false);
     setPCustomCommissionLevels(prod.customCommissionLevels && prod.customCommissionLevels.length > 0 ? prod.customCommissionLevels : [
-      { level: 1, percentage: 30 },
-      { level: 2, percentage: 20 },
-      { level: 3, percentage: 15 },
-      { level: 4, percentage: 10 },
-      { level: 5, percentage: 5 }
+      { level: 1, percentage: 30, type: 'percentage' },
+      { level: 2, percentage: 20, type: 'percentage' },
+      { level: 3, percentage: 15, type: 'percentage' },
+      { level: 4, percentage: 10, type: 'percentage' },
+      { level: 5, percentage: 5, type: 'percentage' }
     ]);
     setPIsOfferActive(prod.isOfferActive || false);
     setPOfferPrice(prod.offerPrice || 0);
@@ -263,6 +271,8 @@ export default function AdminPanel({
       paymentType: pPaymentType,
       advancePaymentRequired: pAdvancePaymentRequired,
       advancePaymentNote: pAdvancePaymentNote.trim(),
+      commissionType: pCommissionType,
+      commissionValue: Number(pCommissionValue),
       useCustomCommission: pUseCustomCommission,
       customCommissionLevels: pUseCustomCommission ? pCustomCommissionLevels : [],
       isOfferActive: pIsOfferActive,
@@ -511,8 +521,17 @@ export default function AdminPanel({
 
   // --- ORDER APPROVAL & LEVEL INCENTIVE ENGINE ---
   const handleApproveOrder = (order: ProductOrder) => {
-    // 1. Calculate Total Commission Pool for this order
-    const totalPool = Math.round((order.totalBV || 0) * (commissionPoolPercent / 100));
+    // 1. Calculate Total Commission Pool for this order based on Product Commission Setup
+    const matchedProduct = products.find(p => p.id === order.productId);
+    let totalPool = 0;
+    if (matchedProduct && matchedProduct.commissionType === 'fixed') {
+      totalPool = (matchedProduct.commissionValue || 0) * (order.qty || 1);
+    } else if (matchedProduct && matchedProduct.commissionType === 'percentage') {
+      const baseAmt = order.totalAmount || (matchedProduct.distributorPrice * (order.qty || 1));
+      totalPool = Math.round(baseAmt * ((matchedProduct.commissionValue || 10) / 100));
+    } else {
+      totalPool = Math.round((order.totalBV || 0) * (commissionPoolPercent / 100));
+    }
 
     // 2. Buyer gets 0 direct incentive (per user explicit rule)
     const buyerIncentive = 0;
@@ -548,8 +567,24 @@ export default function AdminPanel({
     const dateOnly = new Date().toISOString().split('T')[0];
 
     for (let l = 1; l <= maxIncentiveLevels; l++) {
-      const levelPct = levelPercentages[l] || 0;
-      const levelAmount = Math.round(totalPool * (levelPct / 100));
+      const customLevel = (matchedProduct && matchedProduct.useCustomCommission && matchedProduct.customCommissionLevels)
+        ? matchedProduct.customCommissionLevels.find(c => c.level === l)
+        : null;
+
+      let levelAmount = 0;
+      let levelPct = levelPercentages[l] || 0;
+
+      if (customLevel) {
+        if (customLevel.type === 'fixed' || customLevel.amount !== undefined) {
+          levelAmount = (customLevel.amount || 0) * (order.qty || 1);
+        } else {
+          levelPct = customLevel.percentage !== undefined ? customLevel.percentage : (levelPercentages[l] || 0);
+          levelAmount = Math.round(totalPool * (levelPct / 100));
+        }
+      } else {
+        levelAmount = Math.round(totalPool * (levelPct / 100));
+      }
+
       const hasUpline = uplineChain.some(u => u.level === l);
 
       if (hasUpline) {
@@ -4207,25 +4242,38 @@ export default function AdminPanel({
                         </div>
 
                         {/* Level Commission Breakdown Badge */}
-                        <div className="bg-indigo-50/70 border border-indigo-100 p-2 rounded-lg text-[10px]">
-                          <div className="flex items-center justify-between font-bold text-indigo-950 mb-1">
+                        <div className="bg-indigo-50/70 border border-indigo-100 p-2.5 rounded-lg text-[10px] space-y-1.5">
+                          <div className="flex items-center justify-between font-bold text-indigo-950">
                             <span>কমিশন স্ট্রাকচার:</span>
                             {prod.useCustomCommission ? (
-                              <span className="bg-indigo-600 text-white text-[9px] px-1.5 py-0.5 rounded font-black">Custom Product Levels</span>
+                              <span className="bg-indigo-600 text-white text-[9px] px-1.5 py-0.5 rounded font-black">Custom Levels</span>
                             ) : (
-                              <span className="bg-slate-200 text-slate-700 text-[9px] px-1.5 py-0.5 rounded font-bold">Global System Levels</span>
+                              <span className="bg-emerald-600 text-white text-[9px] px-1.5 py-0.5 rounded font-black">Global Levels</span>
                             )}
                           </div>
+                          
+                          <div className="flex items-center justify-between bg-white px-2 py-1 rounded border border-indigo-100 text-slate-700 font-bold">
+                            <span>মূল প্রোডাক্ট কমিশন:</span>
+                            <span className="text-emerald-700 font-extrabold font-mono">
+                              {prod.commissionType === 'fixed' 
+                                ? `৳${(prod.commissionValue || 0).toLocaleString('en-IN')} (Fixed)` 
+                                : `${prod.commissionValue || 10}% (Percentage)`}
+                            </span>
+                          </div>
+
                           {prod.useCustomCommission && prod.customCommissionLevels && prod.customCommissionLevels.length > 0 ? (
-                            <div className="flex items-center gap-1.5 flex-wrap text-slate-600 font-mono font-bold">
-                              {prod.customCommissionLevels.map(c => (
-                                <span key={c.level} className="bg-white border border-indigo-200 px-1.5 py-0.5 rounded">
-                                  L{c.level}: {c.percentage ? `${c.percentage}%` : `₹${c.amount}`}
-                                </span>
-                              ))}
+                            <div className="space-y-1">
+                              <span className="text-[9px] font-bold text-indigo-900 block">লেভেলভিত্তিক কাস্টম ডিস্ট্রিবিউশন:</span>
+                              <div className="flex items-center gap-1.5 flex-wrap text-slate-600 font-mono font-bold">
+                                {prod.customCommissionLevels.map(c => (
+                                  <span key={c.level} className="bg-white border border-indigo-200 px-1.5 py-0.5 rounded text-[9px]">
+                                    L{c.level}: {c.type === 'fixed' || c.amount !== undefined ? `৳${c.amount}` : `${c.percentage}%`}
+                                  </span>
+                                ))}
+                              </div>
                             </div>
                           ) : (
-                            <span className="text-slate-500">গ্লোবাল ডিসবার্সমেন্ট সেটিংস অনুসৃত হবে।</span>
+                            <span className="text-[9px] text-slate-500 block">গ্লোবাল সিস্টেমে এই কমিশন পুলটি ডিস্ট্রিবিউট হবে।</span>
                           )}
                         </div>
 
@@ -4645,6 +4693,42 @@ export default function AdminPanel({
                     />
                   </div>
                 </div>
+
+                {/* PRODUCT COMMISSION TYPE & VALUE SETUP */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-emerald-50/55 p-3 rounded-2xl border border-emerald-100">
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">
+                      কমিশনের ধরন (Commission Type) *
+                    </label>
+                    <select
+                      value={pCommissionType}
+                      onChange={(e) => setPCommissionType(e.target.value as 'percentage' | 'fixed')}
+                      className="w-full p-2.5 bg-white border border-emerald-200 rounded-xl font-bold text-xs"
+                    >
+                      <option value="percentage">শতকরা কমিশন / Percentage (%)</option>
+                      <option value="fixed">নির্দিষ্ট টাকা / Fixed Amount (৳/₹)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-800 mb-1">
+                      কমিশনের পরিমাণ (Commission Value) *
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      value={pCommissionValue}
+                      onChange={(e) => setPCommissionValue(Number(e.target.value))}
+                      className="w-full p-2.5 bg-white border border-emerald-200 rounded-xl font-mono font-black text-emerald-800 text-xs"
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      {pCommissionType === 'percentage' 
+                        ? 'বিক্রয় মূল্যের (Selling Price/DP) ওপর এই শতকরা হার অনুযায়ী মোট কমিশন হিসেব করা হবে।' 
+                        : 'প্রতিটি পণ্য বিক্রয়ের জন্য এই নির্দিষ্ট টাকা কমিশন হিসেবে বন্টন করা হবে।'}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* SECTION 3: STOCK & PAYMENT METHODS */}
@@ -4766,25 +4850,65 @@ export default function AdminPanel({
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 font-mono">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono">
                       {pCustomCommissionLevels.map((lvlItem, idx) => (
-                        <div key={idx} className="bg-white p-2 rounded-xl border border-indigo-200 shadow-xs space-y-1">
-                          <span className="text-[10px] font-black text-indigo-900 block">Level {lvlItem.level}</span>
-                          <div className="flex items-center gap-1">
-                            <input
-                              type="number"
-                              min={0}
-                              max={100}
-                              value={lvlItem.percentage !== undefined ? lvlItem.percentage : 0}
+                        <div key={idx} className="bg-white p-3 rounded-xl border border-indigo-200 shadow-xs space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-black text-indigo-900">Level {lvlItem.level}</span>
+                            <select
+                              value={lvlItem.type || 'percentage'}
                               onChange={(e) => {
-                                const newPct = Number(e.target.value);
+                                const newType = e.target.value as 'percentage' | 'fixed';
                                 const newArr = [...pCustomCommissionLevels];
-                                newArr[idx].percentage = newPct;
+                                newArr[idx].type = newType;
+                                if (newType === 'fixed') {
+                                  newArr[idx].amount = lvlItem.amount || Math.round((lvlItem.percentage || 5) * 10);
+                                } else {
+                                  newArr[idx].percentage = lvlItem.percentage || Math.round((lvlItem.amount || 50) / 10);
+                                }
                                 setPCustomCommissionLevels(newArr);
                               }}
-                              className="w-full p-1 bg-slate-50 border border-slate-200 rounded font-bold text-xs"
-                            />
-                            <span className="font-black text-indigo-700">%</span>
+                              className="p-1 text-[10px] font-bold bg-indigo-50 border border-indigo-100 rounded cursor-pointer"
+                            >
+                              <option value="percentage">% Pct</option>
+                              <option value="fixed">৳ Fixed</option>
+                            </select>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {lvlItem.type === 'fixed' ? (
+                              <>
+                                <span className="text-slate-500 font-bold text-xs">৳</span>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={lvlItem.amount !== undefined ? lvlItem.amount : 0}
+                                  onChange={(e) => {
+                                    const newAmt = Number(e.target.value);
+                                    const newArr = [...pCustomCommissionLevels];
+                                    newArr[idx].amount = newAmt;
+                                    setPCustomCommissionLevels(newArr);
+                                  }}
+                                  className="w-full p-1 bg-slate-50 border border-slate-200 rounded font-bold text-xs font-mono"
+                                />
+                              </>
+                            ) : (
+                              <>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={100}
+                                  value={lvlItem.percentage !== undefined ? lvlItem.percentage : 0}
+                                  onChange={(e) => {
+                                    const newPct = Number(e.target.value);
+                                    const newArr = [...pCustomCommissionLevels];
+                                    newArr[idx].percentage = newPct;
+                                    setPCustomCommissionLevels(newArr);
+                                  }}
+                                  className="w-full p-1 bg-slate-50 border border-slate-200 rounded font-bold text-xs font-mono"
+                                />
+                                <span className="font-black text-indigo-700 text-xs">%</span>
+                              </>
+                            )}
                           </div>
                         </div>
                       ))}

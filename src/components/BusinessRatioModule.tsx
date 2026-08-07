@@ -229,25 +229,51 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
 
   // Distributor Target & Reward Progress Calculations
   const targetProgress = useMemo(() => {
-    const currentBv = ratioData.totalBV;
-    const currentPv = Math.round(currentBv / 20); // 1 PV = 20 BV ratio
+    // Calculate actual active direct and team members to compute realistic business values
+    const activeDirectCount = downlines.filter(m => m.level === 1 && m.status === 'active').length;
+    const activeTeamCount = downlines.filter(m => m.level > 1 && m.status === 'active').length;
 
-    const directBv = Math.round(currentBv * 0.35);
-    const directPv = Math.round(currentPv * 0.35);
-    const teamBv = Math.round(currentBv * 0.65);
-    const teamPv = Math.round(currentPv * 0.65);
+    // Direct Business BV & PV
+    const directBv = activeDirectCount * 25000;
+    const directPv = Math.round(directBv / 20); // 1 PV = 20 BV
 
-    const targetBv = targetConfig.bvTarget || (targetConfig.directBvTarget + targetConfig.teamBvTarget) || 60000;
-    const targetPv = targetConfig.pvTarget || (targetConfig.directPvTarget + targetConfig.teamPvTarget) || 3000;
+    // Team Business BV & PV
+    const teamBv = activeTeamCount * 25000;
+    const teamPv = Math.round(teamBv / 20); // 1 PV = 20 BV
 
-    const bvProgress = targetBv > 0 ? Math.min(100, Math.round((currentBv / targetBv) * 100)) : 100;
-    const pvProgress = targetPv > 0 ? Math.min(100, Math.round((currentPv / targetPv) * 100)) : 100;
-    const overallProgress = Math.min(100, Math.round((bvProgress + pvProgress) / 2));
+    // Combined Volumes
+    const currentBv = directBv + teamBv;
+    const currentPv = directPv + teamPv;
 
-    const isBvAchieved = currentBv >= targetBv;
-    const isPvAchieved = currentPv >= targetPv;
-    const isRatioMet = !targetConfig.ratioRuleEnabled || ratioData.balanceScore >= 50;
-    const isAchieved = isBvAchieved && isPvAchieved && isRatioMet;
+    // Targets from backend admin settings
+    const targetDirectBv = targetConfig.directBvTarget || 10000;
+    const targetDirectPv = targetConfig.directPvTarget || 500;
+    const targetTeamBv = targetConfig.teamBvTarget || 50000;
+    const targetTeamPv = targetConfig.teamPvTarget || 2500;
+
+    const targetBv = targetDirectBv + targetTeamBv;
+    const targetPv = targetDirectPv + targetTeamPv;
+
+    // Percentages per category
+    const directBvProgress = targetDirectBv > 0 ? Math.min(100, Math.round((directBv / targetDirectBv) * 100)) : 100;
+    const directPvProgress = targetDirectPv > 0 ? Math.min(100, Math.round((directPv / targetDirectPv) * 100)) : 100;
+    const teamBvProgress = targetTeamBv > 0 ? Math.min(100, Math.round((teamBv / targetTeamBv) * 100)) : 100;
+    const teamPvProgress = targetTeamPv > 0 ? Math.min(100, Math.round((teamPv / targetTeamPv) * 100)) : 100;
+
+    const overallProgress = Math.min(100, Math.round((directBvProgress + directPvProgress + teamBvProgress + teamPvProgress) / 4));
+
+    const isDirectBvAchieved = directBv >= targetDirectBv;
+    const isDirectPvAchieved = directPv >= targetDirectPv;
+    const isTeamBvAchieved = teamBv >= targetTeamBv;
+    const isTeamPvAchieved = teamPv >= targetTeamPv;
+
+    // 50:50 ratio rule
+    const maxLeg = Math.max(ratioData.leftBV, ratioData.rightBV);
+    const minLeg = Math.min(ratioData.leftBV, ratioData.rightBV);
+    const isRatioMet = !targetConfig.ratioRuleEnabled || (minLeg >= maxLeg * (targetConfig.otherLegsMinRatio / targetConfig.strongLegMaxRatio));
+    
+    // Achieved is true when both direct & team, BV & PV, and ratio rules are completely fulfilled
+    const isAchieved = isDirectBvAchieved && isDirectPvAchieved && isTeamBvAchieved && isTeamPvAchieved && isRatioMet;
 
     const today = new Date();
     const endDateObj = new Date(targetConfig.endDate || '2026-12-31');
@@ -261,17 +287,157 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
       directPv,
       teamBv,
       teamPv,
+      targetDirectBv,
+      targetDirectPv,
+      targetTeamBv,
+      targetTeamPv,
       targetBv,
       targetPv,
-      bvProgress,
-      pvProgress,
+      directBvProgress,
+      directPvProgress,
+      teamBvProgress,
+      teamPvProgress,
       overallProgress,
-      isBvAchieved,
-      isPvAchieved,
+      isDirectBvAchieved,
+      isDirectPvAchieved,
+      isTeamBvAchieved,
+      isTeamPvAchieved,
+      isRatioMet,
       isAchieved,
       daysLeft
     };
-  }, [ratioData, targetConfig]);
+  }, [downlines, ratioData, targetConfig]);
+
+  // Handle high-fidelity Printing for Achievement Certificate
+  const handlePrintCertificate = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Пожалуйста, разрешите всплывающие окна для печати сертификата.');
+      return;
+    }
+    const htmlContent = `
+      <html>
+        <head>
+          <title>Success India - Certificate of Achievement - ${user.name}</title>
+          <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+          <style>
+            @media print {
+              body { margin: 0; padding: 0; -webkit-print-color-adjust: exact; }
+              .no-print { display: none; }
+              .cert-bg { background-color: #fffbeb !important; }
+            }
+            body { font-family: 'Georgia', serif; background-color: #fafaf9; }
+            .cert-container { 
+              max-width: 900px; 
+              margin: 40px auto; 
+              padding: 50px; 
+              background-color: #fffbeb; 
+              border: 18px double #b45309; 
+              box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+              position: relative;
+            }
+            .cert-seal {
+              border-radius: 9999px;
+              width: 90px;
+              height: 90px;
+              background: radial-gradient(circle, #f59e0b 0%, #b45309 100%);
+              border: 4px solid #fff;
+              box-shadow: 0 4px 10px rgba(180, 83, 9, 0.4);
+            }
+          </style>
+        </head>
+        <body>
+          <div class="cert-container text-center rounded-lg">
+            <!-- Interior frame -->
+            <div class="border-4 border-amber-600/60 p-8 h-full relative">
+              <!-- Corner Ornaments -->
+              <div class="absolute top-0 left-0 w-10 h-10 border-t-4 border-l-4 border-amber-800"></div>
+              <div class="absolute top-0 right-0 w-10 h-10 border-t-4 border-r-4 border-amber-800"></div>
+              <div class="absolute bottom-0 left-0 w-10 h-10 border-b-4 border-l-4 border-amber-800"></div>
+              <div class="absolute bottom-0 right-0 w-10 h-10 border-b-4 border-r-4 border-amber-800"></div>
+
+              <!-- Header Logos -->
+              <div class="mb-4">
+                <span class="text-xs font-black tracking-widest text-amber-800 uppercase block">SUCCESS INDIA SOLAR ENERGY NETWORK</span>
+                <span class="text-[9px] text-slate-500 font-bold block tracking-wider mt-0.5">গ্লোবাল ডিস্ট্রিবিউশন অ্যান্ড লিডারশিপ পোর্টাল</span>
+              </div>
+
+              <!-- Certificate Title -->
+              <h1 class="text-4xl font-extrabold text-amber-900 tracking-wide uppercase font-serif mt-2 mb-1">CERTIFICATE OF ACHIEVEMENT</h1>
+              <div class="text-[11px] text-slate-500 tracking-widest uppercase font-bold italic mb-6">সাফল্য ও স্বীকৃতি প্রশংসাপত্র</div>
+
+              <!-- Presentation Text -->
+              <p class="text-sm text-slate-700 italic mb-2">This is proudly presented to</p>
+              <h2 class="text-3xl font-black text-slate-900 border-b-2 border-amber-500/30 pb-1.5 max-w-lg mx-auto mb-4 font-serif tracking-wide">${user.name}</h2>
+              <div class="text-[11px] text-indigo-700 font-mono font-bold uppercase tracking-wider mb-8">
+                Distributor ID: #${user.id} &bull; Sponsor Phone: ${user.phone}
+              </div>
+
+              <!-- Achievement Narrative -->
+              <p class="text-xs sm:text-sm text-slate-700 leading-relaxed max-w-xl mx-auto mb-8 font-serif">
+                For outstanding sales performance, network leadership, and successfully maintaining the strict 
+                <strong>50:50 Business Ratio</strong> requirements during the campaign 
+                <strong class="text-amber-900">"${targetConfig.title}"</strong>.
+                By completing 
+                <strong>${targetProgress.directBv.toLocaleString('en-IN')} BV / ${targetProgress.directPv} PV</strong> in Direct Business and 
+                <strong>${targetProgress.teamBv.toLocaleString('en-IN')} BV / ${targetProgress.teamPv} PV</strong> in Team Business, 
+                they are officially decorated with the prestigious rank of:
+              </p>
+
+              <!-- Rank Title Decoration -->
+              <div class="bg-amber-100/60 border-2 border-amber-500/40 py-3 px-6 rounded-2xl max-w-md mx-auto mb-8">
+                <span class="text-[10px] text-amber-800 font-black block uppercase tracking-widest mb-1">OFFICIALLY DECORATED RANK</span>
+                <strong class="text-lg text-amber-900 font-black tracking-wider uppercase font-serif">
+                  "${targetConfig.rewardTitle || 'Solar Executive Star'}"
+                </strong>
+              </div>
+
+              <!-- Rewards & Entitlement -->
+              <div class="text-xs text-slate-600 italic max-w-lg mx-auto mb-10 leading-snug">
+                This achievement entitles the holder to the premium reward of 
+                <strong class="text-slate-900">${targetConfig.rewardGift || 'iPhone 15 Pro'}</strong>, 
+                along with a cash bonus of 
+                <strong class="text-slate-900">৳${(targetConfig.rewardBonusAmount || 0).toLocaleString('en-IN')}</strong> 
+                and exclusive <strong class="text-slate-900">${targetConfig.rewardIncentive || '5% Royalty Pool Shares'}</strong>.
+              </div>
+
+              <!-- Footer Signatures -->
+              <div class="grid grid-cols-3 gap-6 items-center max-w-lg mx-auto pt-6 border-t border-slate-200/80">
+                <div class="text-center">
+                  <div class="text-xs font-mono font-bold text-slate-900 border-b border-slate-300 pb-1">${new Date().toLocaleDateString('en-IN')}</div>
+                  <div class="text-[9px] text-slate-400 uppercase font-black tracking-wider mt-1">Issue Date</div>
+                </div>
+
+                <div class="flex justify-center">
+                  <div class="cert-seal flex flex-col items-center justify-center text-white select-none">
+                    <span class="text-[10px] font-black tracking-wider uppercase leading-none">GOLD</span>
+                    <span class="text-[9px] font-bold leading-none mt-1">SEAL</span>
+                  </div>
+                </div>
+
+                <div class="text-center">
+                  <div class="text-xs font-mono font-bold text-slate-900 border-b border-slate-300 pb-1 italic">SUCCESS INDIA</div>
+                  <div class="text-[9px] text-slate-400 uppercase font-black tracking-wider mt-1">Authorized Audit</div>
+                </div>
+              </div>
+
+              <div class="text-[9px] text-slate-400 font-mono mt-8 uppercase tracking-widest">
+                VERIFIED DISTRIBUTOR BLOCKCHAIN SECURED &bull; VERIFICATION CODE: IND-SOLAR-TARGET-ACH-${user.id}
+              </div>
+            </div>
+          </div>
+          
+          <div class="no-print text-center mt-6">
+            <button onclick="window.print()" class="px-6 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm rounded-lg shadow-md cursor-pointer transition-all">
+              🖨️ Print Certificate (প্রিন্ট করুন)
+            </button>
+          </div>
+        </body>
+      </html>
+    `;
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
 
   // Historical Ratio Timeline for Charts & Reports using 50:50 Rule
   const ratioTimeline = useMemo(() => {
@@ -604,6 +770,205 @@ export default function BusinessRatioModule({ user, downlines = [], isDarkMode =
         </div>
 
       </div>
+
+      {/* 1.6 CERTIFICATE & PROGRESS REPORT SECTION */}
+      <div className={`p-6 rounded-3xl border shadow-md space-y-6 ${
+        isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
+          <div>
+            <h3 className="text-base font-black uppercase tracking-wider flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+              🏆 প্রশংসাপত্র ও অগ্রগতি রিপোর্ট (Certificate & Progress Audit)
+            </h3>
+            <p className="text-xs text-slate-500">
+              টার্গেটের সফল অর্জনের উপর ভিত্তি করে প্রশংসাপত্র এবং লাইভ চার-স্তরের অগ্রগতি ট্র্যাক রিপোর্ট।
+            </p>
+          </div>
+          <button
+            onClick={handlePrintCertificate}
+            className="px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+          >
+            <Printer className="w-4 h-4 text-slate-950" />
+            <span>প্রশংসাপত্র প্রিন্ট করুন (Print Certificate)</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left: Certificate Preview Panel */}
+          <div className="lg:col-span-7 bg-amber-50/20 dark:bg-slate-950/40 p-4 sm:p-6 rounded-2xl border border-amber-200/60 dark:border-slate-800 flex flex-col justify-between min-h-[420px] relative overflow-hidden">
+            {/* Watermark Stamp */}
+            <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] dark:opacity-[0.02] pointer-events-none select-none">
+              <span className="text-[120px] font-black tracking-widest uppercase font-serif">SOLAR</span>
+            </div>
+
+            {/* In Progress / Achieved Stamp Watermark Overlay */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-[-12deg] pointer-events-none select-none z-10">
+              {targetProgress.isAchieved ? (
+                <div className="border-8 border-emerald-500/30 text-emerald-500/35 text-2xl sm:text-4xl font-black px-6 py-3 rounded-3xl uppercase tracking-widest leading-none">
+                  🎉 ACHIEVED
+                </div>
+              ) : (
+                <div className="border-8 border-slate-500/25 text-slate-500/25 text-2xl sm:text-4xl font-black px-6 py-3 rounded-3xl uppercase tracking-widest leading-none">
+                  ⏳ IN PROGRESS
+                </div>
+              )}
+            </div>
+
+            {/* Certificate Border decoration */}
+            <div className="border-2 border-amber-600/40 p-6 flex-1 flex flex-col justify-between relative rounded-xl bg-amber-50/10">
+              {/* Corner brackets */}
+              <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-amber-800"></div>
+              <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-amber-800"></div>
+              <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-amber-800"></div>
+              <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-amber-800"></div>
+
+              <div className="text-center space-y-4">
+                <div className="space-y-0.5">
+                  <span className="text-[9px] font-extrabold tracking-widest text-amber-700 uppercase block">SUCCESS INDIA PORTAL</span>
+                  <span className="text-[16px] font-serif font-black text-slate-800 dark:text-slate-200 block">CERTIFICATE OF ACHIEVEMENT</span>
+                  <span className="text-[8px] text-slate-500 block">সাফল্য ও স্বীকৃতি প্রশংসাপত্র</span>
+                </div>
+
+                <div className="space-y-1">
+                  <p className="text-[10px] text-slate-500 italic">This is proudly presented to</p>
+                  <h4 className="text-xl font-serif font-black text-amber-800 dark:text-amber-400 tracking-wide">{user.name}</h4>
+                  <div className="text-[9px] text-indigo-600 dark:text-indigo-400 font-mono font-bold">
+                    ID: #{user.id} &bull; Sponsor: {user.phone}
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed font-serif">
+                  For outstanding performance and successfully fulfilling the <strong>50:50 Business Ratio Leg Matching</strong> requirement of 
+                  the campaign <strong>"{targetConfig.title}"</strong>. Fully completed Direct and Team business targets and decorated with the rank of:
+                </p>
+
+                <div className="inline-block bg-amber-100/40 dark:bg-amber-950/20 border border-amber-500/30 px-4 py-1.5 rounded-lg">
+                  <strong className="text-xs text-amber-900 dark:text-amber-300 font-black tracking-wide uppercase tracking-widest font-serif">
+                    "{targetConfig.rewardTitle || 'Solar Executive Star'}"
+                  </strong>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-6 border-t border-slate-200/50 dark:border-slate-800/80 mt-6 text-[9px] text-slate-400 font-mono">
+                <div>
+                  <span className="block">Date: {new Date().toLocaleDateString('en-IN')}</span>
+                  <span className="block uppercase">Verified Live</span>
+                </div>
+                <div className="w-10 h-10 rounded-full border border-amber-500/40 bg-amber-500/5 flex items-center justify-center font-black text-[7px] text-amber-700 leading-none text-center">
+                  SEAL OF<br/>SUCCESS
+                </div>
+                <div>
+                  <span className="block italic">Audit Status: Approved</span>
+                  <span className="block uppercase">Success India</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Detailed Live Progress Checklist Panel */}
+          <div className="lg:col-span-5 space-y-4">
+            <h4 className="font-black text-slate-900 dark:text-white text-xs uppercase tracking-wider flex items-center gap-1.5">
+              <span>📊 ৪-স্তরের অগ্রগতি ট্র্যাক রিপোর্ট (Progress Audit Checklist)</span>
+            </h4>
+
+            <div className="space-y-3">
+              {/* Milestone 1: Direct BV */}
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/80 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">১. ডাইরেক্ট সেলস ভলিউম (Direct BV)</span>
+                  {targetProgress.isDirectBvAchieved ? (
+                    <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 font-black px-2 py-0.5 rounded-full uppercase">Completed</span>
+                  ) : (
+                    <span className="text-[9px] bg-amber-100 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 font-black px-2 py-0.5 rounded-full uppercase">In Progress</span>
+                  )}
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono flex items-center justify-between">
+                  <span>{targetProgress.directBv.toLocaleString('en-IN')} / {targetProgress.targetDirectBv.toLocaleString('en-IN')} BV</span>
+                  <span>{targetProgress.directBvProgress}%</span>
+                </div>
+                <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-indigo-600 h-full rounded-full transition-all" style={{ width: `${targetProgress.directBvProgress}%` }}></div>
+                </div>
+              </div>
+
+              {/* Milestone 2: Direct PV */}
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/80 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">২. ডাইরেক্ট পয়েন্ট ভলিউম (Direct PV)</span>
+                  {targetProgress.isDirectPvAchieved ? (
+                    <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 font-black px-2 py-0.5 rounded-full uppercase">Completed</span>
+                  ) : (
+                    <span className="text-[9px] bg-amber-100 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 font-black px-2 py-0.5 rounded-full uppercase">In Progress</span>
+                  )}
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono flex items-center justify-between">
+                  <span>{targetProgress.directPv.toLocaleString('en-IN')} / {targetProgress.targetDirectPv.toLocaleString('en-IN')} PV</span>
+                  <span>{targetProgress.directPvProgress}%</span>
+                </div>
+                <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-amber-500 h-full rounded-full transition-all" style={{ width: `${targetProgress.directPvProgress}%` }}></div>
+                </div>
+              </div>
+
+              {/* Milestone 3: Team BV */}
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/80 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">৩. টিম সেলস ভলিউম (Team BV)</span>
+                  {targetProgress.isTeamBvAchieved ? (
+                    <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 font-black px-2 py-0.5 rounded-full uppercase">Completed</span>
+                  ) : (
+                    <span className="text-[9px] bg-amber-100 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 font-black px-2 py-0.5 rounded-full uppercase">In Progress</span>
+                  )}
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono flex items-center justify-between">
+                  <span>{targetProgress.teamBv.toLocaleString('en-IN')} / {targetProgress.targetTeamBv.toLocaleString('en-IN')} BV</span>
+                  <span>{targetProgress.teamBvProgress}%</span>
+                </div>
+                <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-emerald-600 h-full rounded-full transition-all" style={{ width: `${targetProgress.teamBvProgress}%` }}></div>
+                </div>
+              </div>
+
+              {/* Milestone 4: Team PV */}
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/80 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">৪. টিম পয়েন্ট ভলিউম (Team PV)</span>
+                  {targetProgress.isTeamPvAchieved ? (
+                    <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 font-black px-2 py-0.5 rounded-full uppercase">Completed</span>
+                  ) : (
+                    <span className="text-[9px] bg-amber-100 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 font-black px-2 py-0.5 rounded-full uppercase">In Progress</span>
+                  )}
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono flex items-center justify-between">
+                  <span>{targetProgress.teamPv.toLocaleString('en-IN')} / {targetProgress.targetTeamPv.toLocaleString('en-IN')} PV</span>
+                  <span>{targetProgress.teamPvProgress}%</span>
+                </div>
+                <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-purple-600 h-full rounded-full transition-all" style={{ width: `${targetProgress.teamPvProgress}%` }}></div>
+                </div>
+              </div>
+
+              {/* 50:50 Ratio Status */}
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/80 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200">⚡ ৫০:৫০ বিজনেস রেশিও ভারসাম্য (Leg Matching)</span>
+                  {targetProgress.isRatioMet ? (
+                    <span className="text-[9px] bg-emerald-100 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-300 font-black px-2 py-0.5 rounded-full uppercase">Balanced</span>
+                  ) : (
+                    <span className="text-[9px] bg-amber-100 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 font-black px-2 py-0.5 rounded-full uppercase">Skewed</span>
+                  )}
+                </div>
+                <div className="text-[10px] text-slate-500 font-mono flex justify-between">
+                  <span>Score: {ratioData.balanceScore}% Balanced</span>
+                  <span>Left: {ratioData.leftPercent}% | Right: {ratioData.rightPercent}%</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className={`p-3 rounded-xl border shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3 ${
         isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
       }`}>
