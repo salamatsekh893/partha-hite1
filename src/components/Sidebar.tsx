@@ -82,7 +82,7 @@ export default function Sidebar({ isOpen, onClose, user, onLogout, isImpersonati
         }`}
       >
         {/* Header Banner - Rich Midnight Gradient with Amber Sun */}
-        <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 text-white p-4 relative overflow-hidden shrink-0 border-b border-amber-500/30">
+        <div className="bg-[#0A192F] text-white p-4 relative overflow-hidden shrink-0 border-b border-amber-500/30">
           <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 w-28 h-28 rounded-full bg-amber-500/15 blur-2xl pointer-events-none"></div>
           <div className="absolute left-10 bottom-0 w-20 h-20 rounded-full bg-indigo-500/20 blur-xl pointer-events-none"></div>
 

@@ -206,8 +206,8 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
       {/* 1. Header Banner & Profile Strip with Dark Mode Switch */}
       <div className={`p-4 sm:p-5 rounded-2xl border shadow-md relative overflow-hidden transition-all ${
         isDarkMode 
-          ? 'bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border-indigo-500/20 text-white' 
-          : 'bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border-indigo-900/30'
+          ? 'bg-[#0A192F] border-indigo-500/20 text-white' 
+          : 'bg-[#0A192F] text-white border-indigo-900/30'
       }`}>
         <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           
@@ -343,7 +343,7 @@ export default function UserDashboard({ user, onUserUpdated, activeMainTab: cont
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-4 sm:p-5 flex items-center justify-between border-b border-indigo-900/40 shrink-0">
+            <div className="bg-[#0A192F] text-white p-4 sm:p-5 flex items-center justify-between border-b border-indigo-900/40 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black text-lg shadow-sm">
                   <UserPlus className="w-5 h-5" />

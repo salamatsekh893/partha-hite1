@@ -66,7 +66,7 @@ function GenealogyNode({
         animate={{ opacity: 1, scale: 1 }}
         whileHover={{ scale: 1.05, y: -3 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        className="flex flex-col items-center p-2.5 w-28 sm:w-34 bg-[#111c2e]/10 dark:bg-slate-900/40 border-2 border-dashed border-indigo-500/20 hover:border-indigo-500/50 rounded-2xl shadow-xs transition-all group shrink-0"
+        className="flex flex-col items-center p-2.5 w-28 sm:w-34 bg-[#0A192F]/10 dark:bg-slate-900/40 border-2 border-dashed border-indigo-500/20 hover:border-indigo-500/50 rounded-2xl shadow-xs transition-all group shrink-0"
       >
         <div className="w-10 h-10 rounded-full flex items-center justify-center bg-indigo-900/10 dark:bg-indigo-950/30 border-2 border-dashed border-indigo-500/30 text-indigo-400 group-hover:text-indigo-300 transition-all mb-1.5 shadow-inner">
           <UserPlus className="w-4 h-4" />
@@ -97,7 +97,7 @@ function GenealogyNode({
       transition={{ type: "spring", stiffness: 300, damping: 18 }}
       className={`flex flex-col items-center p-2.5 w-28 sm:w-34 rounded-2xl border relative shrink-0 ${
         isActive 
-          ? 'bg-[#111c2e] border-indigo-500/80 shadow-md text-white' 
+          ? 'bg-[#0A192F] border-indigo-500/80 shadow-md text-white' 
           : 'bg-[#1e293b]/90 border-slate-700/60 shadow-sm text-slate-200'
       }`}
     >
@@ -932,7 +932,7 @@ export default function DownlineModule({ user, downlines, isDarkMode = false, on
             isDarkMode ? 'bg-slate-900 border-slate-700 text-white' : 'bg-white border-slate-200 text-slate-900'
           }`}>
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-950 p-6 text-white relative">
+            <div className="bg-[#0A192F] p-6 text-white relative">
               <button
                 onClick={() => setSelectedMemberProfile(null)}
                 className="absolute top-4 right-4 p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"

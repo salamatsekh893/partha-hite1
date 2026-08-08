@@ -27,7 +27,7 @@ export default function Header({ user, onLogout, isImpersonating, currentView, s
   }
 
   return (
-    <header id="app-header" className="bg-[#111c2e] border-b border-slate-800 sticky top-0 z-40 shadow-md">
+    <header id="app-header" className="bg-[#0A192F] border-b border-slate-800 sticky top-0 z-40 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
           
